@@ -1,0 +1,948 @@
+/* Estilos para el admin usando Bootstrap  v5.2.3 */
+
+/* Estilos para el módulo de Soporte Técnico */
+.soporte-tecnico {
+    &-header-row {
+        background-color: #f4f4f4;
+    }
+    &-no-results-td {
+        padding: 20px;
+    }
+    &-card {
+        border-radius: 10px;
+        border: 1px solid #eee;
+        margin-bottom: 15px;
+        background: #fff;
+
+        &-show {
+            background: #fafafa;
+            margin-bottom: 0;
+        }
+    }
+    &-ticket-id {
+        font-weight: bold;
+    }
+    &-label-small {
+        font-size: 10px;
+        text-transform: uppercase;
+    }
+    &-empty-icon {
+        opacity: 0.3;
+    }
+    &-well-custom {
+        background-color: #fff !important;
+        min-height: 100px;
+    }
+
+    /* Anchos específicos para columnas de tabla */
+    &-w-5 { width: 5%; }
+    &-w-10 { width: 10%; }
+    &-w-15 { width: 15%; }
+    &-w-25 { width: 25%; }
+
+    /* Estilos para la búsqueda */
+    &-search-wrapper {
+        width: 150px;
+    }
+    &-select-tema {
+        width: 100% !important;
+    }
+    &-btn-flotante-buscar {
+        position: absolute;
+        bottom: 70px; /* Ajustado ligeramente hacia abajo para evitar solapamientos con inputs */
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 10px 25px rgba(0, 123, 255, 0.4);
+        transition: all 0.4s ease;
+        z-index: 1070; /* Por encima del modal-body pero contenido en el modal-content */
+        border: 2px solid #fff;
+        padding: 0 !important;
+
+        &:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0, 123, 255, 0.5);
+            background: #0056b3;
+        }
+
+        i {
+            margin: 0 !important;
+        }
+    }
+    &-modal-body-scroll {
+        @media (min-width: 768px) {
+            max-height: 65vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    }
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
+/* Estilos para la paginación personalizada */
+.reda-pagination-container {
+    .pagination {
+        .page-item {
+            .page-link {
+                color: #333;
+                border-radius: 5px;
+                margin: 0 2px;
+                padding: 5px 10px;
+                font-size: 13px;
+                box-shadow: none !important;
+
+                &:hover {
+                    background-color: #f1faff;
+                    color: #00a1ff;
+                    border-color: #00a1ff;
+                }
+
+                i {
+                    font-size: 10px; /* Tamaño controlado para los íconos */
+                }
+            }
+
+            &.active {
+                .page-link {
+                    background-color: #00a1ff !important;
+                    border-color: #00a1ff !important;
+                    color: #fff !important;
+                }
+            }
+
+            &.disabled {
+                .page-link {
+                    color: #ccc;
+                    background-color: #f9f9f9;
+                }
+            }
+        }
+    }
+}
+
+/* Utilidades adicionales para el admin */
+.f-10, .text-10 { font-size: 10px !important; }
+.f-11, .text-11 { font-size: 11px !important; }
+.f-12, .text-12 { font-size: 12px !important; }
+.f-13, .text-13 { font-size: 13px !important; }
+.f-14, .text-14 { font-size: 14px !important; }
+.f-15, .text-15 { font-size: 15px !important; }
+.f-16, .text-16 { font-size: 16px !important; }
+.f-18, .text-18 { font-size: 18px !important; }
+.f-20, .text-20 { font-size: 20px !important; }
+.f-24, .text-24 { font-size: 24px !important; }
+
+.fw-500 { font-weight: 500 !important; }
+.fw-600 { font-weight: 600 !important; }
+.fw-700 { font-weight: 700 !important; }
+
+.fs-7 { font-size: 0.95rem !important; }
+.fs-8 { font-size: 0.85rem !important; }
+.fs-9 { font-size: 0.75rem !important; }
+
+.italic { font-style: italic !important; }
+
+.leading-tight { line-height: 1.25 !important; }
+
+.opacity-05 { opacity: 0.5 !important; }
+
+.rounded-4 { border-radius: 1rem !important; }
+
+.w-250px { width: 250px !important; }
+
+.border-dashed { border-style: dashed !important; }
+
+.text-blue { color: #007bff !important; }
+.text-green { color: #28a745 !important; }
+.shadow-xs { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important; }
+
+.mt-85 { margin-top: 85px !important; }
+
+.reda-admin-menu-hidden { display: none; }
+
+/* Utilidades para modales genéricos */
+.reda-modal-custom {
+    &-confirmacion { z-index: 1070 !important; }
+    &-notificacion { z-index: 1060 !important; }
+    &-content {
+        border-radius: 15px !important;
+        border: none !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+    &-btn-pill {
+        border-radius: 20px !important;
+    }
+}
+
+/* Utilidades para íconos SVG */
+.reda-icon-svg-14 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+        width: 14px !important;
+        height: 14px !important;
+        color: currentColor;
+    }
+}
+
+.reda-icon-svg-18 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+        width: 18px !important;
+        height: 18px !important;
+        color: currentColor;
+    }
+}
+
+.reda-icon-svg-20 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+        width: 20px !important;
+        height: 20px !important;
+        color: currentColor;
+    }
+}
+
+/* Símbolos y Avatares */
+.symbol {
+    display: inline-block;
+    flex-shrink: 0;
+    position: relative;
+    border-radius: 0.475rem;
+
+    &.symbol-circle {
+        border-radius: 50%;
+        .symbol-label {
+            border-radius: 50%;
+        }
+        img {
+            border-radius: 50%;
+        }
+    }
+
+    &.symbol-30px {
+        width: 30px;
+        height: 30px;
+    }
+
+    &.symbol-35px {
+        width: 35px;
+        height: 35px;
+    }
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .symbol-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #3f4254;
+        background-color: #f5f8fa;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+    }
+}
+
+/* Colores de fondo claros (Light Backgrounds) */
+.bg-light-primary {
+    background-color: #f1faff !important;
+}
+.bg-light-success {
+    background-color: #e8fff3 !important;
+}
+.bg-light-info {
+    background-color: #f8f5ff !important;
+}
+.bg-light-warning {
+    background-color: #fff8dd !important;
+}
+.bg-light-danger {
+    background-color: #fff5f8 !important;
+}
+
+/* Estilos para el módulo de Planes de Negocio */
+.planes-negocio {
+    &-box-custom {
+        border: 1px solid #d2d6de;
+        border-radius: 5px;
+    }
+    &-box-header-custom {
+        background-color: #f7f7f7;
+    }
+    &-box-title-custom {
+        font-size: 15px;
+        font-weight: bold;
+    }
+    &-label-block {
+        display: block;
+        margin-bottom: 5px;
+    }
+    &-mt-25 {
+        margin-top: 25px;
+    }
+    &-well-ver {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        background: #fafafa;
+    }
+    &-modal-body-scroll {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    &-btn-flotante-editar {
+        position: absolute;
+        bottom: 85px; /* Por encima del footer del modal */
+        right: 25px;
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 10px 20px rgba(0, 123, 255, 0.3);
+        transition: all 0.4s ease;
+        z-index: 1060;
+        border: 2px solid #fff;
+        cursor: pointer;
+
+        &:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0, 123, 255, 0.4);
+            background: #0056b3;
+            color: white !important;
+        }
+
+        @media (max-width: 767px) {
+            bottom: 75px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+    }
+    &-label-detalle {
+        font-weight: bold;
+        color: #555;
+        display: block;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    &-valor-detalle {
+        font-size: 15px;
+        color: #333;
+    }
+    &-fila-plan-pago {
+        margin-bottom: 12px;
+        border-bottom: 1px dashed #eee;
+        padding-bottom: 10px;
+    }
+    &-align-end-pb-15 {
+        padding-bottom: 15px;
+        display: flex;
+        align-items: flex-end;
+    }
+    &-fila-beneficio {
+        margin-bottom: 8px;
+    }
+    &-bg-header-table {
+        background-color: #f4f4f4;
+    }
+    &-w-30 { width: 30%; }
+    &-w-40 { width: 40%; }
+    &-w-35 { width: 35%; }
+    &-w-45 { width: 45%; }
+    &-w-50 { width: 50%; }
+    &-w-20 { width: 20%; }
+    &-w-20-center { width: 20%; text-align: center; }
+    &-text-center { text-align: center; }
+    &-padding-20 { padding: 20px; }
+    &-card-movil {
+        border-radius: 10px;
+        border: 1px solid #eee;
+        background: white;
+    }
+    &-flex-1 { flex: 1; }
+    &-label-movil {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    &-badge-destacado-movil {
+        font-size: 9px;
+        border-radius: 4px;
+    }
+    &-opacity-03 { opacity: 0.3; }
+
+    /* Listado de planes interactivo */
+    &-selector-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    &-lapsos-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 8px;
+        width: fit-content;
+
+        &.w-100 {
+            width: 100% !important;
+        }
+    }
+    &-btn-lapso {
+        border: none;
+        background: transparent;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+        cursor: pointer;
+        outline: none !important;
+
+        &:hover {
+            color: #1e293b;
+            background: rgba(255,255,255,0.5);
+        }
+
+        &.active {
+            background: white;
+            color: #2563eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    }
+    &-price-display {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+    }
+    &-price-amount {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    &-price-label {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    /* Listado anterior y compatibilidad */
+    &-pills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    &-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        background-color: #f0f4f8;
+        border: 1px solid #d1e1e9;
+        border-radius: 50px;
+        color: #2c5282;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s;
+
+        &:hover {
+            background-color: #e2e8f0;
+            border-color: #cbd5e0;
+        }
+    }
+    &-plan-card-header {
+        border-bottom: 1px solid #edf2f7;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+    &-option-card {
+        background-color: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px;
+        flex: 1;
+        min-width: 140px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    &-option-price {
+        color: #2b6cb0;
+        font-size: 14px;
+        font-weight: 700;
+        display: block;
+    }
+    &-option-lapso {
+        color: #718096;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    /* Tablas V2 */
+    &-table-v2 {
+        background: white !important;
+        border-radius: 8px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border: 1px solid #dee2e6 !important;
+        overflow: hidden;
+
+        th {
+            background-color: #f7fafc !important;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            color: #4a5568;
+            border-bottom: 2px solid #dee2e6 !important;
+            padding: 12px !important;
+        }
+
+        td {
+            vertical-align: middle !important;
+            padding: 12px !important;
+        }
+    }
+}
+
+/* Estilos para el módulo de Mediaciones (Disputas) */
+.reda-admin-disputas {
+    .reda-reservacion-thumb-size {
+        width: 80px !important;
+        height: 60px !important;
+    }
+
+    .reda-propiedad-foto-max {
+        max-height: 200px;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+
+    .reda-avatar-30 { width: 30px; height: 30px; object-fit: cover; }
+    .reda-status-badge-pos { bottom: -2px; right: -2px; z-index: 1; }
+    .reda-status-badge-icon { width: 16px; height: 16px; border: 1px solid #ddd; }
+
+    /* Pestañas de Navegación */
+    .reda-tabs-nav {
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        &::-webkit-scrollbar { display: none; }
+
+        .disputa-tab-item {
+            flex-shrink: 0; /* Evita que las pestañas se compriman */
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            opacity: 0.6;
+
+            &.active {
+                opacity: 1;
+                border-bottom-color: #1dbf73;
+                color: #1dbf73;
+
+                .status-icon svg {
+                    color: #1dbf73;
+                    transform: scale(1.1);
+                }
+            }
+
+            &:hover:not(.active) {
+                opacity: 0.8;
+                background-color: #f8f9fa;
+            }
+
+            .status-icon svg {
+                width: 24px;
+                height: 24px;
+                transition: transform 0.2s ease;
+            }
+        }
+    }
+
+    /* Card Mediación */
+    .card-mediacion {
+        transition: all 0.3s ease;
+        border: 1px solid #e0e0e0 !important;
+        overflow: hidden; /* Asegura que la imagen respete el redondeo de la tarjeta */
+
+        &.shadow-sm-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+            border-color: #1dbf73 !important;
+        }
+
+        &.active-mediacion {
+            border: 2px solid #1dbf73 !important;
+            box-shadow: 0 0 15px rgba(29, 191, 115, 0.2);
+            z-index: 5;
+        }
+    }
+
+    /* Detalle Móvil Integrado */
+    .mobile-detail-wrapper {
+        .mobile-detail-toggle {
+            transition: background-color 0.2s ease;
+            &:active { background-color: #e9ecef !important; }
+            .toggle-icon { transition: transform 0.3s ease; }
+        }
+
+        .mobile-detail-content {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+    }
+
+    .reda-motivo-clamped, .reda-mediation-desc-clamped, .reda-property-name-clamped {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        cursor: pointer;
+        line-height: 1.5 !important;
+        font-weight: 500 !important;
+        color: #484848 !important;
+
+        &.expanded {
+            display: block !important;
+            max-height: none !important;
+            overflow: visible !important;
+            -webkit-line-clamp: unset !important;
+            white-space: normal !important;
+        }
+    }
+
+    .reda-motivo-clamped, .reda-property-name-clamped {
+        max-height: 3em !important; /* Estrictamente 2 líneas (1.5 * 2) */
+    }
+
+    .reda-mediation-desc-clamped {
+        /* La descripción ahora está dentro de un div con padding.
+           Sincronizamos max-height y min-height para 2 líneas exactas. */
+        max-height: 3em !important;
+        min-height: 3em;
+
+        &.expanded {
+            min-height: 0;
+            max-height: none !important;
+        }
+    }
+
+    /* Línea de tiempo (Timeline) */
+    .reda-timeline-carousel {
+        display: flex;
+        overflow-x: auto;
+        padding: 15px 0 30px 0; /* Altura reducida */
+        min-height: 95px; /* Altura mínima ajustada */
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        &::-webkit-scrollbar { display: none; }
+    }
+
+    .timeline-item {
+        min-width: 140px; /* Un poco más de ancho para evitar saltos de línea excesivos */
+        text-align: center;
+        position: relative;
+        padding: 0 5px;
+        flex-shrink: 0;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        &:last-child::after { display: none; }
+
+        .timeline-icon {
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+            font-size: 10px;
+            color: #adb5bd;
+        }
+
+        &.active {
+            .timeline-icon {
+                border-color: #1dbf73;
+                background: #1dbf73;
+                color: #fff;
+                box-shadow: 0 0 10px rgba(29, 191, 115, 0.4);
+            }
+            .timeline-text {
+                color: #1dbf73;
+                font-weight: 600;
+            }
+        }
+
+        &.completed {
+            .timeline-icon {
+                border-color: #1dbf73;
+                background: #e8f5e9;
+                color: #1dbf73;
+            }
+            &::after { background: #1dbf73; }
+        }
+
+        .timeline-text {
+            font-size: 10px;
+            line-height: 1.2;
+            font-weight: 600;
+            color: #6c757d;
+            display: block;
+            word-wrap: break-word;
+            padding: 0 5px;
+        }
+    }
+
+    .timeline-nav-btn {
+        position: absolute;
+        top: 100%;
+        transform: translateY(-80%); /* Subidos para quedar mejor integrados */
+        width: 32px;
+        height: 32px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        &:hover {
+            background: #1dbf73;
+            color: #fff;
+            border-color: #1dbf73;
+            box-shadow: 0 4px 8px rgba(29, 191, 115, 0.3);
+        }
+    }
+
+    .timeline-nav-left { left: 5px; }
+    .timeline-nav-right { right: 5px; }
+
+    /* Ajustes para el dropdown de receptores */
+    #select-receptor-admin {
+        min-width: 200px;
+        .dropdown-item {
+            &:hover {
+                background-color: #f1faff;
+                color: #1dbf73;
+            }
+        }
+    }
+}
+
+/* Estilos para el Inbox de Administración (Disputas) - Fuera de anidación para aplicar al modal */
+.container-inbox-admin {
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+#reda-mensajes-container {
+    flex: 1;
+    overflow-y: scroll !important; /* Forzamos scrollbar siempre en el lado derecho */
+    padding: 20px;
+    background-color: #e5ddd5; /* Color de fondo beige/champaña tipo WhatsApp */
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Mayor separación entre grupos de mensajes */
+
+    /* Estilo barra desplazamiento siempre visible */
+    &::-webkit-scrollbar {
+        width: 8px !important;
+        display: block !important;
+    }
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1 !important;
+        border-radius: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: #ced4da !important;
+        border-radius: 10px;
+        border: 2px solid #f1f1f1;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: #adb5bd !important;
+    }
+}
+
+.message-list-admin {
+    margin-bottom: 5px;
+    max-width: 90%;
+    display: flex;
+    align-self: flex-start;
+
+    &.me {
+        flex-direction: row-reverse;
+        align-self: flex-end !important;
+        
+        .symbol {
+            margin-left: 8px;
+            margin-right: 0 !important;
+        }
+
+        .msg-bubble-container {
+            align-items: flex-end;
+            
+            .msg-admin {
+                background-color: #dcf8c6 !important;
+                /* Punta a la derecha */
+                &:before {
+                    left: auto;
+                    right: -8px;
+                    border-right: 0;
+                    border-left: 10px solid #dcf8c6;
+                }
+            }
+            .time-admin {
+                text-align: right;
+            }
+        }
+    }
+
+    .symbol {
+        margin-top: 5px;
+        img {
+            width: 35px;
+            height: 35px;
+            object-fit: cover;
+        }
+    }
+
+    .msg-bubble-container {
+        display: flex;
+        flex-column: column;
+        max-width: 100%;
+
+        .msg-admin {
+            background-color: #fff;
+            color: #000;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+            min-width: 120px;
+
+            /* La "puntita" del mensaje apuntando al avatar (izquierda por defecto) */
+            &:before {
+                content: "";
+                position: absolute;
+                left: -8px;
+                top: 10px;
+                width: 0;
+                height: 0;
+                border-top: 8px solid transparent;
+                border-bottom: 8px solid transparent;
+                border-right: 10px solid #fff;
+                z-index: 1;
+            }
+        }
+    }
+
+    .time-admin {
+        font-size: 10px;
+        color: #999;
+        margin-top: 4px;
+        padding: 0 4px;
+    }
+}
+
+.message-footer-admin {
+    background: #fff;
+    padding-top: 15px;
+
+    .cht_msg_admin {
+        border-radius: 20px;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        &:focus {
+            border-color: #1dbf73;
+            box-shadow: 0 0 0 0.2rem rgba(29, 191, 115, 0.1);
+        }
+    }
+
+    .send-btn-admin {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border: none;
+        &:hover {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+        }
+    }
+}
+
+#select-receptor-reda {
+    min-width: 220px;
+    .dropdown-item {
+        &:hover {
+            background-color: #f1faff;
+            color: #1dbf73;
+        }
+    }
+}
+
+/* Corrección para que el autocompletado de Google Places sea visible en modales */
+.pac-container {
+    z-index: 110000000 !important;
+}

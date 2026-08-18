@@ -1,0 +1,452 @@
+ /* Rtl direction css */
+ html[dir="rtl"] body {
+    text-align: right !important;
+}
+
+html[dir="rtl"] .rtl-left-20p {
+    margin-left: 20px;
+}
+html[dir="rtl"] .rtl-cu-border {
+    border-radius: 0;
+}
+
+html[dir="rtl"] .strip-left {
+	margin-left: 10px;
+}
+
+html[dir="rtl"] .social-left {
+	margin-left: 5px;
+}
+
+html[dir="rtl"] .social-input {
+	margin-right: 5px;
+}
+
+html[dir="rtl"] .toggleSwitch a {
+    right: -45px;
+    left: 50%;
+}
+
+html[dir="rtl"] .date-right-ltr {
+	padding-left: 16px !important;
+}
+
+html[dir="rtl"] .dataTables_filter label input {
+	margin-right: 10px;
+}
+
+html[dir="rtl"] .msg-rtl, i.message-footer input {
+	margin-left: 0px;
+    border-radius: unset;
+}
+
+html[dir="rtl"] .message-footer input {
+    border-radius: unset !important;
+}
+
+html[dir="rtl"] .list-group-flush {
+    text-align: right;
+}
+
+html[dir="rtl"] .list-group-item i {
+    margin-left: 15px;
+}
+
+html[dir="rtl"] .text-left {
+    text-align: right !important;
+}
+
+html[dir="rtl"] .full-table .margin-top10 .text-right {
+    text-align: left !important;
+}
+
+html[dir="rtl"] .content-inbox header img {
+    margin-left: 10px;
+}
+
+html[dir="rtl"] sidebar .list-wrap .list img {
+    margin-left: 10px;
+}
+
+html[dir="rtl"] .list-bacground .float-right {
+    float: left!important;
+}
+
+html[dir="rtl"] .test-review .mt-4 ul li i {
+    margin-left: 10px;
+}
+
+html[dir="rtl"] .rtl-ml {
+    padding-right: 64px !important;
+}
+
+html[dir="rtl"] .header_area .navbar .nav .nav-item {
+	margin-left: 3.5rem;
+    margin-right: unset;
+}
+
+html[dir="rtl"] .user-img {
+	margin-left: 0px !important;
+    margin-right: unset;
+}
+
+html[dir="rtl"] .mr-2 {
+    margin-left: .5rem !important;
+    margin-right: unset !important;
+}
+
+html[dir="rtl"] .ml-2 {
+    margin-right: .5rem !important;
+    margin-left: unset !important;
+}
+
+html[dir="rtl"] .pr-4 {
+    padding-left: 1.5rem !important;
+    padding-right: unset !important;
+}
+
+html[dir="rtl"] .sidebar-thumb{
+	float: right;
+	overflow: hidden;
+	margin-left: 15px;
+    margin-right: unset;
+}
+
+html[dir="rtl"] .text-right{
+	text-align: left !important;
+}
+
+html[dir="rtl"] .text-left{
+	text-align: right !important;
+}
+
+html[dir="rtl"] .border-right{
+    border-left: 1px solid #dee2e6 !important;
+    border-right: unset !important;
+}
+
+html[dir="rtl"] a.send-btn {
+    float: left;
+    border-radius:  4px 0 0 4px ;
+    margin:unset;
+}
+
+.list-inline-item:not(:last-child) {
+    margin-left: .5rem !important;
+    margin-right: unset !important;
+}
+
+@media (min-width: 576px) {
+    html[dir="rtl"] .text-sm-center {
+        text-align: center !important;
+    }
+}
+
+html[dir="rtl"] .float-right {
+    float: left!important;
+}
+
+html[dir="rtl"] .float-left {
+    float: right!important;
+}
+
+html[dir="rtl"] input[type=checkbox]{
+    margin-left: 5px;
+    margin-right: unset;
+}
+
+html[dir="rtl"] .calendar-month .month-nav-next {
+    margin-left: 15px;
+    margin-right: -1px;
+}
+
+html[dir="rtl"] .neg-transition-scale {
+    transform: scaleX(-1);
+}
+
+html[dir="rtl"] .toggleSwitch>span span{
+    right: -55%;
+    left: unset;
+    text-align: right;
+    margin-right: 50px;
+    margin-left: unset;
+}
+
+html[dir="rtl"] .toggleSwitch>span:before{
+    right: 0;
+    left: unset;
+}
+
+html[dir="rtl"] .toggleSwitch>span{
+    text-align: right;
+    right: -50PX;
+    left: unset;
+}
+
+html[dir="rtl"] .toggleSwitch.large>span span:first-of-type{
+    right: 0%;
+    left: unset;
+}
+
+html[dir="rtl"] .toggleSwitch{
+margin-right: 50px;
+margin-left: unset;
+}
+
+html[dir="rtl"] .toggleSwitch.large input:checked~a {
+    right: 47px;
+    left: unset;
+}
+
+html[dir="rtl"] .toggleSwitch input:checked~a{
+    margin-right: -8px;
+    margin-left: unset;
+}
+
+html[dir="rtl"] .dataTables_wrapper .dataTables_info{
+    float: right;
+}
+
+html[dir="rtl"] .dataTables_wrapper .dataTables_paginate{
+    float: left;
+}
+
+html[dir="rtl"] .pl-5{
+    padding-right: 3rem !important;
+    padding-left: unset !important;
+}
+
+html[dir="rtl"] .intl-tel-input.separate-dial-code .selected-dial-code{
+    padding-right: 24px;
+}
+
+html[dir="rtl"] .intl-tel-input .selected-flag .iti-arrow{
+    left: 4px;
+    right: unset;
+}
+
+html[dir="rtl"] .intl-tel-input.allow-dropdown .flag-container, .intl-tel-input.separate-dial-code .flag-container{
+    left: auto;
+    right: 0;
+}
+
+html[dir="ltr"] .intl-tel-input.allow-dropdown .flag-container, .intl-tel-input.separate-dial-code .flag-container{
+    left: 0;
+    right: auto;
+}
+
+html[dir="rtl"]   .intl-tel-input.separate-dial-code.allow-dropdown.iti-sdc-5 input, .intl-tel-input.separate-dial-code.allow-dropdown.iti-sdc-5 input[type=text], .intl-tel-input.separate-dial-code.allow-dropdown.iti-sdc-5 input[type=tel] {
+    padding-right: 100px; 
+    padding-left: unset;
+}
+
+html[dir="rtl"] .intl-tel-input.separate-dial-code.iti-sdc-5 input, .intl-tel-input.separate-dial-code.iti-sdc-5 input[type=text], .intl-tel-input.separate-dial-code.iti-sdc-5 input[type=tel] {
+    padding-right: 90px;
+    padding-left: unset;
+}
+
+ html[dir="rtl"] .intl-tel-input.allow-dropdown input, .intl-tel-input.allow-dropdown input[type=text], .intl-tel-input.allow-dropdown input[type=tel], .intl-tel-input.separate-dial-code input, .intl-tel-input.separate-dial-code input[type=text], .intl-tel-input.separate-dial-code input[type=tel] {
+    padding-left: 6px;
+    padding-right: 52px;
+    margin-right: 0; 
+}
+
+html[dir="rtl"] .intl-tel-input input, .intl-tel-input input[type=text], .intl-tel-input input[type=tel]{
+    padding-right: 9.8rem !important;
+    padding-left: unset !important;
+}
+
+html[dir="rtl"] .intl-tel-input input{
+    text-align: right !important;
+}
+
+html[dir="rtl"] .header_area .navbar-brand {
+    margin-left: 3rem;
+    margin-right: unset;
+}
+
+html[dir="rtl"] .modal{
+    right: 0;
+    left: unset;
+}
+
+html[dir="rtl"] .close{
+    float:left !important;
+}
+
+html[dir="rtl"] .modal.left.fade.show .modal-dialog{
+    right: 0;
+    left: unset;
+}
+
+html[dir="rtl"] .modal.left.fade .modal-dialog{
+    right: 500px;
+    left: unset;
+    transition: opacity 0.3s linear, right 0.3s ease-out;
+}
+
+html[dir="rtl"] .modal-header .close {
+    padding: 1rem 1rem;
+    margin: -1rem auto -1rem -1rem;
+}
+
+html[dir="rtl"] .mobile-side a i {
+	margin-left: 16px;
+    margin-right: unset;
+}
+
+html[dir="rtl"] .modal.left .modal-dialog,
+html[dir="rtl"] .modal.right .modal-dialog,
+html[dir="rtl"] .modal.top .modal-dialog,
+html[dir="rtl"] .modal.bottom .modal-dialog {
+	-webkit-transform: translate3d(-0%, 0, 0);
+	-ms-transform: translate3d(-0%, 0, 0);
+	-o-transform: translate3d(-0%, 0, 0);
+	transform: translate3d(-0%, 0, 0);
+}
+
+html[dir="rtl"] .modal.left.fade .modal-dialog {
+	right: -500px;
+    left: unset;
+	-webkit-transition: opacity 0.3s linear, right 0.3s ease-out;
+	-moz-transition: opacity 0.3s linear, right 0.3s ease-out;
+	-o-transition: opacity 0.3s linear, right 0.3s ease-out;
+	transition: opacity 0.3s linear, right 0.3s ease-out;
+}
+
+html[dir="rtl"] .modal.left.fade.show .modal-dialog {
+	right: 0;
+    left: unset;
+}
+
+html[dir="rtl"] .modal.right.fade .modal-dialog {
+	right: -500px;
+	-webkit-transition: opacity 0.3s linear, right 0.3s ease-out;
+	-moz-transition: opacity 0.3s linear, right 0.3s ease-out;
+	-o-transition: opacity 0.3s linear, right 0.3s ease-out;
+	transition: opacity 0.3s linear, right 0.3s ease-out;
+}
+
+html[dir="rtl"] .modal.right.fade.show .modal-dialog {
+	left: 0;
+    right: unset;
+}
+
+html[dir="rtl"] .grid figure figcaption,
+html[dir="rtl"] .grid figure figcaption>a {
+	left: unset;
+	right: 0;
+}
+html[dir="rtl"] figure.effect-milo img {
+    -webkit-transform: translate3d(3rem, 0, 0) scale(1.12);
+    transform: translate3d(3rem, 0, 0) scale(1.12);
+}
+
+html[dir="rtl"] figure.effect-milo:hover img {
+    -webkit-transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
+}
+
+html[dir="rtl"] figure.effect-milo h2 {
+    left: 0;
+    right: unset;
+}
+
+html[dir="rtl"] figure.effect-milo p {
+    text-align: left;
+    -webkit-transform: translate3d(4rem, 0, 0);
+    transform: translate3d(4rem, 0, 0);
+}
+
+html[dir="rtl"] figure.effect-milo:hover p {
+    -webkit-transform: translate3d(-0, 0, 0);
+    transform: translate3d(-0, 0, 0);
+}
+
+html[dir="rtl"] .full_title {
+    float: right;
+}
+
+html[dir="rtl"] .input-group>.custom-select:not(:last-child), html[dir="rtl"] .input-group>.form-control:not(:last-child){
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: unset;
+    border-bottom-right-radius: unset;
+}
+
+html[dir="rtl"] .input-group-append{
+    margin-right: -1px;
+    margin-left: unset;
+}
+
+html[dir="rtl"] .input-group>.input-group-append>.btn, html[dir="rtl"] .input-group>.input-group-append>.input-group-text, html[dir="rtl"] .input-group>.input-group-prepend:first-child>.btn:not(:first-child), html[dir="rtl"] .input-group>.input-group-prepend:first-child>.input-group-text:not(:first-child), html[dir="rtl"] .input-group>.input-group-prepend:not(:first-child)>.btn, html[dir="rtl"] .input-group>.input-group-prepend:not(:first-child)>.input-group-text{
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: unset;
+    border-bottom-left-radius: unset;
+}
+
+html[dir="rtl"] .border-right-0 {
+    border-left: 0 !important;
+    border-right: unset !important;
+}
+
+html[dir="rtl"] .ml-auto {
+    margin-right: auto !important;
+    margin-left: unset !important;
+}
+
+html[dir="rtl"] .mr-4 {
+    margin-left: 1.5rem !important;
+    margin-right: unset !important;
+}
+
+html[dir="rtl"] .left_point{
+    float: right;
+}
+
+@media (min-width: 992px) {
+    html[dir="rtl"] .text-lg-left {
+        text-align: right !important;
+    }
+}
+
+@media (min-width: 576px) {
+    html[dir="rtl"] .ml-sm-5 {
+        margin-right: 3rem !important;
+        margin-left: unset !important;
+    }
+   
+    html[dir="rtl"] .ml-sm-4 {
+        margin-right: 1.5rem !important;
+        margin-left: unset !important;
+    }
+    html[dir="rtl"] .text-sm-left {
+        text-align: right !important;
+    }
+}
+
+html[dir="rtl"] .pr-2{
+    padding-left: .5rem !important;
+    padding-right: unset !important;
+}
+
+html[dir="rtl"] .ml-25{
+    margin-right: 40px !important;
+    margin-left: unset !important;
+}
+
+html[dir="rtl"] .pl-0{
+    padding-right: 0 !important;
+    padding-left: unset !important;
+}
+
+html[dir="rtl"] .vtooltip .vtooltiptext {
+    margin-left: unset;
+    margin-right: -60px;
+}
+
+html[dir="rtl"] .intl-tel-input .country-list .flag-box, .intl-tel-input .country-list .country-name {
+    margin-left: 6px;
+    margin-right: unset;
+}

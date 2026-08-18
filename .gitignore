@@ -1,0 +1,52 @@
+/node_modules
+/public/backup
+/public/frontend_backup
+/public/images/uploads
+/public/images/profile
+/public/images
+/public/img
+/public/uploads
+/public/images/logos
+/public/images/starting_city
+/storage/db-backups/*.sql
+/storage/*.key
+/vendor
+/.idea
+/.vscode
+/nbproject
+/.history
+/.vagrant
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+.env
+.env*
+.phpunit.result.cache
+.phpstorm.meta.php
+_ide_helper.php
+Thumbs.db
+public/front
+
+# Ignorar logs y caché de Laravel
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*.php
+/storage/logs/*.log
+/storage/debugbar/*
+
+# Otros
+/documentacion/
+*copy*
+*original*
+chat_gemini/
+
+# Ignorar archivos comprimidos en cualquier directorio
+*.zip
+*.tar.gz
+*.tgz
+*.tar
+*.rar
+
+# Ignorar archivos con fechas y/o horas (ej: 20260709, 20260709-1106, etc.)
+*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*

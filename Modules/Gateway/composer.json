@@ -1,0 +1,26 @@
+{
+    "name": "nwidart/gateway",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Gateway\\": ""
+        },
+        "exclude-from-classmap": [
+            "Database/Migrations/**"
+        ]
+    }
+}

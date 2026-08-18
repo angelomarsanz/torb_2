@@ -1,0 +1,8 @@
+{
+    "/js/app.js": "/js/app.js",
+    "/css/app.css": "/css/app.css",
+    "/backend/dist/css/adminlte.min.css": "/backend/dist/css/adminlte.min.css",
+    "/backend/dist/css/adminlte.min.css.map": "/backend/dist/css/adminlte.min.css.map",
+    "/backend/dist/js/adminlte.min.js": "/backend/dist/js/adminlte.min.js",
+    "/backend/dist/js/adminlte.min.js.map": "/backend/dist/js/adminlte.min.js.map"
+}

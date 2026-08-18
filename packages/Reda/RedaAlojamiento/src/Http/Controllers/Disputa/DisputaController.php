@@ -1,0 +1,437 @@
+<?php
+namespace Reda\RedaAlojamiento\Http\Controllers\Disputa;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Reda\RedaAlojamiento\Models\Disputa\Disputa;
+use App\Models\Bookings;
+use Auth;
+use Validator;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Exception;
+
+class DisputaController extends Controller
+{
+    public function index()
+    {
+        return view('reda-alojamiento::disputa.disputas.index');
+    }
+
+    /**
+     * Obtiene el listado de mediaciones paginado para el dashboard.
+     */
+    public function obtenerDisputasPaginadas(Request $request)
+    {
+        $status = $request->get('status', 'todos');
+        $myUserId = Auth::id();
+
+        $query = Disputa::where(function($q) use ($myUserId) {
+            $q->where('id_usuario_turista', $myUserId)
+              ->orWhere('id_usuario_anfitrion', $myUserId);
+        });
+
+        if ($status !== 'todos') {
+            // Mapeo de estados del frontend a los valores en la base de datos (traducidos)
+            $mapeo = [
+                'abiertos' => __('Abierto'),
+                'revision' => __('En revisión'),
+                'espera'   => __('Esperando respuesta'),
+                'resueltos' => __('Resuelto'),
+                'cerrados' => __('Cerrado')
+            ];
+            
+            if (isset($mapeo[$status])) {
+                $query->where('estado', $mapeo[$status]);
+            }
+        }
+
+        $disputas = $query->with(['booking.properties.property_address', 'agente', 'turista', 'anfitrion'])->orderBy('updated_at', 'desc')->paginate(10);
+
+        // Formatear los datos para el consumo del frontend via Javascript
+        $items = $disputas->getCollection()->map(function($d) use ($myUserId) {
+            
+            // Lógica para contar mensajes no leídos (consistente con el flujo de mediaciones)
+            $usuarioA = $d->id_usuario_turista;
+            $usuarioB = $d->id_usuario_anfitrion;
+            $propertyId = $d->booking ? $d->booking->property_id : null;
+            
+            $nuevosMensajes = 0;
+            if ($propertyId) {
+                // Identificar reservaciones compartidas entre estos dos usuarios para esta propiedad
+                $sharedBookingIds = DB::table('bookings')
+                    ->where('property_id', $propertyId)
+                    ->where(function($q) use ($usuarioA, $usuarioB) {
+                        $q->where(function($q2) use ($usuarioA, $usuarioB) {
+                            $q2->where('user_id', $usuarioA)->where('host_id', $usuarioB);
+                        })->orWhere(function($q2) use ($usuarioA, $usuarioB) {
+                            $q2->where('user_id', $usuarioB)->where('host_id', $usuarioA);
+                        });
+                    })->pluck('id')->toArray();
+
+                // Contar mensajes no leídos que NO fueron enviados por el usuario actual
+                $nuevosMensajes = \App\Models\Messages::where('property_id', $propertyId)
+                    ->whereIn('booking_id', $sharedBookingIds)
+                    ->where('read', 0)
+                    ->where(function($q) use ($myUserId) {
+                        // Un mensaje es un "nuevo mensaje" para el usuario si:
+                        // 1. Fue enviado por un admin (metadata sender_type = admin)
+                        // 2. O fue enviado por el otro usuario (sender_type != admin y sender_id != myUserId)
+                        $q->whereExists(function ($query) {
+                            $query->select(DB::raw(1))
+                                  ->from('reda_mensajes_metadata')
+                                  ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                                  ->where('reda_mensajes_metadata.sender_type', 'admin');
+                        })
+                        ->orWhere('sender_id', '!=', $myUserId);
+                    })
+                    ->count();
+            }
+
+            // Determinar qué documentos mostrar (solo los del usuario actual)
+            $documentosRaw = ($d->id_usuario_turista == $myUserId) ? $d->documentos_turista : $d->documentos_anfitrion;
+            $adjuntos = [];
+            
+            if ($documentosRaw) {
+                $paths = json_decode($documentosRaw, true);
+                if (is_array($paths)) {
+                    foreach ($paths as $path) {
+                        // Asegurar que el path tenga el prefijo /public/ para evitar 404
+                        $webPath = (strpos($path, 'public/') === 0) ? '/' . $path : '/public/' . $path;
+                        $adjuntos[] = [
+                            'nombre' => basename($path),
+                            'url' => $webPath,
+                            'es_imagen' => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])
+                        ];
+                    }
+                }
+            }
+
+            // Asegurar prefijo /public/ para la foto de la propiedad si es ruta relativa
+            $propiedadFoto = $d->booking && $d->booking->properties ? $d->booking->properties->cover_photo : '/public/img/unnamed.png';
+            if ($d->booking && $d->booking->properties && strpos($propiedadFoto, 'http') === false) {
+                $propiedadFoto = (strpos($propiedadFoto, 'public/') === 0) ? '/' . $propiedadFoto : '/public/' . $propiedadFoto;
+            }
+
+            // Datos de ubicación
+            $ubicacion = '';
+            if ($d->booking && $d->booking->properties && $d->booking->properties->property_address) {
+                $addr = $d->booking->properties->property_address;
+                $ubicacion = trim(($addr->city ?? '') . ', ' . ($addr->state ?? ''), ', ');
+            }
+
+            return [
+                'id' => $d->id,
+                'estado' => $d->estado,
+                'paso_actual' => $d->paso_actual,
+                'motivo' => $d->motivo,
+                'prioridad' => $d->prioridad,
+                'descripcion' => $d->descripcion,
+                'booking_id' => $d->booking_id,
+                'booking_start_date' => $d->booking ? date('d/m/Y', strtotime($d->booking->start_date)) : '',
+                'booking_end_date' => $d->booking ? date('d/m/Y', strtotime($d->booking->end_date)) : '',
+                'booking_guest' => $d->booking ? $d->booking->guest : 0,
+                'propiedad_nombre' => $d->booking && $d->booking->properties ? $d->booking->properties->name : '',
+                'propiedad_ubicacion' => $ubicacion,
+                'adjuntos' => $adjuntos,
+                'fecha_apertura' => $d->fecha_apertura ? $d->fecha_apertura->format('d/m/Y H:i') : '',
+                'actualizado_hace' => $d->updated_at->diffForHumans(),
+                'agente' => $d->agente ? [
+                    'nombre' => $d->agente->username,
+                    'foto' => reda_get_profile_src($d->agente, 'admin')
+                ] : null,
+                'turista_nombre' => $d->turista ? $d->turista->first_name . ' ' . $d->turista->last_name : '',
+                'turista_foto' => reda_get_profile_src($d->turista),
+                'anfitrion_nombre' => $d->anfitrion ? $d->anfitrion->first_name . ' ' . $d->anfitrion->last_name : '',
+                'anfitrion_foto' => reda_get_profile_src($d->anfitrion),
+                'propiedad_foto' => $propiedadFoto,
+                'id_usuario_inicial' => $d->id_usuario_inicial,
+                'rol_usuario_inicial' => $d->rol_usuario_inicial,
+                'id_usuario_turista' => $d->id_usuario_turista,
+                'id_usuario_anfitrion' => $d->id_usuario_anfitrion,
+                'conteo_mensajes_nuevos' => $nuevosMensajes,
+            ];
+        });
+
+        $respuesta = [
+            'success' => true,
+            'message' => __('Listado de mediaciones'),
+            'mensaje_usuario' => __('Listado recuperado con éxito'),
+            'respuesta' => [
+                'data' => $items,
+                'pagination' => (string) $disputas->appends(request()->except('page'))->links('reda-alojamiento::general.paginacion')
+            ],
+            'code' => 200
+        ];
+
+        return response()->json($respuesta, $respuesta['code']);
+    }
+
+    /**
+     * Retorna el HTML del modal de mediación.
+     */
+    public function getModal()
+    {
+        $html = view('reda-alojamiento::disputa.disputas.modal_mediacion')->render();
+        return response()->json([
+            'success' => true,
+            'message' => __('Carga de modal'),
+            'mensaje_usuario' => __('Cargado con éxito'),
+            'respuesta' => $html,
+            'code' => 200
+        ], 200);
+    }
+
+    /**
+     * Retorna el HTML del modal de detalle de mediación.
+     */
+    public function getDetailModal($id)
+    {
+        $disputa = Disputa::findOrFail($id);
+        $myUserId = Auth::id();
+
+        // Determinar qué documentos mostrar (solo los del usuario actual)
+        $documentosRaw = ($disputa->id_usuario_turista == $myUserId) ? $disputa->documentos_turista : $disputa->documentos_anfitrion;
+        $adjuntos = [];
+        
+        if ($documentosRaw) {
+            $paths = json_decode($documentosRaw, true);
+            if (is_array($paths)) {
+                foreach ($paths as $path) {
+                    $webPath = strpos($path, 'public/') === 0 ? $path : 'public/' . $path;
+                    $adjuntos[] = [
+                        'nombre' => basename($path),
+                        'url' => asset($webPath),
+                        'es_imagen' => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])
+                    ];
+                }
+            }
+        }
+
+        $html = view('reda-alojamiento::disputa.disputas.modal_detalle', compact('disputa', 'adjuntos'))->render();
+        return response()->json([
+            'success' => true,
+            'message' => __('Carga de detalle'),
+            'mensaje_usuario' => __('Cargado con éxito'),
+            'respuesta' => $html,
+            'code' => 200
+        ], 200);
+    }
+
+    /**
+     * Verifica si existe una disputa para una reservación y retorna sus detalles.
+     */
+    public function checkDispute($booking_id)
+    {
+        $disputa = Disputa::where('booking_id', $booking_id)->first();
+
+        $respuesta = [
+            'success' => true,
+            'message' => __('Verificación de disputa'),
+            'mensaje_usuario' => __('Resultados recuperados con éxito'),
+            'respuesta' => [
+                'exists' => false
+            ],
+            'code' => 200
+        ];
+
+        if ($disputa) {
+            $respuesta['respuesta'] = [
+                'exists' => true,
+                'data' => [
+                    'id'           => $disputa->id,
+                    'fecha'        => $disputa->fecha_apertura ? $disputa->fecha_apertura->format('d/m/Y') : '',
+                    'estado'       => $disputa->estado,
+                    'paso_actual'  => $disputa->paso_actual,
+                ]
+            ];
+        }
+
+        return response()->json($respuesta, $respuesta['code']);
+    }
+
+    /**
+     * Obtiene el conteo de mediaciones activas para el usuario conectado.
+     * Se consideran activas aquellas cuyo estado es diferente a 'Cerrado' o 'Cerrada'.
+     */
+    public function obtenerConteoDisputasActivas()
+    {
+        try {
+            $userId = Auth::id();
+            $adminId = auth()->guard('admin')->id();
+
+            $query = Disputa::where(function($q) use ($userId, $adminId) {
+                if ($userId) {
+                    $q->where('id_usuario_turista', $userId)
+                      ->orWhere('id_usuario_anfitrion', $userId);
+                }
+                
+                if ($adminId) {
+                    $q->orWhere('id_usuario_agente_asignado', $adminId);
+                }
+            });
+
+            // Filtramos por estados que NO sean 'Cerrado' o 'Cerrada' (y sus versiones traducidas)
+            $estadosCerrados = [
+                'Cerrado', 
+                'Cerrada', 
+                __('Cerrado'), 
+                __('Cerrada')
+            ];
+
+            $conteo = $query->whereNotIn('estado', array_unique($estadosCerrados))->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => __('Conteo de mediaciones activas'),
+                'mensaje_usuario' => __('Conteo recuperado con éxito'),
+                'respuesta' => $conteo,
+                'code' => 200
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error("Error al obtener conteo de mediaciones: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Error al obtener el conteo de mediaciones'),
+                'respuesta' => 0,
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    /**
+     * Muestra el detalle de una mediación.
+     */
+    public function show($id)
+    {
+        $disputa = Disputa::findOrFail($id);
+        return view('reda-alojamiento::disputa.disputas.show', compact('disputa'));
+    }
+
+    /**
+     * Almacena una nueva solicitud de mediación (disputa).
+     */
+    public function store(Request $request)
+    {
+        $rules = [
+            'booking_id'  => 'required|exists:bookings,id',
+            'prioridad'   => 'required|in:Baja,Media,Alta',
+            'motivo'      => 'required|string|max:255',
+            'descripcion' => 'required|string',
+            'documentos.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,JPG,JPEG,PNG,PDF|mimetypes:image/jpeg,image/png,application/pdf|max:10240', // 10MB máx por archivo
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Error de validación'),
+                'mensaje_usuario' => __('Por favor complete todos los campos obligatorios y verifique el formato de los archivos (JPG, PNG, PDF)'),
+                'respuesta' => $validator->errors(),
+                'code' => 422
+            ], 422);
+        }
+
+        try {
+            $booking = Bookings::findOrFail($request->booking_id);
+            $myUserId = Auth::id();
+
+            // Determinar rol del iniciador
+            $esAnfitrion = ($myUserId == $booking->host_id);
+            $esTurista = ($myUserId == $booking->user_id);
+
+            if (!$esAnfitrion && !$esTurista) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Usuario no autorizado'),
+                    'mensaje_usuario' => __('No tienes permiso para iniciar una mediación en esta reserva.'),
+                    'respuesta' => '',
+                    'code' => 403
+                ], 403);
+            }
+
+            // Preparar datos de la disputa
+            $disputa = new Disputa();
+            $disputa->booking_id = $request->booking_id;
+            $disputa->prioridad = $request->prioridad;
+            $disputa->motivo = $request->motivo;
+            $disputa->descripcion = $request->descripcion;
+            $disputa->id_usuario_turista = $booking->user_id;
+            $disputa->id_usuario_anfitrion = $booking->host_id;
+            $disputa->id_usuario_inicial = $myUserId;
+            $disputa->rol_usuario_inicial = $esAnfitrion ? __('Anfitrión') : __('Turista');
+
+            // Valores por defecto solicitados
+            $disputa->paso_actual = __('Caso creado');
+            $disputa->fecha_apertura = Carbon::now();
+            $disputa->fecha_limite = Carbon::now()->addHours(48);
+            $disputa->estado = __('Abierto');
+
+            $disputa->save();
+
+            // Manejo de archivos después de guardar para tener el ID de la disputa
+            if ($request->hasFile('documentos')) {
+                $paths = [];
+                // Carpeta: public/images/disputas/{disputa_id}/[documentos_anfitrion|documentos_turista]/{user_id}
+                $subFolder = $esAnfitrion ? 'documentos_anfitrion' : 'documentos_turista';
+                $userIdFolder = $esAnfitrion ? $booking->host_id : $booking->user_id;
+                $destPath = public_path("images/disputas/{$disputa->id}/{$subFolder}/{$userIdFolder}");
+
+                if (!file_exists($destPath)) {
+                    if (!mkdir($destPath, 0755, true)) {
+                        throw new Exception("No se pudo crear el directorio de destino: " . $destPath);
+                    }
+                }
+
+                foreach ($request->file('documentos') as $file) {
+                    // Verificar si el archivo es válido
+                    if (!$file->isValid()) {
+                        Log::error("Archivo no válido detectado: " . $file->getClientOriginalName() . " - Error: " . $file->getErrorMessage());
+                        throw new Exception("El archivo " . $file->getClientOriginalName() . " no pudo ser cargado correctamente. Intente con otro archivo.");
+                    }
+
+                    // Limpiar el nombre del archivo de caracteres especiales que podrían dar problemas
+                    $originalName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
+                    $fileName = time() . '_' . $originalName;
+                    
+                    if (!$file->move($destPath, $fileName)) {
+                        throw new Exception("No se pudo mover el archivo " . $originalName . " a " . $destPath);
+                    }
+
+                    // Guardar con el prefijo public/ para evitar errores 404 en este entorno
+                    $paths[] = "public/images/disputas/{$disputa->id}/{$subFolder}/{$userIdFolder}/{$fileName}";
+                }
+
+                // Guardar rutas como JSON en la columna correspondiente
+                if ($esAnfitrion) {
+                    $disputa->documentos_anfitrion = json_encode($paths);
+                } else {
+                    $disputa->documentos_turista = json_encode($paths);
+                }
+                $disputa->save(); // Actualizar con las rutas de documentos
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => __('Mediación creada'),
+                'mensaje_usuario' => __('Solicitud de mediación enviada correctamente.'),
+                'respuesta' => $disputa,
+                'code' => 200
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error("Error al guardar mediación: " . $e->getMessage() . " en " . $e->getFile() . ":" . $e->getLine());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Ocurrió un error en el servidor al procesar su solicitud. ' . $e->getMessage()),
+                'respuesta' => '',
+                'code' => 500
+            ], 500);
+        }
+    }
+}

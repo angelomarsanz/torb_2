@@ -1,0 +1,856 @@
+/*
+ * Addons Module — Professional Clean Stylesheet
+ * Rebuilt from scratch for pixel-perfect alignment
+ */
+
+/* ═══════════════════════════════════════════
+   1. Upload Panel Toggle
+═══════════════════════════════════════════ */
+#addon-upload-panel {
+    display: none;
+    border-top: 1px solid #e9ecef;
+    background: #f8fafc;
+}
+
+#addon-list-content {
+    transition: opacity 0.25s ease;
+}
+
+/* Upload form labels narrower to match */
+.addon-wb-compact-form .settings-field-label {
+    flex: 0 0 130px !important;
+    max-width: 130px !important;
+}
+
+/* ── Standardized Inputs & Input Groups ── */
+.settings-input {
+    height: 42px !important;
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.addon-upload-input {
+    height: 42px !important;
+    border-radius: 8px 0 0 8px !important;
+    border: 1px solid #d1d5db !important;
+    border-right: none !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.settings-input:focus,
+.addon-upload-input:focus {
+    border-color: #206bc4 !important;
+    box-shadow: 0 0 0 3px rgba(32, 107, 196, 0.1) !important;
+    outline: none !important;
+}
+
+.addon-upload-browse {
+    border-radius: 0 8px 8px 0 !important;
+    border: 1px solid #d1d5db !important;
+    border-left: none !important;
+    background: #f8fafc !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 1.5rem !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+}
+
+.addon-upload-browse:hover {
+    background: #f1f5f9 !important;
+    color: #206bc4 !important;
+}
+
+.addon-upload-group {
+    border-radius: 8px !important;
+    display: flex !important;
+}
+
+.addon-upload-group:focus-within .addon-upload-input,
+.addon-upload-group:focus-within .addon-upload-browse {
+    border-color: #206bc4 !important;
+}
+
+/* ═══════════════════════════════════════════
+   2. Tab Bar + Search
+═══════════════════════════════════════════ */
+.addon-tab-bar {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    height: 52px;
+    background: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0 1.5rem;
+}
+
+.addon-tab-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.addon-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 20px;
+    font-size: 0.8375rem;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    user-select: none;
+}
+
+.addon-tab-btn:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.addon-tab-btn.active {
+    background: linear-gradient(135deg, #206bc4 0%, #1558a8 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(32, 107, 196, 0.25);
+}
+
+.addon-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.addon-search-wrap .addon-search-input {
+    height: 34px;
+    width: 230px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.835rem;
+    color: #334155;
+    padding: 0 12px 0 36px;
+    transition: all 0.25s ease;
+}
+
+.addon-search-wrap .addon-search-input:focus {
+    background: #fff;
+    border-color: #206bc4;
+    box-shadow: 0 0 0 3px rgba(32, 107, 196, 0.1);
+    outline: none;
+}
+
+.addon-search-wrap .addon-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   3. Table — Clean & Correctly Aligned
+═══════════════════════════════════════════ */
+.addon-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.addon-table thead th {
+    padding: 14px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8fafc;
+    white-space: nowrap;
+}
+
+.addon-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
+}
+
+.addon-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.addon-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.addon-table tbody td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    color: #334155;
+}
+
+/* ═══════════════════════════════════════════
+   4. Addon Row — Image + Info Cell
+═══════════════════════════════════════════ */
+.addon-cell {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.addon-logo-box {
+    flex-shrink: 0;
+    width: 140px;
+    height: 90px;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02);
+}
+
+.addon-logo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.addon-info-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.addon-version-inline {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 1px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    display: inline-block;
+}
+
+.addon-info-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.addon-action-link {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.addon-action-link:hover {
+    color: #206bc4;
+    text-decoration: none;
+}
+
+.addon-action-sep {
+    color: #d1d5db;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 0 2px;
+    user-select: none;
+}
+
+/* ═══════════════════════════════════════════
+   5. Status Badges
+═══════════════════════════════════════════ */
+.addon-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.addon-badge-active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.addon-badge-inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.addon-badge-installed {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* ═══════════════════════════════════════════
+   6. Empty State
+═══════════════════════════════════════════ */
+.addon-empty {
+    padding: 64px 24px;
+    text-align: center;
+}
+
+.addon-empty-icon {
+    font-size: 2.5rem;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.addon-empty h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.addon-empty p {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   7. Modal
+═══════════════════════════════════════════ */
+.addon-modal-window {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+.addon-modal-hidden {
+    display: none !important;
+}
+
+.addon-modal-container {
+    background: #fff;
+    width: 650px;
+    max-width: 95vw;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2) !important;
+    animation: modalSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlide {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.addon-modal-head {
+    padding: 18px 24px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.addon-modal-title {
+    font-weight: 700 !important;
+    font-size: 0.9375rem !important;
+    color: #1e293b !important;
+    margin: 0;
+}
+
+.addon-modal-close {
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+}
+
+.addon-modal-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.modal-form-data {
+    padding: 0;
+    flex: 1 !important;
+    overflow-y: auto !important;
+}
+
+/* Modal Form Design (Refined Workbench Finish) */
+.addon-modal-body {
+    padding: 24px 24px 30px 24px !important;
+}
+
+.addon-modal-form-row {
+    display: flex;
+    margin-bottom: 24px !important;
+}
+
+.addon-modal-label {
+    flex: 0 0 180px !important;
+    max-width: 180px !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    padding-top: 8px !important;
+    margin-bottom: 0 !important;
+}
+
+.addon-modal-danger {
+    color: #ef4444 !important;
+    margin-left: 2px !important;
+}
+
+.addon-modal-field {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.addon-modal-input {
+    width: 100% !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 0.875rem !important;
+    font-size: 0.875rem !important;
+    color: #334155 !important;
+    background-color: #fff !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    height: auto !important;
+}
+
+.addon-modal-input:focus {
+    border-color: #206bc4 !important;
+    box-shadow: 0 0 0 3px rgba(32, 107, 196, 0.12), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    outline: none !important;
+}
+
+textarea.addon-modal-input {
+    min-height: 100px !important;
+    resize: vertical !important;
+}
+
+.addon-modal-field input[type="file"]::file-selector-button {
+    margin-right: 16px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.addon-modal-field img {
+    margin-top: 12px;
+    max-height: 60px;
+    border-radius: 8px;
+    border: 1px dashed #e2e8f0;
+    object-fit: contain;
+    background: #f8fafc;
+    padding: 8px;
+}
+
+.addon-modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px !important;
+    padding: 1rem 2rem !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e8ecf1 !important;
+}
+
+.addon-modal-submit,
+.addon-modal-cancel {
+    border-radius: 8px !important;
+    padding: 0.5rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em;
+    text-transform: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.addon-modal-submit {
+    background: linear-gradient(135deg, #206bc4 0%, #1a569d 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(32, 107, 196, 0.25) !important;
+}
+
+.addon-modal-submit:hover {
+    background: linear-gradient(135deg, #1a569d 0%, #206bc4 100%) !important;
+    box-shadow: 0 4px 12px rgba(32, 107, 196, 0.35) !important;
+    transform: translateY(-1px);
+}
+
+.addon-modal-cancel {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+}
+
+.addon-modal-cancel:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+    color: #334155 !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+    transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════
+   8. Utility
+═══════════════════════════════════════════ */
+.addons-hide {
+    display: none !important;
+}
+
+.addon-modal-dnone {
+    display: none !important;
+}
+
+/* ── Custom File Upload Area (Elite Finish) ── */
+.addon-upload-area {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+}
+
+.addon-upload-area:hover {
+    background: #eff6ff;
+    border-color: #2563eb;
+}
+
+.addon-upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+}
+
+.addon-upload-icon {
+    font-size: 1.75rem;
+    color: #3b82f6;
+    margin-bottom: 0.25rem;
+}
+
+.addon-upload-placeholder span {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.addon-upload-area.file-selected {
+    border-style: solid;
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.addon-upload-area.file-selected .addon-upload-icon {
+    color: #10b981;
+}
+
+.addon-upload-area.file-selected .addon-upload-placeholder span {
+    color: #065f46;
+}
+
+.addon-badge-installed {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #dbeafe !important;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Elite Alerts (Color Adjustments)
+   ────────────────────────────────────────────────────────────────────────── */
+
+.btn-close {
+    padding: 1.25rem !important;
+    box-shadow: none !important;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+    filter: none;
+}
+
+.btn-close:hover {
+    opacity: 0.75 !important;
+}
+
+/* ═══════════════════════════════════════════
+   9. Responsive Design — Workbench Elite Optimization
+   Targeting Mobile and Tablet Breakpoints
+   ═══════════════════════════════════════════ */
+
+@media (max-width: 991px) {
+
+    /* ── Tab & Search Bar ── */
+    .addon-tab-bar {
+        height: auto !important;
+        flex-direction: column !important;
+        padding: 1.25rem !important;
+        gap: 1rem !important;
+        align-items: stretch !important;
+    }
+
+    .addon-search-wrap {
+        width: 100% !important;
+    }
+
+    .addon-search-wrap .addon-search-input {
+        width: 100% !important;
+        height: 44px !important;
+        background: #fff !important;
+    }
+
+    /* ── Table to 'Compact Elite' Card Conversion ── */
+    .addon-table {
+        display: block !important;
+    }
+
+    .addon-table thead {
+        display: none !important;
+    }
+
+    .addon-table tbody {
+        display: block !important;
+        padding: 0.75rem !important;
+    }
+
+    .addon-table tr {
+        display: block !important;
+        position: relative !important;
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+        margin-bottom: 1.25rem !important;
+        padding: 1rem !important;
+        /* Compact Professional Padding */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+        text-align: left !important;
+    }
+
+    .addon-table td {
+        display: block !important;
+        padding: 0 !important;
+        border: none !important;
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* ── Absolute Status Badge ── */
+    .addon-table td:nth-child(2) {
+        position: absolute !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        width: auto !important;
+        margin: 0 !important;
+        z-index: 5;
+    }
+
+    .addon-badge {
+        font-size: 0.7rem !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+    }
+
+    /* ── Compact Addon Row Evolution ── */
+    .addon-cell {
+        flex-direction: row !important;
+        /* Row layout removes extra gap */
+        align-items: center !important;
+        gap: 1.25rem !important;
+        width: 100% !important;
+    }
+
+    .addon-logo-box {
+        flex-shrink: 0 !important;
+        width: 84px !important;
+        height: 84px !important;
+        border-radius: 12px !important;
+        background: #ffffff !important;
+        border: 1px solid #eef2f6 !important;
+        padding: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+    }
+
+    .addon-logo-box img {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    .addon-info-name {
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 0.5rem !important;
+        padding-right: 80px !important;
+        /* Space for absolute badge */
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        color: #0f172a !important;
+        line-height: 1.2 !important;
+    }
+
+    .addon-info-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        margin-top: 0.5rem !important;
+    }
+
+    .addon-action-link {
+        font-size: 0.8125rem !important;
+        font-weight: 600 !important;
+        background: #f8fafc !important;
+        padding: 6px 14px !important;
+        border-radius: 8px !important;
+        color: #475569 !important;
+        border: 1px solid #e2e8f0 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: normal !important;
+        text-align: left !important;
+        line-height: 1.2 !important;
+    }
+
+    .addon-action-sep {
+        display: none !important;
+    }
+
+    /* ── Show all relevant columns on mobile ── */
+    .addon-table td {
+        display: block !important;
+    }
+
+    /* ── Available List Specific Refinements (Elite Positioning) ── */
+    #available-addon .addon-badge-installed {
+        position: absolute !important;
+        bottom: 1rem !important;
+        left: 115px !important;
+        /* Offset to clear the 90px logo + gap */
+        width: auto !important;
+        margin: 0 !important;
+        z-index: 5;
+    }
+
+    #available-addon td:nth-child(2) {
+        /* Price cell */
+        position: absolute !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+    }
+}
+
+@media (max-width: 767px) {
+
+    /* ── Upload Form Panels ── */
+    .settings-field-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 0 !important;
+    }
+
+    .addon-wb-compact-form .settings-field-label,
+    .addon-modal-label {
+        flex: 0 0 auto !important;
+        max-width: 100% !important;
+        text-align: left !important;
+        margin-bottom: 8px !important;
+        padding-top: 0 !important;
+        font-weight: 700 !important;
+    }
+
+    .settings-field-input,
+    .addon-modal-field {
+        width: 100% !important;
+    }
+
+    /* ── Action Button Elegance ── */
+    #available-addon td:nth-child(3) .btn {
+        width: 100% !important;
+        height: 48px !important;
+        font-size: 0.875rem !important;
+        border-radius: 10px !important;
+    }
+}

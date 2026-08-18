@@ -1,0 +1,33 @@
+language: en-US
+
+reviews:
+  profile: assertive                      # or 'assertive'
+  high_level_summary: true
+  tone_instructions: |
+    Review this Laravel and JavaScript project code carefully.
+    - Prioritize security vulnerabilities (SQL injection, XSS, unsafe input)
+    - Suggest performance and maintainability improvements
+    - Ensure adherence to Laravel and JS best practices
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    base_branches:
+      - "feature/.*"
+      - "release/*"
+      - "develop"  # or use .*
+  path_filters:
+    - "!vendor/**"
+    - "!node_modules/**"
+    - "!public/**"
+    - "!storage/**"
+    - "!bootstrap/**"
+    - "!tests/**"
+    - "!database/factories/**"
+    - "!coverage/**"
+    - "!build/**"
+    - "!dist/**"
+  tools:
+    phpstan:
+      enabled: true
+    phpmd:
+      enabled: true
