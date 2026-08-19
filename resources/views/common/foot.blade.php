@@ -21,7 +21,7 @@
 		</script>
 		<script src="{{ asset('public/js/main.min.js') }}"></script>
 
-		
+
 
 		<!-- New Js End -->
 		<!-- Needed Js from Old Version Start-->
@@ -44,6 +44,7 @@
         </script>
 
 		<!-- Needed Js from Old Version End -->
+        @include('reda-alojamiento::general.main_footer')
 		@stack('scripts')
 	</body>
 </html>

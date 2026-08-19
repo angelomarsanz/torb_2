@@ -1,21 +1,106 @@
 const mix = require('laravel-mix');
 
+// Variables de entorno para control selectivo
+const buildApp = process.env.BUILD_APP === 'true';
+const buildAlojamiento = process.env.BUILD_ALOJAMIENTO === 'true';
+
 /*
  |--------------------------------------------------------------------------
- | Mix Asset Management
+ | Compilación Selectiva
  |--------------------------------------------------------------------------
- |
- | Mix provides a clean, fluent API for defining some Webpack build steps
- | for your Laravel application. By default, we are compiling the Sass
- | file for the application as well as bundling up all the JS files.
- |
  */
 
-mix.js('resources/js/app.js', 'public/js')
-    .sass('resources/sass/app.scss', 'public/css')
-    // Copy AdminLTE 4 CSS
-    .copy('node_modules/admin-lte/dist/css/adminlte.min.css', 'public/backend/dist/css/adminlte.min.css')
-    .copy('node_modules/admin-lte/dist/css/adminlte.min.css.map', 'public/backend/dist/css/adminlte.min.css.map')
-    // Copy AdminLTE 4 JS
-    .copy('node_modules/admin-lte/dist/js/adminlte.min.js', 'public/backend/dist/js/adminlte.min.js')
-    .copy('node_modules/admin-lte/dist/js/adminlte.min.js.map', 'public/backend/dist/js/adminlte.min.js.map');
+// Módulo Principal (App)
+if (buildApp) {
+    console.log('🏗️ Compilando: APP Principal (JS/SASS)');
+    mix.js('resources/js/app.js', 'public/js')
+       .sass('resources/sass/app.scss', 'public/css')
+       // Copy AdminLTE 4 CSS
+       .copy('node_modules/admin-lte/dist/css/adminlte.min.css', 'public/backend/dist/css/adminlte.min.css')
+       .copy('node_modules/admin-lte/dist/css/adminlte.min.css.map', 'public/backend/dist/css/adminlte.min.css.map')
+       // Copy AdminLTE 4 JS
+       .copy('node_modules/admin-lte/dist/js/adminlte.min.js', 'public/backend/dist/js/adminlte.min.js')
+       .copy('node_modules/admin-lte/dist/js/adminlte.min.js.map', 'public/backend/dist/js/adminlte.min.js.map');
+}
+
+// Módulo RedaAlojamiento
+if (buildAlojamiento) {
+    console.log('🏗️ Compilando: REDA Alojamiento');
+    
+    // Css Admin
+    mix.sass('packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss', 'public/css/reda/admin/general/reda-admin-general-main.min.css');
+
+    // Css general
+    mix.sass('packages/Reda/RedaAlojamiento/resources/sass/main.scss', 'public/css/reda/reda-general-main.min.css');
+
+    // Js Admin para uso general
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js', 'public/js/reda/admin/general/reda-admin-general-main.min.js');
+
+    // Js Admin por vistas
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js',
+        'public/js/reda/admin/vistas/experiencia/opcionesTipoDeNegocios.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js',
+        'public/js/reda/admin/vistas/experiencia/configuracionPlanes.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js',
+        'public/js/reda/admin/vistas/disputa/indexDisputas.min.js');
+
+    // Js para uso general
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/general/main.js', 'public/js/reda/general/reda-general-main.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js', 'public/js/reda/general/notificaciones.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/general/media.js', 'public/js/reda/general/reda-general-media.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/chat-injection.js', 'public/js/reda/general/chat-injection.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js', 'public/js/reda/general/reserve-injection.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js', 'public/js/reda/admin/general/soporte_tecnico/indexSoporteTecnico.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js', 'public/js/reda/admin/general/soporte_tecnico/showSoporteTecnico.min.js');
+
+    // Js dashboard usuario
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/createExperiencias.js',
+        'public/js/reda/vistas/experiencia/createExperiencias.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/formularioDePasosExperiencias.js',
+        'public/js/reda/vistas/experiencia/formularioDePasosExperiencias.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/indexExperiencias.js',
+        'public/js/reda/vistas/experiencia/indexExperiencias.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/calificacionExperiencia.js',
+        'public/js/reda/vistas/experiencia/calificacionExperiencia.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/detalleCalificaciones.js',
+        'public/js/reda/vistas/experiencia/detalleCalificaciones.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/listadoCalificaciones.js',
+        'public/js/reda/vistas/experiencia/listadoCalificaciones.min.js');
+
+    // Js Disputas
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/disputa/disputas/indexDisputas.js',
+        'public/js/reda/vistas/disputa/disputas/indexDisputas.min.js');
+
+    // Js Inbox Unificado REDA
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js', 
+        'public/js/reda/vistas/inbox/inbox.min.js');
+
+    // Js Frontend
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoExperiencias.js',
+        'public/js/reda/vistas/experiencia/frontend/listadoExperiencias.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoProductosServicios.js',
+        'public/js/reda/vistas/experiencia/frontend/listadoProductosServicios.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/productosServiciosEncontrados.js',
+        'public/js/reda/vistas/experiencia/frontend/productosServiciosEncontrados.min.js');
+
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/calificacionExperienciaFrontend.js', 'public/js/reda/vistas/experiencia/frontend/calificacionExperienciaFrontend.min.js');
+
+    // Js Vistas Generales
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js', 'public/js/reda/vistas/frontend/propiedad_detalle.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js', 'public/js/reda/vistas/pago/frontend/pagos.min.js');
+}
+
+mix.options({
+    manifest: false,
+    processCssUrls: false
+});

@@ -7,6 +7,12 @@
         "laravel"
     ],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/Reda/RedaAlojamiento"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "eluceo/ical": "^0.16.1",
@@ -22,6 +28,7 @@
         "psr/http-factory": "^1.0",
         "guzzlehttp/psr7": "^2.0",
         "razorpay/razorpay": "2.*",
+        "reda/reda-alojamiento": "@dev",
         "stripe/stripe-php": "^16.6",
         "twilio/sdk": "^6.11",
         "yajra/laravel-datatables-buttons": "^12.0",

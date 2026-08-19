@@ -42,5 +42,6 @@
 			</script>
 		@endif
 		<!--Google Analytics code-end-->
+        @include('reda-alojamiento::general.main_head')
 	</head>
 <body>

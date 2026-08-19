@@ -3,9 +3,9 @@
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		
+
 		<title> {{ siteName() }} | Dashboard </title>
-		
+
 		<meta name="csrf-token" content="{{ csrf_token() }}">
 		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 
@@ -43,6 +43,7 @@
 		<link href="{{ asset('public/css/glyphicon.min.css') }}" rel="stylesheet" type="text/css" />
 		<!-- Custom css -->
 		<link rel="stylesheet" href="{{ asset('public/backend/dist/css/custom.css') }}">
+        @include('reda-alojamiento::admin.general.main_head')
 		@stack('css')
 	</head>
 	<body class="layout-fixed sidebar-mini sidebar-expand-lg">

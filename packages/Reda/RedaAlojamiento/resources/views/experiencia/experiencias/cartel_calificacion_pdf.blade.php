@@ -1,10 +1,11 @@
+@use('Misterspelik\LaravelPdf\Facades\Pdf')
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Cartel de Calificación - {{ $experiencia->titulo }}</title>
     <style>
-        /* Estilos específicos para mPDF */
+        /* Estilos específicos para mPDF (Misterspelik/LaravelPdf) */
         @page {
             margin: 0;
             padding: 0;

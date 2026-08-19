@@ -86,6 +86,7 @@
 <!-- Custom JS -->
 <script type="text/javascript" src="{{ asset('public/backend/dist/js/custom.js') }}"></script>
 <script type="text/javascript" src="{{ asset('public/backend/js/daterangecustom.js') }}"></script>
+@include('reda-alojamiento::admin.general.main_footer')
 @stack('scripts')
 </body>
 </html>

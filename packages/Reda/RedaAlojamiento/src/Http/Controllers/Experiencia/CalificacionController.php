@@ -8,7 +8,7 @@ use Reda\RedaAlojamiento\Models\Experiencia\CalificacionExperiencia;
 use Reda\RedaAlojamiento\Models\Experiencia\Experiencia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use PDF; // niklasravnsborg/laravel-pdf
+use Misterspelik\LaravelPdf\Facades\Pdf;
 
 class CalificacionController extends Controller
 {

@@ -19,6 +19,10 @@ class RedirectIfAuthenticated
     {
         if (Auth::guard($role)->check()) {
             if ($role == 'users') {
+                if ($request->is('reda*')) {
+                    return $next($request);
+                }
+
                 return redirect('dashboard');
             } elseif ($role == 'admin') {
                 return redirect('admin/dashboard');
