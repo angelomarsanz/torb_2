@@ -17,13 +17,15 @@ import {
 
     // Estado para el visor de medios
     let currentZoom = 1;
+    let translateX = 0;
+    let translateY = 0;
     const zoomStep = 0.2;
     const maxZoom = 4;
-    const minZoom = 0.5;
+    const minZoom = 1;
 
-    // Estado para arrastrar (Panning) en escritorio
+    // Estado para arrastrar (Panning)
     let isDragging = false;
-    let startX, startY, scrollLeft, scrollTop;
+    let lastMouseX, lastMouseY;
 
     /**
      * Obtiene la URL completa para una imagen.
@@ -407,7 +409,7 @@ import {
     };
 
     /**
-     * Aplica el zoom actual a la imagen del visor.
+     * Aplica el zoom y la traslación actual a la imagen del visor mediante CSS transforms.
      */
     const applyZoom = () => {
         const img = $('#media-viewer-img');
@@ -416,44 +418,24 @@ import {
 
         if (currentZoom <= 1) {
             currentZoom = 1;
-            // Estado inicial: Ajustar a pantalla con margen
-            container.css({
-                'display': 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                'overflow': 'hidden'
-            });
-            img.css({
-                'width': 'auto',
-                'height': 'auto',
-                'max-width': '95%',
-                'max-height': '85vh',
-                'cursor': 'default',
-                'transform': 'none',
-                'display': 'block',
-                'margin': 'auto'
-            });
-            img.removeClass('zoom-active');
-            container.scrollLeft(0);
-            container.scrollTop(0);
-        } else {
-            // Estado con zoom: Permitir desbordamiento y scroll en ambos ejes
-            container.css({
-                'display': 'block',
-                'text-align': 'center',
-                'overflow': 'auto'
-            });
-            
-            const zoomFactor = currentZoom * 100;
-            img.css({
-                'width': zoomFactor + '%',
-                'max-width': 'none',
-                'max-height': 'none',
-                'display': 'inline-block',
-                'vertical-align': 'middle',
-                'cursor': 'grab'
-            });
+            translateX = 0;
+            translateY = 0;
+        }
+
+        // Limitar la traslación para que la imagen no se salga totalmente del contenedor (Opcional, pero recomendado)
+        // Por ahora permitimos movimiento libre para máxima flexibilidad, como pidió el usuario.
+
+        img.css({
+            'transform': `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`,
+            'transition': isDragging ? 'none' : 'transform 0.2s ease-out'
+        });
+
+        if (currentZoom > 1) {
             img.addClass('zoom-active');
+            img.css('cursor', isDragging ? 'grabbing' : 'grab');
+        } else {
+            img.removeClass('zoom-active');
+            img.css('cursor', 'default');
         }
     };
 
@@ -470,6 +452,8 @@ import {
         if (!modalElement) return;
 
         currentZoom = 1;
+        translateX = 0;
+        translateY = 0;
         isDragging = false;
         
         container.html('<div class="spinner-border text-light" role="status"></div>');
@@ -486,7 +470,7 @@ import {
         if (esImagen) {
             const img = new Image();
             img.onload = () => {
-                container.html(`<img src="${fullUrl}" id="media-viewer-img" class="img-fluid" style="touch-action: none;">`);
+                container.html(`<img src="${fullUrl}" id="media-viewer-img" class="img-fluid" style="touch-action: none; will-change: transform;">`);
                 $('.zoom-controls').addClass('d-none').addClass('d-md-flex');
                 applyZoom();
 
@@ -497,11 +481,9 @@ import {
                 $img.on('mousedown', function(e) {
                     if (currentZoom > 1) {
                         isDragging = true;
-                        startX = e.pageX - container.offset().left;
-                        startY = e.pageY - container.offset().top;
-                        scrollLeft = container.scrollLeft();
-                        scrollTop = container.scrollTop();
-                        $img.css('cursor', 'grabbing');
+                        lastMouseX = e.pageX;
+                        lastMouseY = e.pageY;
+                        applyZoom();
                         e.preventDefault();
                     }
                 });
@@ -514,10 +496,8 @@ import {
                     if (e.touches.length === 1) {
                         isDragging = true;
                         const touch = e.touches[0];
-                        startX = touch.pageX - container.offset().left;
-                        startY = touch.pageY - container.offset().top;
-                        scrollLeft = container.scrollLeft();
-                        scrollTop = container.scrollTop();
+                        lastMouseX = touch.pageX;
+                        lastMouseY = touch.pageY;
                     } else if (e.touches.length === 2) {
                         isDragging = false;
                         initialDist = Math.hypot(
@@ -531,12 +511,16 @@ import {
                 imgEl.addEventListener('touchmove', (e) => {
                     if (e.touches.length === 1 && isDragging && currentZoom > 1) {
                         const touch = e.touches[0];
-                        const x = touch.pageX - container.offset().left;
-                        const y = touch.pageY - container.offset().top;
-                        const walkX = (x - startX);
-                        const walkY = (y - startY);
-                        container.scrollLeft(scrollLeft - walkX);
-                        container.scrollTop(scrollTop - walkY);
+                        const deltaX = touch.pageX - lastMouseX;
+                        const deltaY = touch.pageY - lastMouseY;
+                        
+                        translateX += deltaX;
+                        translateY += deltaY;
+                        
+                        lastMouseX = touch.pageX;
+                        lastMouseY = touch.pageY;
+                        
+                        applyZoom();
                         e.preventDefault();
                     } else if (e.touches.length === 2) {
                         const dist = Math.hypot(
@@ -545,6 +529,13 @@ import {
                         );
                         const delta = dist / initialDist;
                         currentZoom = Math.min(Math.max(initialScale * delta, 1), maxZoom);
+                        
+                        // Si regresamos a zoom 1, reseteamos posición
+                        if (currentZoom <= 1) {
+                            translateX = 0;
+                            translateY = 0;
+                        }
+                        
                         applyZoom();
                         e.preventDefault();
                     }
@@ -552,6 +543,7 @@ import {
 
                 imgEl.addEventListener('touchend', () => {
                     isDragging = false;
+                    applyZoom();
                 });
             };
             img.onerror = () => {

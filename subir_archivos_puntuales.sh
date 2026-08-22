@@ -6,20 +6,20 @@
 # Para no subir archivos, escribir la palabra "Ninguno".
 ARCHIVOS_PHP_PUNTUALES=(
     # --- ARCHIVOS DEL PROYECTO ORIGINAL MODIFICADOS ---
-    "app/Http/Middleware/RedirectIfAuthenticated.php"
-    "config/pdf.php"
-    "compilar.sh"
-    "composer.json"
-    "package.json"
+    #"app/Http/Middleware/RedirectIfAuthenticated.php"
+    #"config/pdf.php"
+    #"compilar.sh"
+    #"composer.json"
+    #"package.json"
     "webpack.mix.js"
 
-    "resources/views/admin/common/foot.blade.php"
-    "resources/views/admin/common/head.blade.php"
-    "resources/views/common/foot.blade.php"
-    "resources/views/common/head.blade.php"
+    #"resources/views/admin/common/foot.blade.php"
+    #"resources/views/admin/common/head.blade.php"
+    #"resources/views/common/foot.blade.php"
+    #"resources/views/common/head.blade.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: GENERAL ---
-    "packages/Reda/RedaAlojamiento/composer.json"
+    #"packages/Reda/RedaAlojamiento/composer.json"
     #"packages/Reda/RedaAlojamiento/config/reda-alojamiento.php"
     "packages/Reda/RedaAlojamiento/resources/lang/es.json"
     "packages/Reda/RedaAlojamiento/resources/lang/es/messages.php"
@@ -115,7 +115,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/admin/general/paginacion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/configuracion_planes.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/partials/tabla_planes.blade.php"
-    #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/modal_detalle.blade.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (FRONTEND - CARPETAS FRONTEND) ---
@@ -148,7 +148,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/modal_detalle.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/show.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/calificacion_experiencia.blade.php"
-    "packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/cartel_calificacion_pdf.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/cartel_calificacion_pdf.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/create.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/index.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/listado_calificaciones.blade.php"
@@ -170,7 +170,7 @@ ARCHIVOS_PHP_PUNTUALES=(
 
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
+    "packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
 
     # --- Archivos Javascript en la carpeta frontend ---
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoProductosServicios.js"
@@ -214,7 +214,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Administrativo/AdministrativoController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/BilleteraHuesped/BilleteraHuespedController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php"
-    "packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/CalificacionController.php"
+    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/CalificacionController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/ExperienciaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/MediaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Middleware/CheckPluginAuth.php"
