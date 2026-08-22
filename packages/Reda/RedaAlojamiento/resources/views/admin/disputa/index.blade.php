@@ -113,9 +113,9 @@
 <div class="modal fade reda-media-viewer" id="modal-media-viewer-reda" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 95%;">
         <div class="modal-content bg-dark text-white border border-secondary shadow-lg">
-            <div class="modal-header border-0 pb-0 d-flex align-items-center justify-content-between">
+            <div class="modal-header border-bottom border-secondary py-3 px-4 d-flex align-items-center justify-content-between" style="min-height: 70px;">
                 <h5 class="modal-title text-white text-16 fw-700 text-truncate me-3" id="media-viewer-title"></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0 position-relative bg-black-viewer" style="height: 85vh; overflow: hidden;">
                 
@@ -127,7 +127,7 @@
                 </div>
 
                 <!-- Media Content Wrapper -->
-                <div id="media-content-container" class="w-100 h-100 overflow-hidden d-flex align-items-center justify-content-center" style="-webkit-overflow-scrolling: touch;">
+                <div id="media-content-container" class="w-100 h-100 d-flex align-items-center justify-content-center" style="-webkit-overflow-scrolling: touch;">
                     {{-- Inyectado vía JS --}}
                 </div>
             </div>
@@ -137,12 +137,22 @@
 
 <style>
     .bg-black-viewer { background-color: #0b0b0b; }
+    
     #media-viewer-img { 
         will-change: transform;
         transform-origin: center center;
-        max-width: 95%;
-        max-height: 85vh;
+        max-width: 90%;
+        max-height: 90%;
         object-fit: contain;
+    }
+
+    /* Estilo para iframe de PDF */
+    #media-content-container iframe {
+        width: 100%;
+        height: 100%;
+        background-color: #fff;
+        border: none;
+        display: block;
     }
     
     .zoom-controls button { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2); }
@@ -152,6 +162,12 @@
         border-radius: 15px !important; 
         overflow: hidden; 
         border: 1px solid rgba(255,255,255,0.2) !important; 
+    }
+
+    /* Mejora para la cabecera del visor */
+    .reda-media-viewer .modal-header {
+        background-color: #1a1a1a;
+        border-bottom: 1px solid rgba(255,255,255,0.15) !important;
     }
 
     .reda-modal-custom-content { 
@@ -164,6 +180,8 @@
         .reda-media-viewer .modal-content { border-radius: 12px !important; border: 1px solid rgba(255,255,255,0.3) !important; }
         #media-content-container { height: 80vh; }
         .zoom-controls { display: none !important; }
+        /* Evitar truncamiento en móvil */
+        .reda-media-viewer .modal-header { padding: 1rem !important; min-height: 60px; display: flex !important; align-items: center !important; }
     }
 </style>
 @stop

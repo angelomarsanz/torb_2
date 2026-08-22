@@ -459,8 +459,44 @@ import {
         container.html('<div class="spinner-border text-light" role="status"></div>');
         title.text(nombre);
 
-        const bsModal = new bootstrap.Modal(modalElement);
+        // Resetear estilos base del contenedor
+        container.css({
+            'display': 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            'padding': '0',
+            'overflow': 'hidden'
+        });
+
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modalElement);
         bsModal.show();
+
+        // --- GESTIÓN ROBUSTA DEL BOTÓN ATRÁS (MÓVIL) ---
+        // Inyectamos un estado en el historial JUSTO AL ABRIR para interceptar el botón atrás físico
+        const modalIdState = 'viewer_' + Date.now();
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ modal_open: modalIdState }, '');
+        }
+
+        const handleHistoryChange = (e) => {
+            // Si el usuario presiona atrás y el estado ya no es el de nuestro modal, lo cerramos
+            if (bsModal) {
+                bsModal.hide();
+            }
+        };
+
+        window.addEventListener('popstate', handleHistoryChange, { once: true });
+
+        // Limpieza total al cerrar el modal
+        $(modalElement).one('hidden.bs.modal', function () {
+            window.removeEventListener('popstate', handleHistoryChange);
+            // Si el cierre fue manual (botón X), limpiamos el estado del historial para no romper la navegación posterior
+            if (window.history.state && window.history.state.modal_open === modalIdState) {
+                window.history.back();
+            }
+            container.html(''); // Destruir iframe o imagen para liberar memoria
+        });
+        // ----------------------------------------------
 
         const esPDF = esArchivoPDF(fullUrl);
 
@@ -468,6 +504,9 @@ import {
         $('.zoom-controls').addClass('d-none').removeClass('d-md-flex');
 
         if (esImagen) {
+            // Estilo con padding para que la imagen no toque los bordes inicialmente
+            container.css('padding', '1.5rem');
+            
             const img = new Image();
             img.onload = () => {
                 container.html(`<img src="${fullUrl}" id="media-viewer-img" class="img-fluid" style="touch-action: none; will-change: transform;">`);
@@ -551,29 +590,13 @@ import {
             };
             img.src = fullUrl;
         } else if (esPDF) {
-            if (window.innerWidth < 768) {
-                // UI Especial para PDF en móvil para evitar confusiones de navegación
-                container.html(`
-                    <div class="text-center p-4 d-flex flex-column align-items-center justify-content-center h-100">
-                        <i class="fas fa-file-pdf fa-5x text-danger mb-4"></i>
-                        <h6 class="text-white mb-3 text-truncate w-100 px-3">${nombre}</h6>
-                        <p class="text-13 text-muted mb-4 px-2">
-                            ${trans["Este archivo PDF debe abrirse en una nueva pestaña para su correcta visualización."] || "Este archivo PDF debe abrirse en una nueva pestaña para su correcta visualización."}
-                        </p>
-                        <a href="${fullUrl}" target="_blank" class="btn btn-danger btn-lg rounded-pill shadow-lg px-5 mb-3">
-                            <i class="fas fa-external-link-alt me-2"></i> ${trans["Abrir PDF"] || "Abrir PDF"}
-                        </a>
-                        <div class="mt-4 p-3 bg-dark-soft rounded border border-secondary mx-3" style="background: rgba(255,255,255,0.05);">
-                            <p class="text-11 text-info m-0 italic">
-                                <i class="fas fa-info-circle me-1"></i>
-                                ${trans["Nota: Se abrirá en una nueva pestaña o aplicación. Para regresar al modal, simplemente cierre la nueva pestaña o regrese a esta ventana de Chrome."] || "Nota: Se abrirá en una nueva pestaña o aplicación. Para regresar al modal, simplemente cierre la nueva pestaña o regrese a esta ventana de Chrome."}
-                            </p>
-                        </div>
-                    </div>
-                `);
-            } else {
-                container.html(`<iframe src="${fullUrl}" width="100%" height="100%" style="border: none; background: white; min-height: 80vh;"></iframe>`);
-            }
+            // Para PDF eliminamos el centrado flex y padding para que el iframe sea "nativo" al modal
+            container.css({
+                'display': 'block',
+                'padding': '0'
+            });
+            // Importante: No usar target="_blank" en ninguna parte del flujo para PDF
+            container.html(`<iframe src="${fullUrl}" width="100%" height="100%" style="border: none; background: white; min-height: 80vh; display: block;"></iframe>`);
         } else {
             container.html(`<p class="text-white">${trans["Archivo no soportado"] || "Archivo no soportado"}</p>`);
         }
