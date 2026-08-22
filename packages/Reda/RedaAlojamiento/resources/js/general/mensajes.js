@@ -1,9 +1,18 @@
+/**
+ * Resumen: Script de integración general para funcionalidades de mediación.
+ * Este archivo se encarga de inyectar la lógica de mediación en vistas preexistentes
+ * del proyecto principal, como el Inbox (chat general) y la barra lateral de 
+ * detalles de reservación. Permite verificar disputas, solicitar nuevas mediaciones
+ * y enriquecer el chat original con información del plugin Reda.
+ */
 import { mediacionSvg } from './iconos';
 
 let archivosSeleccionados = [];
 
 /**
- * Verifica si existe una disputa para una reservación.
+ * Verifica si existe una disputa activa para una reservación específica.
+ * @param {number|string} bookingId - ID de la reservación.
+ * @returns {Promise} Promesa con el resultado de la verificación.
  */
 export const verificarDisputaReda = (bookingId) => {
     return new Promise((resolve) => {
@@ -35,7 +44,9 @@ export const verificarDisputaReda = (bookingId) => {
 }
 
 /**
- * Obtiene el HTML del modal de detalle de mediación.
+ * Obtiene el HTML renderizado del modal de detalle de una mediación.
+ * @param {number|string} id - ID de la mediación.
+ * @returns {Promise} Promesa con el HTML para inyectar en el DOM.
  */
 export const obtenerModalDetalleMediacionReda = (id) => {
     return new Promise((resolve) => {
@@ -61,7 +72,9 @@ export const obtenerModalDetalleMediacionReda = (id) => {
 }
 
 /**
- * Almacena una nueva mediación.
+ * Envía los datos del formulario de solicitud de mediación al servidor.
+ * @param {FormData} formData - Objeto FormData con los campos y archivos.
+ * @returns {Promise} Promesa con la respuesta de creación.
  */
 export const guardarMediacionReda = (formData) => {
     return new Promise((resolve) => {
@@ -101,7 +114,8 @@ export const guardarMediacionReda = (formData) => {
 }
 
 /**
- * Peticion AJAX para obtener el HTML del modal de creacion.
+ * Obtiene el HTML base del modal de creación de mediación.
+ * @returns {Promise} Promesa con el HTML del modal.
  */
 const getModalMediacionHtml = () => {
     return new Promise((resolve) => {
@@ -130,7 +144,7 @@ const getModalMediacionHtml = () => {
     "use strict";
 
     /**
-     * Renderiza la lista de archivos seleccionados con boton de eliminar.
+     * Renderiza dinámicamente la lista de archivos seleccionados para adjuntar.
      */
     const renderizarPrevisualizacionArchivos = () => {
         const container = $('#file-list-preview');
@@ -167,7 +181,9 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Obtiene los mensajes enriquecidos de una mediación/reservación.
+     * Obtiene los mensajes enriquecidos (con fotos y roles) de una mediación.
+     * @param {number|string} bookingId - ID de la reservación vinculada.
+     * @returns {Promise} Promesa con la colección de mensajes.
      */
     const obtenerMensajesEnriquecidosReda = (bookingId) => {
         return new Promise((resolve) => {
@@ -181,7 +197,10 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Renderiza los mensajes enriquecidos en el inbox original.
+     * Reemplaza el contenido del Inbox original por burbujas enriquecidas del plugin Reda.
+     * @param {Array} mensajes - Lista de mensajes enriquecidos.
+     * @param {object} booking - Datos de la reserva.
+     * @param {number} currentUserId - ID del usuario en sesión.
      */
     const renderizarMensajesEnriquecidosInbox = (mensajes, booking, currentUserId) => {
         const container = $('.message-wrap');
@@ -239,7 +258,8 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Inyecta los mensajes enriquecidos en el inbox original al seleccionar una conversación.
+     * Intercepta la carga del Inbox original para enriquecer los mensajes con datos de mediación.
+     * @param {number|string} bookingId - ID de la conversación/reserva.
      */
     const inyectarMensajesEnriquecidosReda = async (bookingId) => {
         const container = $('.message-wrap');
@@ -260,7 +280,8 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Inyecta el cuadro de mediación en la barra lateral de la reserva.
+     * Inyecta la caja de información de mediación en la barra lateral de la vista de reserva.
+     * @param {boolean} force - Si debe forzar la reinyección aunque ya exista.
      */
     const inyectarCajaMediacionReda = async (force = false) => {
         const containerId = '#booking';
@@ -392,7 +413,7 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Carga e inyecta el modal de mediación si no existe.
+     * Carga el HTML del modal de solicitud de mediación y lo inyecta en el body.
      */
     const cargarModalMediacion = async () => {
         if ($('#modal-mediacion-reda').length) return;
@@ -405,7 +426,8 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Carga e inyecta el modal de detalle de mediación.
+     * Solicita al servidor el modal de detalles y lo muestra al usuario.
+     * @param {number|string} id - ID de la mediación.
      */
     const cargarModalDetalleMediacion = async (id) => {
         if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
@@ -433,7 +455,7 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Configura los eventos del formulario dentro del modal.
+     * Configura los controladores de eventos para el formulario y gestión de archivos en el modal.
      */
     const configurarEventosModal = () => {
         // Trigger para el input oculto

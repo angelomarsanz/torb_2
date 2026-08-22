@@ -1,3 +1,9 @@
+/**
+ * Resumen: Controlador de administración para el panel de mediaciones (Disputas).
+ * Este archivo gestiona la lógica del dashboard de mediaciones para el administrador,
+ * permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo,
+ * gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
+ */
 import {
     todosSvg,
     abiertosSvg,
@@ -28,7 +34,9 @@ import {
     let lastMouseX, lastMouseY;
 
     /**
-     * Obtiene la URL completa para una imagen.
+     * Construye la URL completa para un recurso, manejando prefijos y barras.
+     * @param {string} path - Ruta relativa del archivo.
+     * @returns {string} URL completa.
      */
     const getFullUrl = (path) => {
         if (!path) return `${APP_URL}/public/img/unnamed.png`;
@@ -39,7 +47,9 @@ import {
     };
 
     /**
-     * Detecta si una URL corresponde a un PDF (Incluso con Query Strings).
+     * Determina si una URL apunta a un archivo PDF.
+     * @param {string} url - URL del archivo a verificar.
+     * @returns {boolean} True si es PDF.
      */
     const esArchivoPDF = (url) => {
         if (!url) return false;
@@ -52,7 +62,9 @@ import {
     };
 
     /**
-     * Formatea el texto del estatus: Inicial mayúscula, resto minúscula.
+     * Capitaliza la primera letra de un texto de estatus.
+     * @param {string} text - Texto del estatus.
+     * @returns {string} Texto formateado.
      */
     const formatStatusText = (text) => {
         if (!text) return '';
@@ -60,7 +72,9 @@ import {
     };
 
     /**
-     * Devuelve la clase de color adecuada para el badge según el estatus.
+     * Retorna la clase CSS de Bootstrap para el badge según el estatus de la mediación.
+     * @param {string} status - Estatus del caso.
+     * @returns {string} Clase CSS.
      */
     const getStatusBadgeClass = (status) => {
         if (!status) return 'bg-secondary text-white';
@@ -73,7 +87,10 @@ import {
     };
 
     /**
-     * Peticion AJAX para obtener mediaciones paginadas (Admin).
+     * Petición AJAX para obtener el listado de mediaciones paginado y filtrado (Admin).
+     * @param {string} estatus - Filtro de estado.
+     * @param {number} pagina - Número de página.
+     * @returns {Promise} Promesa con la respuesta del servidor.
      */
     const obtenerMediacionesPaginadas = (estatus, pagina) => {
         return new Promise((resolve) => {
@@ -107,7 +124,9 @@ import {
     };
 
     /**
-     * Peticion AJAX para obtener el HTML del modal de detalle (Admin).
+     * Obtiene el HTML para el modal de detalles de una mediación específica.
+     * @param {number|string} id - ID de la mediación.
+     * @returns {Promise} Promesa con el HTML.
      */
     const obtenerHtmlDetalleMediacion = (id) => {
         return new Promise((resolve) => {
@@ -140,7 +159,7 @@ import {
     };
 
     /**
-     * Inyecta dinámicamente las pestañas de estatus en la cabecera del listado.
+     * Genera e inyecta el menú de pestañas para filtrar mediaciones por estado.
      */
     const inyectarPestanasEstatus = () => {
         const header = $('#disputas-tabs-header');
@@ -180,7 +199,9 @@ import {
     };
 
     /**
-     * Genera el HTML de la línea de tiempo.
+     * Construye la estructura de pasos de la línea de tiempo según el paso actual.
+     * @param {string} pasoActual - Nombre del paso actual del caso.
+     * @returns {object} Objeto con el HTML y el índice del paso actual.
      */
     const generarTimelineHtml = (pasoActual) => {
         const trans = window.RedaAlojamientoJson || {};
@@ -218,7 +239,9 @@ import {
     };
 
     /**
-     * Renderiza la línea de tiempo en un contenedor específico.
+     * Dibuja la línea de tiempo en el contenedor indicado y hace scroll al paso activo.
+     * @param {string} pasoActual - Paso actual de la mediación.
+     * @param {string} containerSelector - Selector del contenedor.
      */
     const renderizarTimeline = (pasoActual, containerSelector = '#reda-timeline-container') => {
         const container = $(containerSelector);
@@ -237,8 +260,9 @@ import {
     };
 
     /**
-     * Renderiza el bloque unificado de personas relacionadas (Admin).
-     * Se identifica al demandante (quien inició el proceso) agregando " - demandante".
+     * Renderiza las fotos y nombres de los involucrados en la mediación (Turista, Anfitrión, Agente).
+     * @param {object} item - Datos de la mediación.
+     * @returns {string} HTML del bloque de personas.
      */
     const generarBloquePersonasHtml = (item) => {
         const trans = window.RedaAlojamientoJson || {};
@@ -318,7 +342,9 @@ import {
     };
 
     /**
-     * Obtiene los mensajes de la mediación vía Ajax.
+     * Consulta al servidor la lista de mensajes asociados a una reservación/mediación.
+     * @param {number|string} bookingId - ID de la reservación.
+     * @returns {Promise} Promesa con los mensajes.
      */
     const obtenerMensajesMediacion = (bookingId) => {
         return new Promise((resolve) => {
@@ -332,7 +358,11 @@ import {
     };
 
     /**
-     * Envía un mensaje como admin.
+     * Envía un nuevo mensaje en nombre del administrador del sistema.
+     * @param {number|string} bookingId - ID de la reservación.
+     * @param {string} message - Contenido del mensaje.
+     * @param {number|string} receiverId - ID del destinatario (0 para difusión).
+     * @returns {Promise} Promesa con el resultado del envío.
      */
     const enviarMensajeAdmin = (bookingId, message, receiverId) => {
         return new Promise((resolve) => {
@@ -352,7 +382,10 @@ import {
     };
 
     /**
-     * Renderiza la lista de mensajes en el modal.
+     * Renderiza burbujas de chat enriquecidas con fotos y roles en el modal de mensajes.
+     * @param {Array} mensajes - Lista de objetos de mensaje.
+     * @param {object} booking - Datos de la reserva relacionada.
+     * @param {number} currentUserId - ID del usuario administrador actual.
      */
     const renderizarMensajes = (mensajes, booking, currentUserId) => {
         const container = $('#reda-mensajes-container');
@@ -440,7 +473,10 @@ import {
     };
 
     /**
-     * Abre el visor de medios para un solo archivo (Admin - Bootstrap 5).
+     * Inicializa y abre el visor de medios para imágenes o PDFs (Admin - Bootstrap 5).
+     * @param {string} url - URL del recurso.
+     * @param {string} nombre - Nombre del archivo.
+     * @param {boolean} esImagen - Indica si el recurso es una imagen.
      */
     const abrirMediaViewer = (url, nombre, esImagen) => {
         const fullUrl = getFullUrl(url);
@@ -603,7 +639,9 @@ import {
     };
 
     /**
-     * Abre el modal de mensajes.
+     * Prepara y muestra el modal de conversación para un caso de mediación.
+     * @param {number|string} bookingId - ID de la reservación.
+     * @param {number|string} disputaId - ID de la mediación.
      */
     const abrirMensajesMediacion = async (bookingId, disputaId) => {
         const modalElement = document.getElementById('modal-mensajes-mediacion-reda');
@@ -636,7 +674,9 @@ import {
     };
 
     /**
-     * Genera el HTML de la lista de adjuntos (Actualizado para el visor).
+     * Genera el listado de archivos adjuntos permitiendo disparar el visor para imágenes/PDF.
+     * @param {Array} adjuntos - Lista de adjuntos.
+     * @returns {string} HTML de la lista.
      */
     const generarListaAdjuntosHtml = (adjuntos) => {
         const trans = window.RedaAlojamientoJson || {};
@@ -677,7 +717,9 @@ import {
     };
 
     /**
-     * Renderiza la cabecera informativa de la mediación (Estatus, ID, Motivo).
+     * Renderiza los datos básicos del caso (ID, Estatus, Motivo) en el contenedor de cabecera.
+     * @param {object} item - Datos de la mediación.
+     * @param {string} containerSelector - Selector del contenedor.
      */
     const renderizarCabeceraMediacion = (item, containerSelector) => {
         const container = $(containerSelector);
@@ -709,7 +751,9 @@ import {
     };
 
     /**
-     * Renderiza la información de la reservación asociada.
+     * Renderiza los detalles de la reservación (Fechas, Propiedad, Huéspedes) en el panel lateral.
+     * @param {object} item - Datos de la mediación.
+     * @param {string} containerSelector - Selector del contenedor.
      */
     const renderizarReservacionMediacion = (item, containerSelector) => {
         const container = $(containerSelector);
@@ -756,7 +800,9 @@ import {
     };
 
     /**
-     * Renderiza el cuerpo del detalle de la mediación (Sección colapsable).
+     * Renderiza la información complementaria del caso (Prioridad, Fechas, Descripción).
+     * @param {object} item - Datos de la mediación.
+     * @param {string} containerSelector - Selector del contenedor.
      */
     const renderizarResumenMediacion = (item, containerSelector) => {
         const container = $(containerSelector);
@@ -818,7 +864,7 @@ import {
     };
 
     /**
-     * Inicializa un observador para detectar qué mediación está en el centro visual del móvil.
+     * Inicializa un observador de intersección para móvil, detectando el caso en el centro de la pantalla.
      */
     const inicializarObservadorEnfoque = () => {
         if (window.innerWidth >= 768) return;
@@ -850,7 +896,9 @@ import {
     };
 
     /**
-     * Maneja la selección de una mediación.
+     * Gestiona el estado de selección de una mediación y actualiza todas las vistas relacionadas.
+     * @param {number|string} id - ID de la mediación seleccionada.
+     * @param {boolean} conScroll - Si debe desplazarse hacia la tarjeta (Móvil).
      */
     const seleccionarMediacion = (id, conScroll = false) => {
         if (mediacionSeleccionadaId == id && !conScroll) return;
@@ -902,7 +950,8 @@ import {
     };
 
     /**
-     * Renderiza el listado de mediaciones con el diseño de tres columnas optimizado.
+     * Renderiza el listado principal de tarjetas de mediación.
+     * @param {Array} items - Colección de objetos de mediación.
      */
     const renderizarLista = (items) => {
         const container = $('#disputas-list-container');
@@ -1018,7 +1067,9 @@ import {
     };
 
     /**
-     * Carga las mediaciones vía Ajax según el estatus y página seleccionada (Admin).
+     * Carga las mediaciones filtradas por estatus y página, gestionando spinners de espera.
+     * @param {string} estatus - Estado por el cual filtrar.
+     * @param {number} pagina - Página a cargar.
      */
     const cargarMediaciones = async (estatus, pagina = 1) => {
         if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
@@ -1064,7 +1115,8 @@ import {
     };
 
     /**
-     * Abre el modal de detalle de la mediación (Admin).
+     * Carga y muestra el modal con el detalle técnico y administrativo de la mediación.
+     * @param {number|string} id - ID de la mediación.
      */
     const abrirDetalleMediacion = async (id) => {
         if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {

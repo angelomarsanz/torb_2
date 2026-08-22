@@ -1,3 +1,9 @@
+{{-- 
+    Resumen: Vista de administración para el listado y gestión de mediaciones (Disputas).
+    Esta interfaz permite a los administradores visualizar todos los casos de mediación,
+    filtrarlos por estado, realizar seguimiento del progreso mediante una línea de tiempo
+    y acceder a los chats de comunicación entre las partes involucradas.
+--}}
 @extends('admin.template')
 
 @section('main')

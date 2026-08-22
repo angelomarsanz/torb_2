@@ -1,3 +1,9 @@
+{{-- 
+    Resumen: Vista principal del panel de mediaciones (disputas) para el usuario.
+    Proporciona un dashboard para listar, filtrar y ver el progreso de las mediaciones activas.
+    Incluye la interfaz para la línea de tiempo, detalles de la reservación y modales 
+    para chat y visualización de archivos adjuntos.
+--}}
 @extends('template')
 
 @section('main')

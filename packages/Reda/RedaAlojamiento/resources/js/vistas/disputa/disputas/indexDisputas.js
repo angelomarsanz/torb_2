@@ -1,3 +1,9 @@
+/**
+ * Resumen: Controlador de la vista de índice de disputas (Mediaciones).
+ * Este archivo gestiona la lógica del dashboard de mediaciones, incluyendo la carga
+ * paginada por estados, la renderización de la lista de casos, la línea de tiempo
+ * de progreso, el visor de medios (imágenes/PDF) y el chat específico de la mediación.
+ */
 import {
     todosSvg,
     abiertosSvg,
@@ -29,6 +35,7 @@ import {
      * Obtiene la URL completa para una imagen.
      */
     const getFullUrl = (path) => {
+... (resto del archivo)
         if (!path) return (typeof APP_URL !== 'undefined' ? APP_URL : '') + '/public/img/unnamed.png';
         if (path.startsWith('http')) return path;
         
