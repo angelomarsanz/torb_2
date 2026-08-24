@@ -1,3 +1,9 @@
+{{-- 
+Resumen: Vista Blade principal para el Inbox unificado del plugin Reda.
+Define la estructura de la interfaz de mensajería, incluyendo el sidebar con 
+avatares duales (propiedad y participantes) y el contenedor para los mensajes 
+enriquecidos y detalles de la reserva.
+--}}
 @extends('template')
 @section('main')
 <div class="margin-top-85">

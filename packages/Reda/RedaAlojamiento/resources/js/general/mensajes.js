@@ -7,12 +7,16 @@
  */
 import { mediacionSvg } from './iconos';
 
+/**
+ * Almacena temporalmente los archivos seleccionados para adjuntar a la mediación.
+ * @type {Array<File>}
+ */
 let archivosSeleccionados = [];
 
 /**
  * Verifica si existe una disputa activa para una reservación específica.
  * @param {number|string} bookingId - ID de la reservación.
- * @returns {Promise} Promesa con el resultado de la verificación.
+ * @returns {Promise<Object>} Promesa con el resultado de la verificación y datos de la disputa si existe.
  */
 export const verificarDisputaReda = (bookingId) => {
     return new Promise((resolve) => {
@@ -44,9 +48,9 @@ export const verificarDisputaReda = (bookingId) => {
 }
 
 /**
- * Obtiene el HTML renderizado del modal de detalle de una mediación.
+ * Obtiene el HTML renderizado del modal de detalle de una mediación existente.
  * @param {number|string} id - ID de la mediación.
- * @returns {Promise} Promesa con el HTML para inyectar en el DOM.
+ * @returns {Promise<Object>} Promesa con el HTML para inyectar en el DOM.
  */
 export const obtenerModalDetalleMediacionReda = (id) => {
     return new Promise((resolve) => {
@@ -72,9 +76,9 @@ export const obtenerModalDetalleMediacionReda = (id) => {
 }
 
 /**
- * Envía los datos del formulario de solicitud de mediación al servidor.
- * @param {FormData} formData - Objeto FormData con los campos y archivos.
- * @returns {Promise} Promesa con la respuesta de creación.
+ * Envía los datos del formulario de solicitud de mediación al servidor incluyendo adjuntos.
+ * @param {FormData} formData - Objeto FormData con los campos del motivo, descripción y archivos.
+ * @returns {Promise<Object>} Promesa con la respuesta de creación del servidor.
  */
 export const guardarMediacionReda = (formData) => {
     return new Promise((resolve) => {
@@ -97,7 +101,6 @@ export const guardarMediacionReda = (formData) => {
                     }
                     
                     const mensajeErrorBase = window.RedaAlojamientoJson["Error en el servidor de Torbian"] || 'Error en el servidor de Torbian';
-                    // Si el servidor devolvió un mensaje de error técnico pero no un mensaje_usuario, lo mostramos como detalle
                     const detalleError = respuestaServidor.message ? `<br /><small class="text-muted">${respuestaServidor.message}</small>` : '';
                     
                     resolve({
@@ -114,8 +117,8 @@ export const guardarMediacionReda = (formData) => {
 }
 
 /**
- * Obtiene el HTML base del modal de creación de mediación.
- * @returns {Promise} Promesa con el HTML del modal.
+ * Solicita al servidor el HTML base del modal de creación de mediación.
+ * @returns {Promise<Object>} Promesa con el HTML del modal de solicitud.
  */
 const getModalMediacionHtml = () => {
     return new Promise((resolve) => {
@@ -144,7 +147,9 @@ const getModalMediacionHtml = () => {
     "use strict";
 
     /**
-     * Renderiza dinámicamente la lista de archivos seleccionados para adjuntar.
+     * Renderiza dinámicamente la lista de archivos seleccionados en el modal de solicitud.
+     * Muestra íconos según el tipo de archivo y permite su eliminación individual.
+     * @returns {void}
      */
     const renderizarPrevisualizacionArchivos = () => {
         const container = $('#file-list-preview');
@@ -181,9 +186,9 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Obtiene los mensajes enriquecidos (con fotos y roles) de una mediación.
-     * @param {number|string} bookingId - ID de la reservación vinculada.
-     * @returns {Promise} Promesa con la colección de mensajes.
+     * Obtiene los mensajes enriquecidos (con fotos, roles y metadatos) de una mediación.
+     * @param {number|string} bookingId - ID de la reservación vinculada a la conversación.
+     * @returns {Promise<Object>} Promesa con la colección de mensajes y metadatos del usuario.
      */
     const obtenerMensajesEnriquecidosReda = (bookingId) => {
         return new Promise((resolve) => {
@@ -197,10 +202,12 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Reemplaza el contenido del Inbox original por burbujas enriquecidas del plugin Reda.
-     * @param {Array} mensajes - Lista de mensajes enriquecidos.
-     * @param {object} booking - Datos de la reserva.
-     * @param {number} currentUserId - ID del usuario en sesión.
+     * Reemplaza el contenido del Inbox original por burbujas de chat enriquecidas del plugin Reda.
+     * Ajusta roles, fotos y estados de lectura (check/doble check).
+     * @param {Array<Object>} mensajes - Lista de objetos de mensaje con metadatos.
+     * @param {Object} booking - Datos de la reservación asociada.
+     * @param {number} currentUserId - ID del usuario autenticado en la sesión.
+     * @returns {void}
      */
     const renderizarMensajesEnriquecidosInbox = (mensajes, booking, currentUserId) => {
         const container = $('.message-wrap');
@@ -258,8 +265,10 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Intercepta la carga del Inbox original para enriquecer los mensajes con datos de mediación.
-     * @param {number|string} bookingId - ID de la conversación/reserva.
+     * Intercepta la carga del Inbox original para inyectar mensajes enriquecidos con datos de mediación.
+     * Maneja estados de carga y errores de comunicación.
+     * @param {number|string} bookingId - ID de la conversación o reservación a enriquecer.
+     * @returns {Promise<void>}
      */
     const inyectarMensajesEnriquecidosReda = async (bookingId) => {
         const container = $('.message-wrap');
@@ -280,8 +289,10 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Inyecta la caja de información de mediación en la barra lateral de la vista de reserva.
-     * @param {boolean} force - Si debe forzar la reinyección aunque ya exista.
+     * Inyecta dinámicamente la caja de información de mediación en la barra lateral de detalles de reserva.
+     * Verifica la existencia de disputas y muestra opciones de solicitud si aplica.
+     * @param {boolean} force - Indica si se debe forzar la reinyección descartando el estado actual.
+     * @returns {Promise<void>}
      */
     const inyectarCajaMediacionReda = async (force = false) => {
         const containerId = '#booking';

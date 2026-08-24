@@ -1,4 +1,10 @@
 <?php
+/**
+ * Resumen: Controlador para la gestión de disputas y mediaciones en el plugin Reda.
+ * Este controlador maneja la lógica de visualización de listados filtrados por estado,
+ * la carga de modales de solicitud y detalle, la verificación de mediaciones activas
+ * para reservaciones y el almacenamiento de nuevas solicitudes con archivos adjuntos.
+ */
 namespace Reda\RedaAlojamiento\Http\Controllers\Disputa;
 
 use App\Http\Controllers\Controller;
@@ -14,13 +20,21 @@ use Exception;
 
 class DisputaController extends Controller
 {
+    /**
+     * Muestra la vista principal del listado de mediaciones.
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         return view('reda-alojamiento::disputa.disputas.index');
     }
 
     /**
-     * Obtiene el listado de mediaciones paginado para el dashboard.
+     * Obtiene el listado de mediaciones paginado para el dashboard del usuario.
+     * Aplica filtros por estado (abiertos, revisión, espera, resueltos, cerrados)
+     * e identifica mensajes no leídos para cada mediación.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function obtenerDisputasPaginadas(Request $request)
     {
@@ -169,7 +183,8 @@ class DisputaController extends Controller
     }
 
     /**
-     * Retorna el HTML del modal de mediación.
+     * Retorna el HTML renderizado del modal de creación de mediación.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function getModal()
     {
@@ -184,7 +199,10 @@ class DisputaController extends Controller
     }
 
     /**
-     * Retorna el HTML del modal de detalle de mediación.
+     * Retorna el HTML renderizado del modal de detalle para una mediación específica.
+     * Filtra los documentos para mostrar solo aquellos que pertenecen al usuario en sesión.
+     * @param number|string $id - ID de la disputa.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function getDetailModal($id)
     {
@@ -220,7 +238,10 @@ class DisputaController extends Controller
     }
 
     /**
-     * Verifica si existe una disputa para una reservación y retorna sus detalles.
+     * Verifica si existe una disputa activa para una reservación específica.
+     * Evalúa si el estatus de la reservación permite iniciar un proceso de mediación.
+     * @param number|string $booking_id - ID de la reservación.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function checkDispute($booking_id)
     {
@@ -239,8 +260,6 @@ class DisputaController extends Controller
 
         if ($booking) {
             // Un booking permite mediación si ya no es una simple consulta ('')
-            // Consideramos que 'Pending' es una solicitud formal, pero el usuario dice "cuando haga la reservación"
-            // Generalmente esto implica Accepted, Success o Processing.
             $status = $booking->status;
             // Si el status está vacío, es una consulta iniciada desde el chat-injection.
             if (!empty($status) && !in_array($status, ['Expired', 'Cancelled', 'Declined'])) {
@@ -265,8 +284,9 @@ class DisputaController extends Controller
     }
 
     /**
-     * Obtiene el conteo de mediaciones activas para el usuario conectado.
-     * Se consideran activas aquellas cuyo estado es diferente a 'Cerrado' o 'Cerrada'.
+     * Obtiene el conteo de mediaciones activas para el usuario conectado (huésped, anfitrión o agente).
+     * Se consideran activas aquellas cuyo estado no sea 'Cerrado' o 'Cerrada'.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function obtenerConteoDisputasActivas()
     {
@@ -316,7 +336,9 @@ class DisputaController extends Controller
     }
 
     /**
-     * Muestra el detalle de una mediación.
+     * Muestra el detalle de una mediación específica.
+     * @param number|string $id - ID de la disputa.
+     * @return \Illuminate\View\View
      */
     public function show($id)
     {
@@ -325,7 +347,10 @@ class DisputaController extends Controller
     }
 
     /**
-     * Almacena una nueva solicitud de mediación (disputa).
+     * Almacena una nueva solicitud de mediación (disputa) en la base de datos.
+     * Valida los campos obligatorios, gestiona la subida de adjuntos y asigna roles iniciales.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {

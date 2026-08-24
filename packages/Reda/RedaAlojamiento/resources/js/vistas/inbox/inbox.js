@@ -1,3 +1,9 @@
+/**
+ * Resumen: Controlador Javascript para la vista de Inbox personalizada del plugin Reda.
+ * Gestiona la carga dinámica de conversaciones, el envío de mensajes mediante AJAX,
+ * la navegación optimizada para dispositivos móviles (estilo WhatsApp) y la
+ * neutralización de scripts originales para evitar conflictos de eventos.
+ */
 "use strict";
 
 (function($) {
@@ -17,7 +23,9 @@
     var isSending = false;
 
     /**
-     * AJAX para cargar el detalle de un booking (Inbox).
+     * Realiza una petición AJAX para cargar el detalle completo de un booking y sus mensajes en el Inbox.
+     * @param {number|string} id - ID de la reservación (booking).
+     * @returns {Promise<Object>} Promesa con los datos renderizados del inbox y la reserva.
      */
     const apiCargarBooking = (id) => {
         return new Promise((resolve) => {
@@ -43,7 +51,9 @@
     };
 
     /**
-     * AJAX para responder un mensaje (Inbox).
+     * Envía una respuesta de mensaje al servidor mediante AJAX.
+     * @param {Object} params - Parámetros del mensaje (msg, booking_id, receiver_id, property_id).
+     * @returns {Promise<Object>} Promesa con el resultado de la operación.
      */
     const apiResponderMensaje = (params) => {
         return new Promise((resolve) => {
@@ -69,7 +79,8 @@
     };
 
     /**
-     * Desplaza el chat al final y asegura visibilidad del input en móvil.
+     * Desplaza el contenedor de chat al final y asegura la visibilidad del input en dispositivos móviles.
+     * @returns {void}
      */
     function scrollChatToBottom() {
         const wrap = document.querySelector(".message-wrap-reda");
@@ -81,7 +92,7 @@
         if (window.innerWidth < 768) {
             const footer = document.querySelector(".message-footer");
             if (footer) {
-                // Pequeño retardo para asegurar que el DOM se haya actualizado y el teclado (si está abierto) se considere
+                // Pequeño retardo para asegurar que el DOM se haya actualizado y el teclado se considere
                 setTimeout(() => {
                     footer.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }, 150);
@@ -89,6 +100,10 @@
         }
     }
 
+    /**
+     * Inicializa el procesamiento de la lista de conversaciones y vincula los eventos iniciales.
+     * @returns {void}
+     */
     function process() {
         console.log('REDA Inbox: Vinculando eventos...');
         list = document.querySelectorAll(".list");
@@ -116,6 +131,14 @@
         });
     }
 
+    /**
+     * Gestiona el evento de clic en un elemento de la lista de conversaciones.
+     * Ajusta clases activas y maneja la visibilidad en móviles.
+     * @param {HTMLElement} l - El elemento de la lista clickeado.
+     * @param {number} index - Índice del elemento en la lista.
+     * @param {boolean} isManual - Indica si el clic fue realizado por el usuario.
+     * @returns {void}
+     */
     function click(l, index, isManual = true) {
         list = document.querySelectorAll(".list");
         list.forEach(x => { x.classList.remove("active"); });
@@ -252,7 +275,7 @@
     });
 
     /**
-     * AMPLIA LA FOTO DEL AVATAR (WHATSAPP STYLE)
+     * Amplía la foto del avatar en un overlay (WhatsApp Style).
      */
     $(document).on('click', '.reda-chat-avatar-container', function(e) {
         e.preventDefault();
@@ -274,7 +297,7 @@
     });
 
     /**
-     * EXPANDE/CONTRAE TEXTOS TRUNCADOS (NOMBRE PROPIEDAD)
+     * Expande o contrae textos truncados al hacer clic.
      */
     $(document).on('click', '.reda-expandable-text', function(e) {
         e.preventDefault();
@@ -293,6 +316,11 @@
         }
     });
 
+    /**
+     * Sanea una cadena de texto para evitar inyecciones XSS básicas.
+     * @param {string} string - La cadena a sanear.
+     * @returns {string} La cadena saneada con entidades HTML.
+     */
     function sanitize(string) {
         const symbols = {
             '&': '&amp;',

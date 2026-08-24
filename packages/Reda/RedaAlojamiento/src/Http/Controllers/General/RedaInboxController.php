@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * Resumen: Controlador para la mensajería enriquecida (Inbox) del plugin Reda.
+ * Este controlador gestiona la lógica de la bandeja de entrada unificada, permitiendo
+ * visualizar conversaciones entre huéspedes, anfitriones y agentes de mediación.
+ * Implementa una historia unificada filtrada por propiedad y contexto compartido,
+ * maneja el estado de lectura de los mensajes y la virtualización de datos para el frontend.
+ */
 namespace Reda\RedaAlojamiento\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
@@ -15,7 +21,11 @@ use Illuminate\Support\Facades\DB;
 class RedaInboxController extends Controller
 {
     /**
-     * Inbox Page - Unified Participant Chat
+     * Muestra la página principal del Inbox con el listado de conversaciones activas.
+     * Identifica a los compañeros de chat, agrupa mensajes por propiedad y carga 
+     * el historial unificado inicial para la conversación seleccionada.
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -213,7 +223,11 @@ class RedaInboxController extends Controller
     }
 
     /**
-     * Load Conversation Details via REDA Ajax Route
+     * Carga el detalle de una conversación específica mediante AJAX.
+     * Sanea el historial de mensajes, marca mensajes como leídos y retorna el HTML 
+     * renderizado para el Inbox y el panel lateral de reserva.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function message(Request $request)
     {
@@ -353,8 +367,12 @@ class RedaInboxController extends Controller
     }
 
     /**
-    * Unified Reply via REDA Ajax Route
-    */
+     * Procesa el envío de una respuesta unificada a través de la ruta AJAX del plugin Reda.
+     * Crea el registro del mensaje, marca los mensajes previos del mismo hilo como leídos
+     * y maneja la seguridad para PHP 8.2.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function messageReply(Request $request)
     {
         $rules = array('msg' => 'required|string');
