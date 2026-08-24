@@ -224,27 +224,40 @@ class DisputaController extends Controller
      */
     public function checkDispute($booking_id)
     {
-        $disputa = Disputa::where('booking_id', $booking_id)->first();
-
+        $booking = Bookings::find($booking_id);
+        
         $respuesta = [
             'success' => true,
             'message' => __('Verificación de disputa'),
             'mensaje_usuario' => __('Resultados recuperados con éxito'),
             'respuesta' => [
-                'exists' => false
+                'exists' => false,
+                'permite_mediacion' => false
             ],
             'code' => 200
         ];
 
+        if ($booking) {
+            // Un booking permite mediación si ya no es una simple consulta ('')
+            // Consideramos que 'Pending' es una solicitud formal, pero el usuario dice "cuando haga la reservación"
+            // Generalmente esto implica Accepted, Success o Processing.
+            $status = $booking->status;
+            // Si el status está vacío, es una consulta iniciada desde el chat-injection.
+            if (!empty($status) && !in_array($status, ['Expired', 'Cancelled', 'Declined'])) {
+                $respuesta['respuesta']['permite_mediacion'] = true;
+            }
+        }
+
+        $disputa = Disputa::where('booking_id', $booking_id)->first();
+
         if ($disputa) {
-            $respuesta['respuesta'] = [
-                'exists' => true,
-                'data' => [
-                    'id'           => $disputa->id,
-                    'fecha'        => $disputa->fecha_apertura ? $disputa->fecha_apertura->format('d/m/Y') : '',
-                    'estado'       => $disputa->estado,
-                    'paso_actual'  => $disputa->paso_actual,
-                ]
+            $respuesta['respuesta']['exists'] = true;
+            $respuesta['respuesta']['permite_mediacion'] = true;
+            $respuesta['respuesta']['data'] = [
+                'id'           => $disputa->id,
+                'fecha'        => $disputa->fecha_apertura ? $disputa->fecha_apertura->format('d/m/Y') : '',
+                'estado'       => $disputa->estado,
+                'paso_actual'  => $disputa->paso_actual,
             ];
         }
 

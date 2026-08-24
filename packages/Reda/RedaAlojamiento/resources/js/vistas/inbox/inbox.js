@@ -163,7 +163,13 @@
         if (data.success) {
             $('#msg-' + id).removeClass('text-success font-weight-bold');
             $('#messages').empty().html(data.respuesta.inbox);
-            $('#booking').empty().html(data.respuesta.booking);
+            
+            // Inyectamos el contenido de la reserva y marcamos si permite mediación
+            const $bookingContainer = $('#booking');
+            $bookingContainer.empty().html(data.respuesta.booking);
+            
+            // Guardamos el flag para que mensajes.js lo use sin parpadeos
+            $bookingContainer.attr('data-permite-mediacion', data.respuesta.permite_mediacion ? 'true' : 'false');
             
             setTimeout(() => {
                 scrollChatToBottom();

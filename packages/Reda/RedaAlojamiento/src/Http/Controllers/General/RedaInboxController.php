@@ -193,6 +193,15 @@ class RedaInboxController extends Controller
             
             Log::info("REDA Inbox: Historia unificada virtualizada para Partner $selectedPartnerId. Total: " . $unifiedHistory->count());
 
+            // Determinar si esta conversación permite mediación (Solo si no es una consulta inicial)
+            $status = isset($data['booking']) ? $data['booking']->status : '';
+            $permiteMediacion = (!empty($status) && !in_array($status, ['Expired', 'Cancelled', 'Declined']));
+            // Si el status es inválido, igual permitimos si ya existe una disputa activa
+            if (!$permiteMediacion && isset($data['booking'])) {
+                $permiteMediacion = Disputa::where('booking_id', $data['booking']->id)->exists();
+            }
+            $data['permite_mediacion'] = $permiteMediacion;
+
             if (isset($data['booking']) && $data['booking']) {
                 $data['symbol'] = Currency::getAll()->firstWhere('code', $data['booking']->currency_code)->symbol ?? '$';
             } else {
@@ -323,13 +332,21 @@ class RedaInboxController extends Controller
         $data['booking'] = $targetBooking->load('host', 'users', 'properties');
         $data['symbol'] = Currency::getAll()->firstWhere('code', $data['booking']->currency_code)->symbol ?? '$';
 
+        // Determinar si esta conversación permite mediación
+        $status = $targetBooking->status;
+        $permiteMediacion = (!empty($status) && !in_array($status, ['Expired', 'Cancelled', 'Declined']));
+        if (!$permiteMediacion) {
+            $permiteMediacion = Disputa::where('booking_id', $booking_id)->exists();
+        }
+
         return response()->json([
              'success' => true,
              'message' => __('Detalle del mensaje cargado'),
              'mensaje_usuario' => __('Cargado con éxito'),
              'respuesta' => [
                  "inbox" => view('reda-alojamiento::users.messages', $data)->render(), 
-                 "booking" => view('users.booking', $data)->render()
+                 "booking" => view('users.booking', $data)->render(),
+                 "permite_mediacion" => $permiteMediacion
              ],
              'code' => 200
         ], 200);

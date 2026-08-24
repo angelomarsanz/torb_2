@@ -288,6 +288,15 @@ const getModalMediacionHtml = () => {
         const targetContainer = $(containerId);
 
         if (targetContainer.length) {
+            // Verificamos si la conversación actual permite mediación (marcado por inbox.js o blade inicial)
+            const permiteMediacion = targetContainer.attr('data-permite-mediacion');
+            
+            // Si explícitamente dice 'false', no inyectamos nada y removemos si existe
+            if (permiteMediacion === 'false') {
+                $('#caja-mediacion-reda').remove();
+                return;
+            }
+
             if ($('#caja-mediacion-reda').length) {
                 const currentBookingId = $('.send-btn').attr('data-booking') || '';
                 if ($('#caja-mediacion-reda').attr('data-booking-id') !== currentBookingId || force) {
@@ -391,22 +400,29 @@ const getModalMediacionHtml = () => {
                 } else if (!response.success) {
                     container.html(`<p class="text-12 text-danger">${response.mensaje_usuario}</p>`);
                 } else {
-                    const sinMediacionText = window.RedaAlojamientoJson["Sin mediación activa"] || "Sin mediación activa";
-                    const ayudaText = window.RedaAlojamientoJson["Si tienes problema con esta reserva, puedes solicitar ayuda a nuestro equipo"] || "Si tienes problema con esta reserva, puedes solicitar ayuda a nuestro equipo";
-                    const solicitarText = window.RedaAlojamientoJson["Solicitar mediación"] || "Solicitar mediación";
+                    // Solo mostramos la opción de solicitar mediación si el booking ya es una reservación formal
+                    // y no una simple consulta (inquiry) iniciada desde el chat-injection
+                    if (response.respuesta.permite_mediacion) {
+                        const sinMediacionText = window.RedaAlojamientoJson["Sin mediación activa"] || "Sin mediación activa";
+                        const ayudaText = window.RedaAlojamientoJson["Si tienes problema con esta reserva, puedes solicitar ayuda a nuestro equipo"] || "Si tienes problema con esta reserva, puedes solicitar ayuda a nuestro equipo";
+                        const solicitarText = window.RedaAlojamientoJson["Solicitar mediación"] || "Solicitar mediación";
 
-                    const htmlSolicitar = `
-                        <h6 class="text-14 font-weight-700 mb-1 mt-2">${sinMediacionText}</h6>
-                        <p class="text-12 text-muted mb-3">${ayudaText}</p>
-                        <button id="btn-solicitar-mediacion-reda" 
-                            class="btn btn-success btn-block text-14 font-weight-700"
-                            data-reservacion-id="${bookingId}"
-                            data-anfitrion-id="${anfitrionId}"
-                            data-turista-id="${turistaId}">
-                            ${solicitarText}
-                        </button>
-                    `;
-                    container.html(htmlSolicitar);
+                        const htmlSolicitar = `
+                            <h6 class="text-14 font-weight-700 mb-1 mt-2">${sinMediacionText}</h6>
+                            <p class="text-12 text-muted mb-3">${ayudaText}</p>
+                            <button id="btn-solicitar-mediacion-reda" 
+                                class="btn btn-success btn-block text-14 font-weight-700"
+                                data-reservacion-id="${bookingId}"
+                                data-anfitrion-id="${anfitrionId}"
+                                data-turista-id="${turistaId}">
+                                ${solicitarText}
+                            </button>
+                        `;
+                        container.html(htmlSolicitar);
+                    } else {
+                        // Si es una consulta inicial (status vacío), eliminamos la caja de mediación
+                        $('#caja-mediacion-reda').remove();
+                    }
                 }
             }
         }

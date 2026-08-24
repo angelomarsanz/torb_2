@@ -68,7 +68,7 @@
 								</div>
 							</div>
 
-							<div class="col-md-3 card p-0 " id="booking">
+							<div class="col-md-3 card p-0 " id="booking" data-permite-mediacion="{{ $permite_mediacion ? 'true' : 'false' }}">
 								@include('users.booking')
 							</div>
 						</div>

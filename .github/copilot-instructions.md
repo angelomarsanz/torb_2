@@ -278,9 +278,7 @@ Para los formatos numéricos en php se usará packages/Reda/RedaAlojamiento/src/
 Se debe usar packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js para la animación de espera en el frontend ya sea en el dashboard del usuario o en cualquier vista en el frontend a la que tenga el usuario común indistintamente si ha hecho login o no
 
 ## Subida de archivos al servidor Vesta de Desarrollo
-Los archivos se suben vía FTP al servidor Vesta de Desarrollo para sus respectivas pruebas. Para subir los archivos se usa el script: subir.sh y subir_archivos_puntuales.sh. Nunca se debe ejecutar automáticamente ./subir.sh solo se deben descomentar de la lista de archivos el archivo modificado o agregar el nuevo archivo creado a subir_archivos_puntuales.sh y se deben comentar aquellos archivos que no fueron modificados para que no se vuelvan a subir 
-En el archivo subir_archivos_puntuales.sh están casi todos los archivo del plugin y del proyecto principal que se han modificado y/o creado. *No eliminar* los archivos que no se subirán el servidor, solo comentar porque se quiere tener esa lista con la información de todos los archivos. SOLO COMENTAR entonces
-
+Los archivos se suben vía FTP al servidor Vesta de Desarrollo para sus respectivas pruebas. Para subir los archivos se usa el script: subir.sh y subir_archivos_puntuales.sh. No se deben modificar esos archivos. Esos archivos solo los puedo modificar yo de mnera manual cuando corresponda
 ## Documentación archivos del plugin
 Todos los archivos que se creen dentro del plugin packages/Reda/RedaAlojamiento deben documentarse al inicio del archivo. Crear un resumen de lo que hace el archivo. Así también cada función que contenga ese archivo debe documentarse
 Además de documentar individualmente cada archivo, cada vez que se cree un archivo en el plugin packages/Reda/RedaAlojamiento se debe agregar un resumen de la documentación de ese archivo en documentacion/documentacion_archivos_plugin_reda_alojamiento.txt Se coloca el nombre del archivo como un título y luego dejando una sangría se coloca el resumen.
