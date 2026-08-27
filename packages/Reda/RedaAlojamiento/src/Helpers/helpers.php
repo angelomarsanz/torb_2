@@ -52,10 +52,10 @@ if (!function_exists('reda_get_inbox_unread_count')) {
      */
     function reda_get_inbox_unread_count()
     {
-        if (!Auth::check()) {
+        if (!auth()->check()) {
             return 0;
         }
-        return DB::table(DB::raw("(SELECT * from messages where receiver_id=".Auth()->id()." and `read`=0 ORDER by id DESC) as msg"))
+        return DB::table(DB::raw("(SELECT * from messages where receiver_id=".auth()->id()." and `read`=0 ORDER by id DESC) as msg"))
             ->groupBy('booking_id')
             ->get()->count();
     }

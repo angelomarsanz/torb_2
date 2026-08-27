@@ -66,7 +66,8 @@ export const menuPrincipal = () => {
          */
         const refrescarBadgeMensajes = async (mostrarLoader = false) => {
             const data = await obtenerConteoNoLeidos(mostrarLoader);
-            if (data.success && data.respuesta.count > 0) {
+            
+            if (data.success && data.respuesta && data.respuesta.count > 0) {
                 $('#reda-inbox-badge').text(data.respuesta.count).removeClass('d-none');
             } else {
                 $('#reda-inbox-badge').addClass('d-none');
@@ -78,10 +79,14 @@ export const menuPrincipal = () => {
         if (logo.length) {
             logo.after(menuHtml);
             
-            // Si el menú se inyectó, cargar el contador si el usuario parece estar autenticado
-            if ($('.nav-item.dropdown').length || $('#logout_link').length) {
-                // En el primer refresco usamos loader si no estamos en inbox para cumplir directrices,
-                // pero lo desactivamos para el intervalo recurrente por UX.
+            // Detección de autenticación mejorada
+            const estaAutenticado = (typeof window.AuthCheck !== 'undefined' && window.AuthCheck === true)
+                || $('.nav-item .dropdown').length 
+                || $('.nav-item.dropdown').length 
+                || $('#logout_link').length 
+                || $('a[href*="/logout"]').length;
+
+            if (estaAutenticado) {
                 refrescarBadgeMensajes(false); 
                 
                 // Intervalo de actualización cada 2 minutos
