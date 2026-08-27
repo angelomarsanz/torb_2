@@ -5,7 +5,7 @@
 
 FECHA=$(date +"%Y-%m-%d_%H-%M")
 NOMBRE_DEFAULT="sesion_gemini_$FECHA.md"
-FOLDER="documentacion/historico_gemini"
+FOLDER="historico_gemini"
 
 echo "--------------------------------------------------------"
 echo "  REDA - Organizador de Memoria Gemini"

@@ -13,10 +13,10 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"package.json"
     "webpack.mix.js"
     #"manual_plugin_reda_alojamiento.txt"
-    #"registrar_sesion.sh"
+    "registrar_sesion.sh"
     #"subir.sh"
     #"subir_archivos_puntuales.sh"
-    #".github/copilot-instructions.md"
+    ".github/copilot-instructions.md"
 
     #"resources/views/admin/common/foot.blade.php"
     #"resources/views/admin/common/head.blade.php"

@@ -16,7 +16,7 @@ Los nombres de tablas y columnas deben estar en español.
 Los nombres de variables deben estar en español.
 
 ## Memoria de Sesiones (Gemini CLI)
-- **Log de Progreso:** Cada vez que inicies una nueva sesión, debes leer obligatoriamente el archivo `documentacion/LOG_DESARROLLO_REDA.md`. Esto te permitirá recordar automáticamente todos los trabajos realizados anteriormente sin que el usuario tenga que repetirlos.
+- **Log de Progreso:** Cada vez que inicies una nueva sesión, debes leer obligatoriamente el archivo `LOG_DESARROLLO_REDA.md`. Esto te permitirá recordar automáticamente todos los trabajos realizados anteriormente sin que el usuario tenga que repetirlos.
 - **Registro de Avances:** Al finalizar una tarea importante, actualiza dicho archivo con un resumen técnico de los cambios.
 - **Exportación de Conversaciones:** Para guardar el diálogo literal, utiliza el comando `/chat share last_chat_export.md` y luego ejecuta el script `./registrar_sesion.sh`.
 
