@@ -21,6 +21,44 @@ use Illuminate\Support\Facades\DB;
 class RedaInboxController extends Controller
 {
     /**
+     * Obtiene el conteo de mensajes no leídos para el usuario autenticado.
+     * Retorna un JSON con el total, siguiendo la estructura de respuesta de REDA.
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUnreadCount()
+    {
+        try {
+            $count = reda_get_inbox_unread_count();
+            
+            $respuesta = [
+                'success' => true,
+                'message' => 'Conteo de mensajes no leídos recuperado',
+                'mensaje_usuario' => '',
+                'respuesta' => [
+                    'count' => $count
+                ],
+                'code' => 200
+            ];
+            
+            return response()->json($respuesta, 200);
+            
+        } catch (\Exception $e) {
+            Log::error("Error en getUnreadCount: " . $e->getMessage());
+            
+            $respuesta = [
+                'success' => false,
+                'message' => 'Error al obtener mensajes no leídos',
+                'mensaje_usuario' => __('Error al obtener mensajes no leídos'),
+                'respuesta' => $e->getMessage(),
+                'code' => 500
+            ];
+            
+            return response()->json($respuesta, 500);
+        }
+    }
+
+    /**
      * Muestra la página principal del Inbox con el listado de conversaciones activas.
      * Identifica a los compañeros de chat, agrupa mensajes por propiedad y carga 
      * el historial unificado inicial para la conversación seleccionada.

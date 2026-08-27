@@ -21,6 +21,16 @@
 - **packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js**
   Script de integración general para funcionalidades de mediación. Este archivo se encarga de inyectar la lógica de mediación en vistas preexistentes del proyecto principal, como el Inbox (chat general) y la barra lateral de detalles de reservación. Permite verificar disputas, solicitar nuevas mediaciones y enriquecer el chat original con información del plugin Reda.
 
+- **packages/Reda/RedaAlojamiento/resources/js/general/menus/menuPrincipal.js**
+  Script para inyectar y gestionar el menú principal REDA en el navbar. Agrega accesos rápidos a Alojamientos, Comercios y Mensajes (Inbox) con contador dinámico de notificaciones no leídas obtenido mediante la función AJAX estandarizada.
+
+- **packages/Reda/RedaAlojamiento/resources/js/general/iconos/notificacionesSvg.js**
+  Ícono SVG para la campana de notificaciones. Estilo minimalista compatible con la interfaz del menú principal.
+
+### JavaScript (AJAX)
+- **packages/Reda/RedaAlojamiento/resources/js/general/ajax/obtenerConteoNoLeidos.js**
+  Función AJAX para obtener el número de mensajes no leídos del usuario autenticado. Implementa el patrón de Promesas, maneja animaciones de espera mediante notificaciones.js y procesa errores siguiendo la estructura estandarizada de REDA.
+
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php**
   Controlador para la gestión de mediaciones (disputas). Maneja la lógica de negocio para crear, verificar y listar mediaciones. Incluye validaciones de estado de reserva para permitir mediaciones solo en reservaciones formales y no en simples consultas.
@@ -38,4 +48,4 @@
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**
-  Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, marca de mensajes leídos y procesamiento de respuestas con virtualización de datos.
+  Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, marca de mensajes leídos, procesamiento de respuestas con virtualización de datos y obtención del conteo de mensajes no leídos para el navbar.

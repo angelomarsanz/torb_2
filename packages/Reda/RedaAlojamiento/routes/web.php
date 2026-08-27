@@ -51,6 +51,7 @@ Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
     Route::match(['get', 'post'], 'inbox', [RedaInboxController::class, 'index'])->name('inbox');
     
     // Rutas exclusivas REDA para AJAX del Inbox
+    Route::get('reda/messaging/unread-count', [RedaInboxController::class, 'getUnreadCount'])->name('reda.messaging.unread_count');
     Route::post('reda/messaging/booking', [RedaInboxController::class, 'message']);
     Route::post('reda/messaging/reply', [RedaInboxController::class, 'messageReply']);
 
