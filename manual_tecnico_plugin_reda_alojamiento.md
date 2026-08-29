@@ -25,7 +25,7 @@
   Script para inyectar y gestionar el menú principal REDA en el navbar. Agrega accesos rápidos a Alojamientos, Comercios y Mensajes (Inbox) con contador dinámico de notificaciones no leídas obtenido mediante la función AJAX estandarizada.
 
 - **packages/Reda/RedaAlojamiento/resources/js/general/iconos/notificacionesSvg.js**
-  Ícono SVG para la campana de notificaciones. Estilo minimalista compatible con la interfaz del menú principal.
+  Ícono SVG para la campana de notificaciones. Diseño de campana convencional con forma de pera, ajustado en dimensiones y grosor de trazo para mantener la consistencia visual con los íconos de Alojamientos y Comercios del menú principal.
 
 ### JavaScript (AJAX)
 - **packages/Reda/RedaAlojamiento/resources/js/general/ajax/obtenerConteoNoLeidos.js**
