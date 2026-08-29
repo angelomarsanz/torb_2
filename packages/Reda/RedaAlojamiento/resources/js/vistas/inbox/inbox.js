@@ -185,6 +185,7 @@
 
         if (data.success) {
             $('#msg-' + id).removeClass('text-success font-weight-bold');
+            $('#unread-badge-' + id).remove(); // Eliminar el badge al abrir la conversación
             $('#messages').empty().html(data.respuesta.inbox);
             
             // Inyectamos el contenido de la reserva y marcamos si permite mediación

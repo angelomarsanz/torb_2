@@ -4,12 +4,16 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [29 de Agosto, 2026] - Ajuste Estético del Menú Principal
-- **Tarea:** Sustituir ícono de campana por uno más convencional y ajustar su tamaño/consistencia.
+## [29 de Agosto, 2026] - Mejoras en Inbox y Ajuste Estético
+- **Tarea:** Priorizar conversaciones con mensajes no leídos y mostrar contador individual en el Inbox.
 - **Cambios realizados:**
-    - Se reemplazó el contenido de `notificacionesSvg.js` con un diseño de campana "forma de pera" (estilo Lucide).
-    - Se agregaron las dimensiones explícitas `width="24" height="24"` y las clases `d-block mb-1 mx-auto` al SVG para asegurar paridad con los íconos de Alojamientos y Comercios.
-    - Se verificó la consistencia en el SASS (`main.scss`) para asegurar el correcto escalado (20px/18px) y posicionamiento del badge de notificaciones.
+    - Se modificó `RedaInboxController.php` para calcular `unread_count` por hilo y ordenar `sidebar_messages` priorizando los pendientes.
+    - Se actualizó `inbox.blade.php` para inyectar un badge de éxito (`badge-success`) con el conteo de mensajes no leídos.
+    - Se ajustó `inbox.js` para ocultar dinámicamente el badge y remover el resaltado al abrir una conversación.
+- **Tarea (Anterior):** Sustituir ícono de campana por uno más convencional y ajustar su tamaño/consistencia.
+- **Cambios realizados:**
+    - Se reemplazó el contenido de `notificacionesSvg.js` con un diseño de campana "forma de pera".
+    - Se agregaron las dimensiones y clases SVG para paridad con los otros íconos del menú principal.
 - **Estado:** Completado.
 
 ## [27 de Agosto, 2026] - Implementación de Notificaciones y Menú

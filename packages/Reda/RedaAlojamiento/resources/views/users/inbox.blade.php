@@ -47,11 +47,11 @@ enriquecidos y detalles de la reserva.
                                                             <span class="reda-name-sidebar line-clamp-2 flex-grow-1 pr-2">{{ optional($sideMsg->properties)->name ?? __('Propiedad') }}</span>
                                                             <span class="text-muted text-12 text-right flex-shrink-0"> {{ $sideMsg->created_at->diffForHumans() }}</span>
                                                         </h3>
-														<div class="d-flex justify-content-between">
-															<div>
+														<div class="d-flex justify-content-between align-items-center">
+															<div class="flex-grow-1 overflow-hidden">
 																<p class="text-muted text-14 mb-1 text pr-4">{{ $user->first_name ?? 'Usuario' }}</p>
 																@if (!$loEnvieYo)
-																	<p class="text-14 m-0 {{ $sideMsg->read == 0  ? 'text-success font-weight-bold' : '' }}" id="msg-{{ $sideMsg->booking_id }}" ><i class="far fa-comment-alt"></i> {{ str_limit($sideMsg->message, 20) }} </p>
+																	<p class="text-14 m-0 {{ $sideMsg->unread_count > 0  ? 'text-success font-weight-bold' : '' }}" id="msg-{{ $sideMsg->booking_id }}" ><i class="far fa-comment-alt"></i> {{ str_limit($sideMsg->message, 20) }} </p>
 																@else
 																	<p class="text-14 m-0" >
                                                                         <i class="fas {{ $sideMsg->read == 1 ? 'fa-check-double text-primary' : 'fa-check' }} mr-1"></i>
@@ -59,6 +59,9 @@ enriquecidos y detalles de la reserva.
                                                                     </p>
 																@endif
 															</div>
+                                                            @if ($sideMsg->unread_count > 0)
+                                                                <span class="badge badge-success reda-unread-badge ml-2" id="unread-badge-{{ $sideMsg->booking_id }}">{{ $sideMsg->unread_count }}</span>
+                                                            @endif
 														</div>
 													</div>
 												</div>

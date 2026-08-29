@@ -62,6 +62,9 @@ class RedaInboxController extends Controller
      * Muestra la página principal del Inbox con el listado de conversaciones activas.
      * Identifica a los compañeros de chat, agrupa mensajes por propiedad y carga 
      * el historial unificado inicial para la conversación seleccionada.
+     * Implementa un ordenamiento por prioridad: las conversaciones con mensajes 
+     * no leídos aparecen al inicio de la lista.
+     * 
      * @param Request $request
      * @return \Illuminate\View\View
      */
@@ -114,8 +117,25 @@ class RedaInboxController extends Controller
         });
 
         // 4. Generar lista del Sidebar: un item por cada compañero de chat real Y PROPIEDAD
-        $data['sidebar_messages'] = $allMessages->unique(function ($item) {
+        $sidebarMessages = $allMessages->unique(function ($item) {
             return $item->property_id . '-' . $item->chat_partner_id;
+        })->values();
+
+        // Calcular conteo de no leídos por cada hilo
+        $sidebarMessages->transform(function($sideMsg) use ($allMessages, $userId) {
+            $sideMsg->unread_count = $allMessages->where('property_id', $sideMsg->property_id)
+                ->where('chat_partner_id', $sideMsg->chat_partner_id)
+                ->where('sender_id', '!=', $userId)
+                ->where('read', 0)
+                ->count();
+            return $sideMsg;
+        });
+
+        // Ordenar: primero los que tienen unread_count > 0, luego por ID desc (más reciente)
+        $data['sidebar_messages'] = $sidebarMessages->sort(function($a, $b) {
+            if ($a->unread_count > 0 && $b->unread_count == 0) return -1;
+            if ($a->unread_count == 0 && $b->unread_count > 0) return 1;
+            return $b->id <=> $a->id;
         })->values();
 
         $data['messages'] = [];
