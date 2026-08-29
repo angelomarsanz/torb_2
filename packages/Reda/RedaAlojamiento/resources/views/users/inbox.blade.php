@@ -60,7 +60,7 @@ enriquecidos y detalles de la reserva.
 																@endif
 															</div>
                                                             @if ($sideMsg->unread_count > 0)
-                                                                <span class="badge badge-success reda-unread-badge ml-2" id="unread-badge-{{ $sideMsg->booking_id }}">{{ $sideMsg->unread_count }}</span>
+                                                                <span class="reda-unread-badge ml-2" id="unread-badge-{{ $sideMsg->booking_id }}">{{ $sideMsg->unread_count }}</span>
                                                             @endif
 														</div>
 													</div>
