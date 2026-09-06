@@ -18,6 +18,9 @@
   Controlador de administración para el panel de mediaciones (Disputas). Este archivo gestiona la lógica del dashboard de mediaciones para el administrador, permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo, gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
 
 ### JavaScript (General)
+- **packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js**
+  Script responsable de inyectar dinámicamente el botón de "Reservar" o "Ver reserva" en las tarjetas de inmuebles de la aplicación. Implementa lógica para detectar el `propertyId` y `slug`, verifica si el usuario está autenticado y consulta si existe una reserva vigente para cambiar el texto y enlace del botón de manera proactiva.
+
 - **packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js**
   Script de integración general para funcionalidades de mediación. Este archivo se encarga de inyectar la lógica de mediación en vistas preexistentes del proyecto principal, como el Inbox (chat general) y la barra lateral de detalles de reservación. Permite verificar disputas, solicitar nuevas mediaciones y enriquecer el chat original con información del plugin Reda.
 
@@ -34,6 +37,9 @@
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php**
   Controlador para la gestión de mediaciones (disputas). Maneja la lógica de negocio para crear, verificar y listar mediaciones. Incluye validaciones de estado de reserva para permitir mediaciones solo en reservaciones formales y no en simples consultas.
+
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php**
+  Controlador para gestiones relacionadas con las reservaciones dentro del ecosistema REDA. Proporciona métodos para verificar el estado de las reservas de un usuario, como la obtención de IDs de inmuebles con reservas vigentes (aceptadas y no finalizadas) para adaptar la interfaz de usuario.
 
 
 ## Mensajería (Inbox)

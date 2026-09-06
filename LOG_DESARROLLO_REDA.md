@@ -4,6 +4,21 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [06 de Septiembre, 2026] - Verificación de Reservas Activas en Inyección de Botón
+- **Tarea:** Cambiar el botón "Reservar" por "Ver reserva" si el usuario ya tiene una reserva vigente para el inmueble.
+- **Cambios realizados:**
+    - Se creó `RedaBookingController.php` con el método `getActiveBookingPropertyIds` para obtener los IDs de inmuebles con reservas aceptadas y no finalizadas.
+    - Se registró la ruta `reda/bookings/check-active` en el grupo de rutas autenticadas.
+    - Se actualizó `reserve-injection.js` para:
+        - Consultar el nuevo endpoint si el usuario ha iniciado sesión (`window.AuthCheck`).
+        - Cachear los IDs de propiedades con reservas activas.
+        - Cambiar dinámicamente el texto a "Ver reserva" y el enlace a `trips/active` si el `propertyId` coincide.
+        - Se agregó soporte para actualizar botones ya inyectados si la lista de reservas se carga posteriormente.
+    - Se agregó la traducción `"Ver reserva": "Ver reserva"` a `es.json`.
+- **Estado:** Completado.
+
+---
+
 ## [29 de Agosto, 2026] - Mejoras en Inbox y Refinamiento Estético Final
 - **Tarea:** Priorizar conversaciones con mensajes no leídos y mostrar contador individual en el Inbox.
 - **Cambios realizados:**

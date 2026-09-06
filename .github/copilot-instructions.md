@@ -287,5 +287,6 @@ Los archivos se suben vía FTP al servidor Vesta de Desarrollo para sus respecti
 ## Documentación archivos del plugin
 Todos los archivos que se creen dentro del plugin packages/Reda/RedaAlojamiento deben documentarse al inicio del archivo. Crear un resumen de lo que hace el archivo. Así también cada función que contenga ese archivo debe documentarse
 Además de documentar individualmente cada archivo, cada vez que se cree un archivo en el plugin packages/Reda/RedaAlojamiento se debe agregar un resumen de la documentación de ese archivo en manual_tecnico_plugin_reda_alojamiento.md : Se coloca el nombre del archivo como un título y luego dejando una sangría se coloca el resumen.
+Si es un archivo que fue creado en el pasado, antes de implementar esta directriz y no tiene ninguna documentación al inicio del archivo y tampoco están documentadas sus funciones (en caso de que tenga funciones) entonces proceder a documentar el archivo y sus funciones y además agregar la documentación de ese archivo en el manual_tecnico_plugin_reda_alojamiento.md
 Si se modifica el archivo se debe modificar tanto el resumen que se hace directamente en el archivo como el resumen en el archivo manual_tecnico_plugin_reda_alojamiento.md
 Si se modifica alguna función de un archivo Javascript o Php también debe actualizarse la documentación de la función 
