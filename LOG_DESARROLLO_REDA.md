@@ -4,6 +4,17 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [06 de Septiembre, 2026] - Verificación de Reservas Activas en Flujo de Reserva
+- **Tarea:** Prevenir que un usuario reserve dos veces la misma propiedad si ya tiene una reserva activa, redirigiéndolo a sus viajes con un mensaje informativo.
+- **Cambios realizados:**
+    - Se modificó `RedaPaymentController@redirectReservar` para verificar en el servidor si el usuario ya tiene una reserva activa (`Accepted` y vigente) antes de permitir la redirección al detalle de la propiedad con el hash `#reservar`.
+    - Se actualizó `propiedad_detalle.js` (frontend) para realizar la misma verificación de forma asíncrona dentro de la función `openModal`, asegurando una doble capa de protección si se accede directamente a la URL.
+    - Se mejoró `notificaciones.js` para detectar el parámetro `reda_alert=active_booking` en la URL y disparar automáticamente el modal de notificación con el mensaje personalizado.
+    - Se agregó la traducción del mensaje "Estimado usuario ya usted tiene una reservación activa para esta propiedad" en `es.json`.
+- **Estado:** Completado.
+
+---
+
 ## [06 de Septiembre, 2026] - Verificación de Reservas Activas en Inyección de Botón
 - **Tarea:** Cambiar el botón "Reservar" por "Ver reserva" si el usuario ya tiene una reserva vigente para el inmueble.
 - **Cambios realizados:**

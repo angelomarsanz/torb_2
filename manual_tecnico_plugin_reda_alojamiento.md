@@ -1,10 +1,17 @@
 # Documentación de Archivos del Plugin RedaAlojamiento
 
-## Mediaciones (Disputas)
+## Alojamientos (Hospedajes)
 
-### Vistas
-- **packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/index.blade.php**
-  Vista principal del panel de mediaciones (disputas) para el usuario. Proporciona un dashboard para listar, filtrar y ver el progreso de las mediaciones activas. Incluye la interfaz para la línea de tiempo, detalles de la reservación y modales para chat y visualización de archivos adjuntos.
+### JavaScript (Vistas)
+- **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js**
+  Gestiona el sistema de reserva en modal y botones flotantes para la vista de detalle de propiedad. Implementa la lógica para ocultar el sidebar original, inyectar el botón flotante con animación y manejar la apertura del modal mediante el hash `#reservar`. Incluye una verificación proactiva de reservas activas para prevenir duplicidades.
+
+### Controladores
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php**
+  Controlador extendido para gestionar el flujo de pagos y redirecciones de reserva. Asegura que los datos de la reserva se mantengan persistentes durante el proceso de login y valida si el usuario ya posee una reservación vigente antes de permitir el acceso al formulario de reserva, redirigiendo con alertas personalizadas si es necesario.
+
+## Mediaciones (Disputas)
+... (resto del archivo)
 
 - **packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php**
   Vista de administración para el listado y gestión de mediaciones (Disputas). Esta interfaz permite a los administradores visualizar todos los casos de mediación, filtrarlos por estado, realizar seguimiento del progreso mediante una línea de tiempo y acceder a los chats de comunicación entre las partes involucradas.

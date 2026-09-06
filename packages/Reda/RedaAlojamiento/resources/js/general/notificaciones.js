@@ -192,4 +192,20 @@ $(function() {
             }
         }
     });
+
+    /**
+     * Detecta alertas especiales enviadas por el controlador REDA vía URL.
+     */
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('reda_alert')) {
+        const alerta = urlParams.get('reda_alert');
+        if (alerta === 'active_booking') {
+            const mensaje = window.RedaAlojamientoJson["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad";
+            window.RedaNotificaciones.notificar(
+                window.RedaAlojamientoJson["Notificación"] || "Notificación",
+                mensaje,
+                'info'
+            );
+        }
+    }
 });
