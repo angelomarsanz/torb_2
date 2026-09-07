@@ -1,6 +1,7 @@
 /**
  * Objeto global para gestionar notificaciones y animaciones de carga del plugin Reda.
  */
+
 window.RedaNotificaciones = {
 
     /**
@@ -122,12 +123,50 @@ window.RedaNotificaciones = {
     }
 };
 
+/**
+ * Detección prioritaria de alertas enviadas vía URL.
+ * Se ejecuta después de definir el objeto RedaNotificaciones para evitar errores de referencia.
+ */
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('reda_alert')) {
+        const alerta = urlParams.get('reda_alert');
+        console.log('REDA Notificaciones: Alerta detectada en URL:', alerta);
+        
+        if (alerta === 'active_booking') {
+            let intentos = 0;
+            const checkInterval = setInterval(() => {
+                intentos++;
+                // Verificamos jQuery, el Modal y nuestro objeto
+                const jqueryListo = typeof jQuery !== 'undefined';
+                const $modal = jqueryListo ? jQuery('#modal-notificacion') : [];
+                
+                if ($modal.length && window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                    clearInterval(checkInterval);
+                    console.log('REDA Notificaciones: Disparando modal informativo');
+                    
+                    const dict = window.RedaAlojamientoJson || {};
+                    const mensaje = dict["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad";
+                    const titulo = dict["Notificación"] || "Notificación";
+
+                    window.RedaNotificaciones.notificar(titulo, mensaje, 'info');
+                }
+
+                if (intentos > 40) {
+                    console.error('REDA Notificaciones: Tiempo de espera agotado para el modal');
+                    clearInterval(checkInterval);
+                }
+            }, 100);
+        }
+    }
+})();
+
 // Mantener compatibilidad con funciones globales previas si existen
 window.mostrarNotificacion = (titulo, mensaje, tipo, recargar) => {
     window.RedaNotificaciones.notificar(titulo, mensaje, tipo, recargar);
 };
 
-// --- GESTIÓN DE BFCACHE Y FOCO (PARA ELIMINAR EL MODAL AL REGRESAR ATRÁS O REENFOCAR) ---
+// --- GESTIÓN DE BFCACHE Y FOCO ---
 window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
         if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
@@ -136,14 +175,9 @@ window.addEventListener('pageshow', function(event) {
     }
 });
 
-/**
- * Cuando el usuario regresa a la ventana (por ejemplo después de ver un PDF en móvil)
- * ocultamos el modal de espera si está bloqueando la pantalla.
- */
 window.addEventListener('focus', function() {
     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
         const $modal = jQuery('#modal-notificacion');
-        // Solo si es el modal de espera (el que no tiene footer/botones)
         if ($modal.length && $modal.find('.modal-footer').hasClass('d-none') && $modal.is(':visible')) {
             window.RedaNotificaciones.ocultar();
         }
@@ -184,28 +218,10 @@ window.mostrarConfirmacion = (mensaje, callback, titulo = '', textoBoton = '') =
 // --- GESTIÓN DE CLICKS GLOBAL PARA EL PLUGIN (ANIMACIÓN DE CARGA) ---
 $(function() {
     $(document).on('click', 'a[href*="/reda/negocios"]', function(e) {
-        // Solo si es un link interno, no se abre en pestaña nueva y no tiene la clase 'no-esperar'
         if (this.href && !this.target && !e.ctrlKey && !e.metaKey && !$(this).hasClass('no-esperar')) {
-             // Evitamos disparar si es el mismo ID de página (anclas #)
              if (!this.href.includes(window.location.pathname + '#')) {
                 window.RedaNotificaciones.esperar();
             }
         }
     });
-
-    /**
-     * Detecta alertas especiales enviadas por el controlador REDA vía URL.
-     */
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('reda_alert')) {
-        const alerta = urlParams.get('reda_alert');
-        if (alerta === 'active_booking') {
-            const mensaje = window.RedaAlojamientoJson["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad";
-            window.RedaNotificaciones.notificar(
-                window.RedaAlojamientoJson["Notificación"] || "Notificación",
-                mensaje,
-                'info'
-            );
-        }
-    }
 });

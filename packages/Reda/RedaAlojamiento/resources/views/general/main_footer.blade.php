@@ -2,9 +2,16 @@
 
 {{-- 1. Traducciones de Laravel a JS --}}
 <script>
+    // Silenciador de errores de terceros (evita bloqueos por scripts originales)
+    window.dateRangeBtn = window.dateRangeBtn || null;
+
     window.AuthCheck = {{ Auth::check() ? 'true' : 'false' }};
     window.RedaAlojamiento = @json(__('reda-alojamiento::messages'));
     window.RedaAlojamientoJson = @json(__('reda-alojamiento::es'));
+    // Refuerzo para asegurar que sea un objeto
+    if (typeof window.RedaAlojamientoJson !== 'object' || window.RedaAlojamientoJson === null) {
+        window.RedaAlojamientoJson = {};
+    }
 </script>
 
 {{-- 2. Modales de uso general --}}

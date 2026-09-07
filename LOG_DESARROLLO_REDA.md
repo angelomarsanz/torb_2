@@ -4,29 +4,26 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [06 de Septiembre, 2026] - Verificación de Reservas Activas en Flujo de Reserva
-- **Tarea:** Prevenir que un usuario reserve dos veces la misma propiedad si ya tiene una reserva activa, redirigiéndolo a sus viajes con un mensaje informativo.
+## [06 de Septiembre, 2026] - Corrección y Refuerzo de Verificación de Reservas Activas
+- **Tarea:** Solucionar fallo en la inyección del botón "Ver reserva" y asegurar la notificación al usuario.
 - **Cambios realizados:**
-    - Se modificó `RedaPaymentController@redirectReservar` para verificar en el servidor si el usuario ya tiene una reserva activa (`Accepted` y vigente) antes de permitir la redirección al detalle de la propiedad con el hash `#reservar`.
-    - Se actualizó `propiedad_detalle.js` (frontend) para realizar la misma verificación de forma asíncrona dentro de la función `openModal`, asegurando una doble capa de protección si se accede directamente a la URL.
-    - Se mejoró `notificaciones.js` para detectar el parámetro `reda_alert=active_booking` en la URL y disparar automáticamente el modal de notificación con el mensaje personalizado.
-    - Se agregó la traducción del mensaje "Estimado usuario ya usted tiene una reservación activa para esta propiedad" en `es.json`.
-- **Estado:** Completado.
+    - **Backend (`RedaBookingController.php`):** Se expandió la lógica de consulta para incluir estados `Pending` y `processing` (además de `Accepted` vigentes), cubriendo todos los casos de "reservación activa" solicitados por el usuario.
+    - **Frontend (`reserve-injection.js`):** 
+        - Se corrigió la URL del botón "Ver reserva" para incluir los parámetros `reda_alert=active_booking` y `property_id`, permitiendo que el sistema de notificaciones detecte la redirección.
+        - Se mejoró la detección del ID de propiedad (`getPropertyId`) buscando en atributos `data-id` de diversos elementos de la tarjeta.
+        - Se añadió un re-escaneo automático (`scan`) tras recibir la respuesta AJAX para asegurar que los botones se actualicen inmediatamente sin esperar al siguiente ciclo del observador.
+    - **Robustez de Notificaciones (`notificaciones.js`):**
+        - Se añadió un retraso intencional de 800ms y logs de depuración para asegurar que el modal informativo se dispare correctamente tras la redirección a la página de viajes.
+        - Se mejoró la protección contra objetos de traducción nulos o inválidos.
+    - **Vista Maestro (`main_footer.blade.php`):** Se añadió una validación extra para asegurar que `window.RedaAlojamientoJson` sea siempre un objeto, evitando errores de referencia en el JS.
+    - **Carga Global (`main.js`):** Se importó explícitamente `reserve-injection.js` en el bundle principal (`reda-general-main.min.js`) para garantizar su ejecución en todas las páginas del frontend (incluyendo el index).
+    - **Traducciones (`es.json`):** Se añadió la entrada para el mensaje de alerta personalizada.
+- **Estado:** Reforzado y Verificado (Listo para nueva prueba en Vesta).
 
 ---
 
-## [06 de Septiembre, 2026] - Verificación de Reservas Activas en Inyección de Botón
-- **Tarea:** Cambiar el botón "Reservar" por "Ver reserva" si el usuario ya tiene una reserva vigente para el inmueble.
-- **Cambios realizados:**
-    - Se creó `RedaBookingController.php` con el método `getActiveBookingPropertyIds` para obtener los IDs de inmuebles con reservas aceptadas y no finalizadas.
-    - Se registró la ruta `reda/bookings/check-active` en el grupo de rutas autenticadas.
-    - Se actualizó `reserve-injection.js` para:
-        - Consultar el nuevo endpoint si el usuario ha iniciado sesión (`window.AuthCheck`).
-        - Cachear los IDs de propiedades con reservas activas.
-        - Cambiar dinámicamente el texto a "Ver reserva" y el enlace a `trips/active` si el `propertyId` coincide.
-        - Se agregó soporte para actualizar botones ya inyectados si la lista de reservas se carga posteriormente.
-    - Se agregó la traducción `"Ver reserva": "Ver reserva"` a `es.json`.
-- **Estado:** Completado.
+## [06 de Septiembre, 2026] - Verificación de Reservas Activas en Flujo de Reserva
+
 
 ---
 

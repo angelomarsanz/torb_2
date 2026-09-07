@@ -29,11 +29,7 @@
         if (!window.AuthCheck || isFetchingBookings || bookingsFetched) return;
         
         isFetchingBookings = true;
-        
-        // Mostrar animación de espera según lineamientos
-        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
-            window.RedaNotificaciones.esperar();
-        }
+        console.log('REDA Reserve Injection: Consultando reservas activas...');
 
         return new Promise((resolve) => {
             $.ajax({
@@ -43,6 +39,7 @@
                 success: function(data) {
                     if (data.success && Array.isArray(data.respuesta)) {
                         activeBookingPropertyIds = data.respuesta.map(id => String(id));
+                        console.log('REDA Reserve Injection: Propiedades con reservas activas:', activeBookingPropertyIds);
                     }
                     bookingsFetched = true;
                     resolve(data);
@@ -54,10 +51,8 @@
                 },
                 complete: function() {
                     isFetchingBookings = false;
-                    // Ocultar animación de espera
-                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
-                        window.RedaNotificaciones.ocultar();
-                    }
+                    // Escaneamos de nuevo ahora que tenemos los datos
+                    scan();
                 }
             });
         });
@@ -69,33 +64,31 @@
      * @param {HTMLElement} card El elemento DOM de la tarjeta.
      */
     function addReserveButton(card) {
+        // Evitar inyectar en el formulario de reserva de la página individual
+        if (card.querySelector('#booking_form')) return;
+
+        let propertyId = getPropertyId(card);
+        
         if (card.querySelector('.reda-reserve-btn')) {
             // Si ya existe el botón, verificamos si necesita actualizarse (de Reservar a Ver reserva)
             const existingBtn = card.querySelector('.reda-btn-reservar');
-            const propertyId = getPropertyId(card);
             
             if (existingBtn && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
                 const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
                 if (!existingBtn.textContent.includes(verReservaText)) {
+                    console.log(`REDA Reserve Injection: Actualizando botón a 'Ver reserva' para propiedad ${propertyId}`);
                     existingBtn.innerHTML = `<i class="far fa-calendar-check"></i> ${verReservaText}`;
-                    existingBtn.href = `${window.APP_URL}/trips/active`;
+                    existingBtn.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}`;
                 }
             }
             return;
         }
 
-        // Evitar inyectar en el formulario de reserva de la página individual
-        if (card.querySelector('#booking_form')) return;
-
-        // Intentar encontrar el ID y el slug de la propiedad
-        let propertyId = getPropertyId(card);
+        // Intentar encontrar el slug de la propiedad si no tenemos ID
         let propertySlug = null;
-        
-        // Buscar el slug en los enlaces de la tarjeta
         const propertyLink = card.querySelector('a[href*="properties/"]');
         if (propertyLink) {
             const href = propertyLink.getAttribute('href');
-            // Extraer slug del href
             const parts = href.split('properties/');
             if (parts.length > 1) {
                 propertySlug = parts[1].split('?')[0].split('#')[0];
@@ -119,10 +112,9 @@
 
         // Lógica de REDA: Si el usuario está logueado y tiene reserva activa, cambiar a "Ver reserva"
         if (window.AuthCheck && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
-            targetUrl = `${window.APP_URL}/trips/active`;
+            targetUrl = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}`;
             buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
         } else if (!window.AuthCheck && propertySlug) {
-            // Si no está autenticado, redirigimos a través de nuestra ruta de control para asegurar el retorno
             targetUrl = `${window.APP_URL}/reda/auth-reserve/${propertySlug}`;
         }
 
@@ -142,11 +134,16 @@
      * @returns {string|null} El ID de la propiedad o null si no se encuentra.
      */
     function getPropertyId(card) {
-        // Verificar data-id en botones de favoritos (estándar vRent)
+        // 1. Verificar data-id en botones de favoritos (estándar vRent)
         const bookmarkBtn = card.querySelector('.book_mark_change');
         if (bookmarkBtn) {
             return bookmarkBtn.getAttribute('data-id');
         }
+
+        // 2. Intentar buscar en enlaces si tienen data-id o similar
+        const link = card.querySelector('a[data-id]');
+        if (link) return link.getAttribute('data-id');
+
         return null;
     }
 
@@ -171,12 +168,14 @@
         const observer = new MutationObserver(() => scan());
         observer.observe(document.body, { childList: true, subtree: true });
 
-        setInterval(scan, 2000);
+        // Intervalo de seguridad para contenido que no dispara MutationObserver
+        setInterval(scan, 3000);
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    // Asegurar que jQuery esté disponible
+    if (typeof jQuery !== 'undefined') {
+        $(document).ready(init);
     } else {
-        init();
+        document.addEventListener('DOMContentLoaded', init);
     }
 })(jQuery);

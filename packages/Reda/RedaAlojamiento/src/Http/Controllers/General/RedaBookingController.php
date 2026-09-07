@@ -18,8 +18,9 @@ class RedaBookingController extends Controller
 {
     /**
      * Obtiene los IDs de inmuebles con reservas activas o vigentes para el usuario autenticado.
-     * Se considera "Vigente" una reserva que esté en estado 'Accepted' y cuya fecha 
-     * de finalización sea hoy o en el futuro.
+     * Se considera "Vigente" una reserva que esté:
+     * 1. En estado 'Accepted' y cuya fecha de finalización sea hoy o en el futuro.
+     * 2. En estado 'Pending' o 'processing' (reservas en curso de aprobación o pago).
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -39,10 +40,15 @@ class RedaBookingController extends Controller
             $userId = Auth::id();
             $today = date('Y-m-d');
 
-            // Buscamos reservas aceptadas que no hayan terminado
+            // Buscamos reservas aceptadas vigentes O reservas pendientes/en proceso
             $activePropertyIds = Bookings::where('user_id', $userId)
-                ->where('status', 'Accepted')
-                ->where('end_date', '>=', $today)
+                ->where(function($query) use ($today) {
+                    $query->where(function($q) use ($today) {
+                        $q->where('status', 'Accepted')
+                          ->where('end_date', '>=', $today);
+                    })
+                    ->orWhereIn('status', ['Pending', 'processing']);
+                })
                 ->pluck('property_id')
                 ->unique()
                 ->toArray();
