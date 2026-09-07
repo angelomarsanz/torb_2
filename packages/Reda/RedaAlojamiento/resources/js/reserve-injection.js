@@ -68,23 +68,48 @@
         if (card.querySelector('#booking_form')) return;
 
         let propertyId = getPropertyId(card);
+        let isTripsPage = window.location.pathname.includes('/trips/');
         
+        // --- 1. LÓGICA ESPECIAL PARA PÁGINA DE VIAJES ---
+        if (isTripsPage) {
+            const statusBadge = card.querySelector('.badge');
+            if (statusBadge) {
+                const status = statusBadge.textContent.trim().toLowerCase();
+                // Estados "activos" que NO deben mostrar botón de reservar en esta página
+                const activeStatuses = ['actual', 'pendiente', 'próximamente', 'accepted', 'pending', 'processing'];
+                const isActiveCard = activeStatuses.some(s => status.includes(s));
+                
+                if (isActiveCard) {
+                    // Si existe un botón inyectado para esta tarjeta activa en viajes, lo removemos
+                    const existingRedaBtn = card.querySelector('.reda-reserve-btn');
+                    if (existingRedaBtn) existingRedaBtn.remove();
+                    return; 
+                }
+            }
+        }
+
+        // --- 2. LÓGICA DE ACTUALIZACIÓN (Si ya existe el botón) ---
         if (card.querySelector('.reda-reserve-btn')) {
-            // Si ya existe el botón, verificamos si necesita actualizarse (de Reservar a Ver reserva)
             const existingBtn = card.querySelector('.reda-btn-reservar');
             
-            if (existingBtn && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
+            // Si NO estamos en viajes y tiene reserva activa -> Mostrar "Ver reserva"
+            if (!isTripsPage && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
                 const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
                 if (!existingBtn.textContent.includes(verReservaText)) {
-                    console.log(`REDA Reserve Injection: Actualizando botón a 'Ver reserva' para propiedad ${propertyId}`);
                     existingBtn.innerHTML = `<i class="far fa-calendar-check"></i> ${verReservaText}`;
                     existingBtn.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}`;
+                }
+            } else if (existingBtn) {
+                // Si ya no es activa o estamos en viajes -> Asegurar que diga "Reservar"
+                const reservarText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Reservar"]) || "Reservar";
+                if (!existingBtn.textContent.includes(reservarText) && !existingBtn.textContent.includes("Ver reserva")) {
+                     // Solo restauramos si el texto es algo diferente (evita bucles)
                 }
             }
             return;
         }
 
-        // Intentar encontrar el slug de la propiedad si no tenemos ID
+        // --- 3. LÓGICA DE INYECCIÓN INICIAL ---
         let propertySlug = null;
         const propertyLink = card.querySelector('a[href*="properties/"]');
         if (propertyLink) {
@@ -97,7 +122,6 @@
 
         if (!propertySlug && !propertyId) return;
 
-        // Encontrar el contenedor donde se adjuntará el botón
         const container = card.querySelector('.review-0') || 
                           card.querySelector('.card-body') || 
                           card;
@@ -110,8 +134,8 @@
         let targetUrl = propertySlug ? `${window.APP_URL}/properties/${propertySlug}#reservar` : `${window.APP_URL}/payments/book/${propertyId}`;
         let buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Reservar"]) || "Reservar";
 
-        // Lógica de REDA: Si el usuario está logueado y tiene reserva activa, cambiar a "Ver reserva"
-        if (window.AuthCheck && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
+        // Cambiar a "Ver reserva" si aplica (fuera de la página de viajes)
+        if (!isTripsPage && window.AuthCheck && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
             targetUrl = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}`;
             buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
         } else if (!window.AuthCheck && propertySlug) {
@@ -134,16 +158,10 @@
      * @returns {string|null} El ID de la propiedad o null si no se encuentra.
      */
     function getPropertyId(card) {
-        // 1. Verificar data-id en botones de favoritos (estándar vRent)
         const bookmarkBtn = card.querySelector('.book_mark_change');
-        if (bookmarkBtn) {
-            return bookmarkBtn.getAttribute('data-id');
-        }
-
-        // 2. Intentar buscar en enlaces si tienen data-id o similar
+        if (bookmarkBtn) return bookmarkBtn.getAttribute('data-id');
         const link = card.querySelector('a[data-id]');
         if (link) return link.getAttribute('data-id');
-
         return null;
     }
 
@@ -164,15 +182,11 @@
      */
     function init() {
         scan();
-
         const observer = new MutationObserver(() => scan());
         observer.observe(document.body, { childList: true, subtree: true });
-
-        // Intervalo de seguridad para contenido que no dispara MutationObserver
         setInterval(scan, 3000);
     }
 
-    // Asegurar que jQuery esté disponible
     if (typeof jQuery !== 'undefined') {
         $(document).ready(init);
     } else {
