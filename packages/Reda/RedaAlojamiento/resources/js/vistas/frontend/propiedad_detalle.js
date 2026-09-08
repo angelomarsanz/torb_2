@@ -8,6 +8,7 @@
  * - Oculta el sidebar de reserva original.
  * - Inyecta un botón flotante responsivo.
  * - Verifica reservas activas antes de permitir una nueva reservación.
+ * - Cambia dinámicamente el botón a "Ver reserva" si ya existe una reservación.
  * - Maneja disparadores por hash (#reservar) para integraciones externas.
  */
 
@@ -34,6 +35,7 @@
             console.log('REDA Property Detail: Inicializando sistema de reserva en modal');
 
             this.setupUI();
+            this.checkActiveBookingStatus(); // Verificación proactiva para el botón flotante
             this.handleHash();
             this.bindEvents();
         },
@@ -82,6 +84,45 @@
         },
 
         /**
+         * Verifica proactivamente si el usuario ya tiene una reserva para esta propiedad
+         * y actualiza el botón flotante si es necesario.
+         */
+        checkActiveBookingStatus: function() {
+            if (!window.AuthCheck) return;
+
+            const self = this;
+            // REDA: Usamos el ID del input ya que el archivo original no tiene atributo 'name'
+            const propertyId = String($('#property_id').val() || '');
+            const propertyName = $('.property-name').text().trim() || $('h1').first().text().trim() || "";
+            const slug = window.location.pathname.split('/').pop();
+
+            if (!propertyId) {
+                console.warn('REDA Property Detail: No se pudo obtener el ID de la propiedad.');
+                return;
+            }
+
+            $.ajax({
+                url: `${window.APP_URL}/reda/bookings/check-active`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.success && typeof data.respuesta === 'object' && data.respuesta[propertyId]) {
+                        console.log('REDA Property Detail: Reserva activa detectada proactivamente para ID:', propertyId);
+                        const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
+                        const $btn = $('#trigger-modal-reserva');
+
+                        // Cambiamos el texto e ícono
+                        $btn.find('span').text(verReservaText);
+                        $btn.find('i').removeClass('far fa-calendar-alt').addClass('far fa-calendar-check');
+
+                        // Cambiamos el comportamiento: de disparar modal a redirigir directamente
+                        $btn.attr('id', 'btn-redirigir-viajes');
+                        $btn.attr('href', `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}&property_slug=${slug}`);
+                    }
+                }
+            });
+        },
+
+        /**
  * Realiza la verificación AJAX estandarizada y procede a abrir el modal o redirigir.
  */
 ejecutarAperturaSegura: function() {
@@ -91,10 +132,10 @@ ejecutarAperturaSegura: function() {
     const $modal = $(this.config.modalId);
 
     if (window.AuthCheck) {
-        const propertyId = String($('input[name="property_id"]').val());
+        const propertyId = String($('#property_id').val() || '');
         const propertyName = $('.property-name').text().trim() || $('h1').first().text().trim() || "";
         const slug = window.location.pathname.split('/').pop();
-        
+
         if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
             window.RedaNotificaciones.esperar();
         }
@@ -189,3 +230,4 @@ ejecutarAperturaSegura: function() {
     });
 
 })(jQuery);
+
