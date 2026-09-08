@@ -104,7 +104,8 @@ class RedaPaymentController extends PaymentController
         // Si ya está autenticado, verificamos si tiene reserva activa para este inmueble
         if ($propiedad) {
             if ($this->tieneReservaActiva($propiedad->id)) {
-                return redirect('trips/active?reda_alert=active_booking');
+                $nombrePropiedad = urlencode($propiedad->name);
+                return redirect("trips/active?reda_alert=active_booking&property_name={$nombrePropiedad}");
             }
         }
         
@@ -125,7 +126,8 @@ class RedaPaymentController extends PaymentController
         if ($propiedad && Auth::check()) {
             if ($this->tieneReservaActiva($propiedad->id)) {
                 Log::info("REDA Payment: Usuario autenticado con reserva activa para {$slug}. Redirigiendo a viajes.");
-                return redirect('trips/active?reda_alert=active_booking');
+                $nombrePropiedad = urlencode($propiedad->name);
+                return redirect("trips/active?reda_alert=active_booking&property_name={$nombrePropiedad}");
             }
         }
 

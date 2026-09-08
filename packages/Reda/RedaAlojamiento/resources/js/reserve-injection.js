@@ -15,12 +15,12 @@
 
     console.log('REDA Reserve Injection: Iniciando script en ' + window.location.href);
 
-    let activeBookingPropertyIds = [];
+    let activeBookingProperties = {}; // Ahora es un objeto { id: name }
     let isFetchingBookings = false;
     let bookingsFetched = false;
 
     /**
-     * Realiza una petición AJAX para obtener los IDs de las propiedades con reservas activas.
+     * Realiza una petición AJAX para obtener los IDs y nombres de las propiedades con reservas activas.
      * Muestra una animación de espera durante la carga.
      * 
      * @returns {Promise} Resuelve cuando la petición termina.
@@ -37,9 +37,9 @@
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    if (data.success && Array.isArray(data.respuesta)) {
-                        activeBookingPropertyIds = data.respuesta.map(id => String(id));
-                        console.log('REDA Reserve Injection: Propiedades con reservas activas:', activeBookingPropertyIds);
+                    if (data.success && typeof data.respuesta === 'object') {
+                        activeBookingProperties = data.respuesta;
+                        console.log('REDA Reserve Injection: Propiedades con reservas activas:', activeBookingProperties);
                     }
                     bookingsFetched = true;
                     resolve(data);
@@ -93,11 +93,13 @@
             const existingBtn = card.querySelector('.reda-btn-reservar');
             
             // Si NO estamos en viajes y tiene reserva activa -> Mostrar "Ver reserva"
-            if (!isTripsPage && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
+            if (!isTripsPage && propertyId && activeBookingProperties[String(propertyId)]) {
                 const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
+                const propertyName = activeBookingProperties[String(propertyId)] || "";
+
                 if (!existingBtn.textContent.includes(verReservaText)) {
                     existingBtn.innerHTML = `<i class="far fa-calendar-check"></i> ${verReservaText}`;
-                    existingBtn.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}`;
+                    existingBtn.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}`;
                 }
             } else if (existingBtn) {
                 // Si ya no es activa o estamos en viajes -> Asegurar que diga "Reservar"
@@ -135,8 +137,9 @@
         let buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Reservar"]) || "Reservar";
 
         // Cambiar a "Ver reserva" si aplica (fuera de la página de viajes)
-        if (!isTripsPage && window.AuthCheck && propertyId && activeBookingPropertyIds.includes(String(propertyId))) {
-            targetUrl = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}`;
+        if (!isTripsPage && window.AuthCheck && propertyId && activeBookingProperties[String(propertyId)]) {
+            const propertyName = activeBookingProperties[String(propertyId)] || "";
+            targetUrl = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}`;
             buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
         } else if (!window.AuthCheck && propertySlug) {
             targetUrl = `${window.APP_URL}/reda/auth-reserve/${propertySlug}`;

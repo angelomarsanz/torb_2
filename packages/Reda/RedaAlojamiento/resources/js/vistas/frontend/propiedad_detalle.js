@@ -60,8 +60,8 @@
             // 3. Inyectar botón flotante
             const floatingBtnHtml = `
                 <div class="${this.config.floatingBtnContainerClass}">
-                    <a href="javascript:void(0)" class="btn-flotante-inner">
-                        <i class="far fa-calendar-alt"></i>
+                    <a href="javascript:void(0)" class="btn-flotante-inner" id="trigger-modal-reserva">
+                        <i class="far fa-calendar-alt mr-2"></i>
                         <span>${btnText}</span>
                     </a>
                 </div>
@@ -82,51 +82,6 @@
         },
 
         /**
-         * Abre el modal de reservación.
-         * Antes verifica mediante AJAX si el usuario tiene una reserva activa para este inmueble.
-         * Utiliza el estándar de animaciones de espera del plugin.
-         * 
-         * @returns {Promise}
-         */
-        openModal: async function() {
-            const self = this;
-            const $form = $(this.config.formId);
-            const $modalBody = $(this.config.modalBodyId);
-            const $modal = $(this.config.modalId);
-
-            // Verificación de Reservas Activas (Regla REDA)
-            if (window.AuthCheck) {
-                const propertyId = String($('input[name="property_id"]').val());
-
-                // Mostrar animación de espera
-                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
-                    window.RedaNotificaciones.esperar();
-                }
-
-                try {
-                    const data = await new Promise((resolve) => {
-                        $.ajax({
-                            url: `${window.APP_URL}/reda/bookings/check-active`,
-                            type: 'GET',
-                            dataType: 'json',
-                            success: (res) => resolve(data), // Error en el nombre de variable res/data, corregimos abajo
-                            error: () => resolve({ success: false }),
-                            complete: () => {
-                                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
-                                    window.RedaNotificaciones.ocultar();
-                                }
-                            }
-                        });
-                    });
-                    // Re-intento de lógica de respuesta correcta
-                } catch (e) { /* Error silencioso */ }
-            }
-            // (Autocorrección de la lógica AJAX para seguir exactamente el estándar REDA)
-            
-            this.ejecutarAperturaSegura();
-        },
-
-        /**
          * Realiza la verificación AJAX estandarizada y procede a abrir el modal o redirigir.
          */
         ejecutarAperturaSegura: function() {
@@ -137,16 +92,19 @@
 
             if (window.AuthCheck) {
                 const propertyId = String($('input[name="property_id"]').val());
+                const propertyName = $('.property-name').text().trim() || $('h1').first().text().trim() || "";
                 
-                if (window.RedaNotificaciones) window.RedaNotificaciones.esperar();
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                    window.RedaNotificaciones.esperar();
+                }
 
                 $.ajax({
                     url: `${window.APP_URL}/reda/bookings/check-active`,
                     type: 'GET',
                     success: function(data) {
-                        if (data.success && Array.isArray(data.respuesta) && data.respuesta.map(id => String(id)).includes(propertyId)) {
-                            // Si ya tiene reserva, redirigimos a viajes activos con alerta
-                            window.location.href = `${window.APP_URL}/trips/active?reda_alert=active_booking`;
+                        if (data.success && typeof data.respuesta === 'object' && data.respuesta[propertyId]) {
+                            // Si ya tiene reserva, redirigimos a viajes activos con alerta y nombre de propiedad
+                            window.location.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_name=${encodeURIComponent(propertyName)}`;
                         } else {
                             self.mostrarModalFinal($form, $modalBody, $modal);
                         }
@@ -155,7 +113,9 @@
                         self.mostrarModalFinal($form, $modalBody, $modal);
                     },
                     complete: function() {
-                        if (window.RedaNotificaciones) window.RedaNotificaciones.ocultar();
+                        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                            window.RedaNotificaciones.ocultar();
+                        }
                     }
                 });
             } else {
@@ -169,7 +129,7 @@
         mostrarModalFinal: function($form, $modalBody, $modal) {
             if (!$modalBody.find(this.config.formId).length) {
                 $modalBody.append($form);
-                $form.removeClass('d-none');
+                $form.removeClass('d-none').show();
             }
             $modal.modal('show');
         },
@@ -197,7 +157,7 @@
         bindEvents: function() {
             const self = this;
 
-            $(document).on('click', `.${this.config.floatingBtnContainerClass} a`, function(e) {
+            $(document).on('click', '#trigger-modal-reserva', function(e) {
                 e.preventDefault();
 
                 if (!window.AuthCheck) {
@@ -220,4 +180,3 @@
     });
 
 })(jQuery);
-

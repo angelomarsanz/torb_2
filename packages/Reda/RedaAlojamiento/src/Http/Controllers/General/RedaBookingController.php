@@ -17,7 +17,7 @@ use Auth;
 class RedaBookingController extends Controller
 {
     /**
-     * Obtiene los IDs de inmuebles con reservas activas o vigentes para el usuario autenticado.
+     * Obtiene un mapa de IDs y nombres de inmuebles con reservas activas o vigentes para el usuario autenticado.
      * Se considera "Vigente" una reserva que esté:
      * 1. En estado 'Accepted' y cuya fecha de finalización sea hoy o en el futuro.
      * 2. En estado 'Pending' o 'processing' (reservas en curso de aprobación o pago).
@@ -41,7 +41,9 @@ class RedaBookingController extends Controller
             $today = date('Y-m-d');
 
             // Buscamos reservas aceptadas vigentes O reservas pendientes/en proceso
-            $activePropertyIds = Bookings::where('user_id', $userId)
+            // Cargamos la relación 'properties' para obtener los nombres
+            $activeBookings = Bookings::where('user_id', $userId)
+                ->with('properties:id,name')
                 ->where(function($query) use ($today) {
                     $query->where(function($q) use ($today) {
                         $q->where('status', 'Accepted')
@@ -49,15 +51,21 @@ class RedaBookingController extends Controller
                     })
                     ->orWhereIn('status', ['Pending', 'processing']);
                 })
-                ->pluck('property_id')
-                ->unique()
-                ->toArray();
+                ->get();
+
+            // Mapeamos los resultados a un objeto { id: name }
+            $respuestaData = [];
+            foreach ($activeBookings as $booking) {
+                if ($booking->properties) {
+                    $respuestaData[$booking->property_id] = $booking->properties->name;
+                }
+            }
 
             $respuesta = [
                 'success' => true,
-                'message' => __('IDs de propiedades con reservas activas obtenidos correctamente'),
+                'message' => __('Mapeo de propiedades con reservas activas obtenido correctamente'),
                 'mensaje_usuario' => '',
-                'respuesta' => array_values($activePropertyIds),
+                'respuesta' => $respuestaData,
                 'code' => 200
             ];
 

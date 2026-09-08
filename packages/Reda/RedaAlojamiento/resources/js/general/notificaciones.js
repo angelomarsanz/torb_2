@@ -137,25 +137,32 @@ window.RedaNotificaciones = {
             console.log('REDA Notificaciones: Alerta detectada en URL:', alerta);
             
             if (alerta === 'active_booking') {
+                const propertyName = urlParams.get('property_name') || "";
                 let intentos = 0;
                 const checkInterval = setInterval(() => {
                     intentos++;
-                    
+
                     // Verificamos jQuery, el Modal y nuestro objeto
                     const jqueryListo = typeof jQuery !== 'undefined';
                     const $modal = jqueryListo ? jQuery('#modal-notificacion') : [];
-                    
+
                     if (jqueryListo && $modal.length && window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                         clearInterval(checkInterval);
                         console.log('REDA Notificaciones: Disparando modal informativo tras ' + (intentos * 100) + 'ms');
-                        
+
                         const dict = window.RedaAlojamientoJson || {};
-                        const mensaje = dict["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad";
+                        let mensajeBase = dict["Estimado usuario usted tiene una reservación activa para la propiedad"] || "Estimado usuario usted tiene una reservación activa para la propiedad";
+
+                        // Construir el mensaje final con el nombre en negrita
+                        const mensajeFinal = propertyName 
+                            ? `${mensajeBase} **${propertyName}**`
+                            : (dict["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad");
+
                         const titulo = dict["Notificación"] || "Notificación";
 
                         // Pequeño delay extra para asegurar que Bootstrap modal esté listo para mostrarse
                         setTimeout(() => {
-                            window.RedaNotificaciones.notificar(titulo, mensaje, 'info');
+                            window.RedaNotificaciones.notificar(titulo, mensajeFinal, 'info');
                         }, 200);
                     }
 
@@ -165,6 +172,7 @@ window.RedaNotificaciones = {
                     }
                 }, 100);
             }
+
         }
     };
 
