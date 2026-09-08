@@ -128,36 +128,50 @@ window.RedaNotificaciones = {
  * Se ejecuta después de definir el objeto RedaNotificaciones para evitar errores de referencia.
  */
 (function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('reda_alert')) {
-        const alerta = urlParams.get('reda_alert');
-        console.log('REDA Notificaciones: Alerta detectada en URL:', alerta);
-        
-        if (alerta === 'active_booking') {
-            let intentos = 0;
-            const checkInterval = setInterval(() => {
-                intentos++;
-                // Verificamos jQuery, el Modal y nuestro objeto
-                const jqueryListo = typeof jQuery !== 'undefined';
-                const $modal = jqueryListo ? jQuery('#modal-notificacion') : [];
-                
-                if ($modal.length && window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
-                    clearInterval(checkInterval);
-                    console.log('REDA Notificaciones: Disparando modal informativo');
+    "use strict";
+
+    const checkAlert = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('reda_alert')) {
+            const alerta = urlParams.get('reda_alert');
+            console.log('REDA Notificaciones: Alerta detectada en URL:', alerta);
+            
+            if (alerta === 'active_booking') {
+                let intentos = 0;
+                const checkInterval = setInterval(() => {
+                    intentos++;
                     
-                    const dict = window.RedaAlojamientoJson || {};
-                    const mensaje = dict["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad";
-                    const titulo = dict["Notificación"] || "Notificación";
+                    // Verificamos jQuery, el Modal y nuestro objeto
+                    const jqueryListo = typeof jQuery !== 'undefined';
+                    const $modal = jqueryListo ? jQuery('#modal-notificacion') : [];
+                    
+                    if (jqueryListo && $modal.length && window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        clearInterval(checkInterval);
+                        console.log('REDA Notificaciones: Disparando modal informativo tras ' + (intentos * 100) + 'ms');
+                        
+                        const dict = window.RedaAlojamientoJson || {};
+                        const mensaje = dict["Estimado usuario ya usted tiene una reservación activa para esta propiedad"] || "Estimado usuario ya usted tiene una reservación activa para esta propiedad";
+                        const titulo = dict["Notificación"] || "Notificación";
 
-                    window.RedaNotificaciones.notificar(titulo, mensaje, 'info');
-                }
+                        // Pequeño delay extra para asegurar que Bootstrap modal esté listo para mostrarse
+                        setTimeout(() => {
+                            window.RedaNotificaciones.notificar(titulo, mensaje, 'info');
+                        }, 200);
+                    }
 
-                if (intentos > 40) {
-                    console.error('REDA Notificaciones: Tiempo de espera agotado para el modal');
-                    clearInterval(checkInterval);
-                }
-            }, 100);
+                    if (intentos > 60) { // Aumentamos a 6 segundos el tiempo de espera máximo
+                        console.error('REDA Notificaciones: Tiempo de espera agotado para el modal o dependencias');
+                        clearInterval(checkInterval);
+                    }
+                }, 100);
+            }
         }
+    };
+
+    // Ejecutar al cargar el script y también cuando el DOM esté listo por seguridad
+    checkAlert();
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(checkAlert);
     }
 })();
 

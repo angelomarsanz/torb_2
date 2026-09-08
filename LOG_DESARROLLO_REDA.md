@@ -4,6 +4,19 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [08 de Septiembre, 2026] - Corrección de Empaquetado JS y Robustez de Alertas Post-Login
+- **Tarea:** Solucionar el error de "Cannot find module" y asegurar que el modal informativo se muestre tras la redirección.
+- **Cambios realizados:**
+    - **Empaquetado (`main.js` y `main_footer.blade.php`):** Se eliminó la importación de `reserve-injection.js` del bundle principal (`main.js`) para evitar conflictos de módulos y errores en tiempo de ejecución. Ahora se carga como un script independiente en el footer.
+    - **Robustez de Notificaciones (`notificaciones.js`):** 
+        - Se optimizó la función de detección de alertas vía URL.
+        - Se aumentó el tiempo de espera (hasta 6 segundos) y se añadió una ejecución doble (inmediata y en `document.ready`) para garantizar que el modal se dispare correctamente independientemente de la velocidad de carga de Bootstrap.
+        - Se añadieron logs de depuración para rastrear el tiempo de respuesta de las dependencias.
+    - **Flujo Post-Login (`RedaPaymentController.php`):** Se consolidó la redirección a la ruta intermedia `reda/check-booking-redirect/{slug}` para usuarios no autenticados, asegurando que la verificación de reserva activa ocurra inmediatamente después del login.
+- **Estado:** Optimizado y Listo para pruebas finales.
+
+---
+
 ## [08 de Septiembre, 2026] - Mejora en el Flujo Post-Login y Verificación de Reservas Activas
 - **Tarea:** Asegurar que los usuarios con reservas activas sean redirigidos correctamente incluso si inician sesión durante el proceso de reserva.
 - **Cambios realizados:**
