@@ -7,7 +7,7 @@ El usuario solicitó crear un módulo de "Experiencias" para ofrecer a los hués
 ## Directrices del proyecto
 Evitar en lo posible modificar los archivos originales del proyecto. Si es muy necesario agregar dos o tres líneas en un archivo original para agregar algún gancho o filtro parecidos a los usados en Wordpress para adicionar código personalizado
 Evitar modificar las vistas .blade y más bien inyectar código html mediante javascript
-Cambiar el comportamiento del proyecto usando Javascript
+Cambiar el comportamiento del proyecto usando Javascript. En caso que se modifique mucho una vista, entonces crear una vista en el plugin con el mismo nombre, para que la aplicación cargue la nueva vista en lugar de la vista original, así como se hace cuando se modifica un tema en Wordpress.
 Evitar modificar las tablas originales de la base de datos, en su lugar crear tablas auxiliares que se vinculen a las tablas originales
 La creación o modificación de nuevas tablas, hacerlas con archivos de migraciones
 Considerar siempre hacer una buena vista para escritorio y para dispositivos móviles

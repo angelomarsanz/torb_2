@@ -138,6 +138,9 @@ window.RedaNotificaciones = {
             
             if (alerta === 'active_booking') {
                 const propertyName = urlParams.get('property_name') || "";
+                const propertyId = urlParams.get('property_id');
+                const propertySlug = urlParams.get('property_slug');
+
                 let intentos = 0;
                 const checkInterval = setInterval(() => {
                     intentos++;
@@ -163,6 +166,33 @@ window.RedaNotificaciones = {
                         // Pequeño delay extra para asegurar que Bootstrap modal esté listo para mostrarse
                         setTimeout(() => {
                             window.RedaNotificaciones.notificar(titulo, mensajeFinal, 'info');
+
+                            // Lógica de desplazamiento (Scroll)
+                            let $target = [];
+                            
+                            // Intentamos por ID (si la vista fuese modificada)
+                            if (propertyId) {
+                                $target = jQuery(`#property-${propertyId}`);
+                            }
+                            
+                            // Si no encontramos por ID, buscamos por Slug en los enlaces (Vista original intacta)
+                            if ((!$target || !$target.length) && propertySlug) {
+                                console.log('REDA Notificaciones: Buscando por slug:', propertySlug);
+                                const $link = jQuery(`a[href*="properties/${propertySlug}"]`).first();
+                                if ($link.length) {
+                                    $target = $link.closest('.row.border');
+                                }
+                            }
+
+                            if ($target && $target.length) {
+                                console.log('REDA Notificaciones: Posicionando scroll en elemento detectado.');
+                                jQuery('html, body').animate({
+                                    scrollTop: $target.offset().top - 120 // 120px de margen superior para el header
+                                }, 800);
+                                // Resaltado temporal sutil
+                                $target.addClass('reda-highlight-border');
+                                setTimeout(() => $target.removeClass('reda-highlight-border'), 4000);
+                            }
                         }, 200);
                     }
 

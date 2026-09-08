@@ -185,7 +185,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/productosServiciosEncontrados.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/calificacionExperienciaFrontend.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/toggleFavoritoComercio.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
+    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
 
     # --- Archivos Javascript fuera de la carpeta frontend ---
     "packages/Reda/RedaAlojamiento/resources/js/general/main.js"
@@ -234,5 +234,5 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php"
     "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
     )

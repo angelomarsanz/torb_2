@@ -4250,3 +4250,11 @@
 .reda-inbox-wrapper sidebar .list-wrap .list {
     border-radius: 0 !important;
 }
+
+/* --- ESTILOS DE RESALTADO (REDA) --- */
+.reda-highlight-border {
+    border: 2px solid #1dbf73 !important;
+    box-shadow: 0 0 15px rgba(29, 191, 115, 0.4) !important;
+    transition: all 0.5s ease;
+    background-color: #f0fff4 !important; /* Un verde muy suave de fondo */
+}

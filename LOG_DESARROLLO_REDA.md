@@ -4,6 +4,27 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [08 de Septiembre, 2026] - Ajuste de Integridad y Posicionamiento mediante JS
+- **Tarea:** Revertir cambios en archivos originales y asegurar el posicionamiento automático en la vista de viajes usando solo Javascript.
+- **Archivos Modificados:**
+    *   `resources/views/trips/active.blade.php`: Se revirtieron los cambios manuales (eliminación del ID personalizado) para cumplir con la directriz de no modificar archivos originales del proyecto.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php`: Se añadió el parámetro `property_slug` en todas las redirecciones hacia `trips/active`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`: Se actualizó la redirección de seguridad para incluir el parámetro `property_slug`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js`: Se modificó la lógica de desplazamiento (`scroll`) para que, en caso de no encontrar un ID directo, busque la fila correspondiente utilizando el slug de la propiedad presente en los enlaces de la página.
+- **Estado:** Cumplimiento de directrices y Funcionalidad mantenida.
+
+---
+
+## [08 de Septiembre, 2026] - Posicionamiento Automático (Scroll) en la Vista de Viajes
+- **Tarea:** Mejorar la experiencia de usuario haciendo que la página se desplace automáticamente hacia la reserva específica cuando el usuario es redirigido por tener una reserva activa.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php`: Se añadió el parámetro `property_id` en todas las redirecciones hacia `trips/active`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js`: Se implementó la lógica de desplazamiento asíncrono (`animate scrollTop`) detectando el `property_id` en la URL. También se añadió un efecto visual de resaltado temporal (`reda-highlight-border`).
+    *   `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: Se añadió la clase `.reda-highlight-border` para dar feedback visual al usuario tras el desplazamiento.
+- **Estado:** Evolucionado a lógica JS pura para respetar archivos originales.
+
+---
+
 ## [08 de Septiembre, 2026] - Mejora Integral del Flujo de Reserva y Notificaciones Personalizadas
 - **Tarea:** Optimizar la seguridad post-login para usuarios con reservas activas e incluir el nombre de la propiedad en las notificaciones.
 - **Archivos Modificados:**

@@ -93,6 +93,7 @@
             if (window.AuthCheck) {
                 const propertyId = String($('input[name="property_id"]').val());
                 const propertyName = $('.property-name').text().trim() || $('h1').first().text().trim() || "";
+                const slug = window.location.pathname.split('/').pop();
                 
                 if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
                     window.RedaNotificaciones.esperar();
@@ -103,8 +104,8 @@
                     type: 'GET',
                     success: function(data) {
                         if (data.success && typeof data.respuesta === 'object' && data.respuesta[propertyId]) {
-                            // Si ya tiene reserva, redirigimos a viajes activos con alerta y nombre de propiedad
-                            window.location.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_name=${encodeURIComponent(propertyName)}`;
+                            // Si ya tiene reserva, redirigimos a viajes activos con alerta, nombre de propiedad, ID y slug para scroll
+                            window.location.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}&property_slug=${slug}`;
                         } else {
                             self.mostrarModalFinal($form, $modalBody, $modal);
                         }
