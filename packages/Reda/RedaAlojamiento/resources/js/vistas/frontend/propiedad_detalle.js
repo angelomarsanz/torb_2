@@ -82,47 +82,55 @@
         },
 
         /**
-         * Realiza la verificación AJAX estandarizada y procede a abrir el modal o redirigir.
-         */
-        ejecutarAperturaSegura: function() {
-            const self = this;
-            const $form = $(this.config.formId);
-            const $modalBody = $(this.config.modalBodyId);
-            const $modal = $(this.config.modalId);
+ * Realiza la verificación AJAX estandarizada y procede a abrir el modal o redirigir.
+ */
+ejecutarAperturaSegura: function() {
+    const self = this;
+    const $form = $(this.config.formId);
+    const $modalBody = $(this.config.modalBodyId);
+    const $modal = $(this.config.modalId);
 
-            if (window.AuthCheck) {
-                const propertyId = String($('input[name="property_id"]').val());
-                const propertyName = $('.property-name').text().trim() || $('h1').first().text().trim() || "";
-                const slug = window.location.pathname.split('/').pop();
-                
-                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
-                    window.RedaNotificaciones.esperar();
+    if (window.AuthCheck) {
+        const propertyId = String($('input[name="property_id"]').val());
+        const propertyName = $('.property-name').text().trim() || $('h1').first().text().trim() || "";
+        const slug = window.location.pathname.split('/').pop();
+        
+        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+            window.RedaNotificaciones.esperar();
+        }
+
+        $.ajax({
+            url: `${window.APP_URL}/reda/bookings/check-active`,
+            type: 'GET',
+            success: function(data) {
+                // REDA: Ocultamos el loader inmediatamente al recibir respuesta
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
                 }
 
-                $.ajax({
-                    url: `${window.APP_URL}/reda/bookings/check-active`,
-                    type: 'GET',
-                    success: function(data) {
-                        if (data.success && typeof data.respuesta === 'object' && data.respuesta[propertyId]) {
-                            // Si ya tiene reserva, redirigimos a viajes activos con alerta, nombre de propiedad, ID y slug para scroll
-                            window.location.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}&property_slug=${slug}`;
-                        } else {
-                            self.mostrarModalFinal($form, $modalBody, $modal);
-                        }
-                    },
-                    error: function() {
+                if (data.success && typeof data.respuesta === 'object' && data.respuesta[propertyId]) {
+                    // Si ya tiene reserva, redirigimos a viajes activos
+                    window.location.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}&property_slug=${slug}`;
+                } else {
+                    // Esperamos un momento para que el backdrop del loader se limpie antes de abrir el nuevo modal
+                    setTimeout(() => {
                         self.mostrarModalFinal($form, $modalBody, $modal);
-                    },
-                    complete: function() {
-                        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
-                            window.RedaNotificaciones.ocultar();
-                        }
-                    }
-                });
-            } else {
-                this.mostrarModalFinal($form, $modalBody, $modal);
+                    }, 600);
+                }
+            },
+            error: function() {
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
+                }
+                setTimeout(() => {
+                    self.mostrarModalFinal($form, $modalBody, $modal);
+                }, 600);
             }
-        },
+        });
+    } else {
+        this.mostrarModalFinal($form, $modalBody, $modal);
+    }
+},
 
         /**
          * Muestra el modal físicamente después de las validaciones.
