@@ -24,15 +24,24 @@ class RedaBookingController extends Controller
      * 
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getActiveBookingPropertyIds()
+    /**
+     * Obtiene el conteo de reservaciones activas para el usuario autenticado.
+     * Considera las categorías:
+     * 1. Actual (Status: Accepted y en curso)
+     * 2. Próximamente (Status: Accepted y futura)
+     * 3. Pendiente (Status: Pending o processing)
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCountActiveBookings()
     {
         try {
             if (!Auth::check()) {
                 return response()->json([
                     'success' => true,
-                    'message' => __('Usuario no autenticado'),
+                    'message' => 'User not authenticated',
                     'mensaje_usuario' => '',
-                    'respuesta' => [],
+                    'respuesta' => 0,
                     'code' => 200
                 ], 200);
             }
@@ -40,10 +49,10 @@ class RedaBookingController extends Controller
             $userId = Auth::id();
             $today = date('Y-m-d');
 
-            // Buscamos reservas aceptadas vigentes O reservas pendientes/en proceso
-            // Cargamos la relación 'properties' para obtener los nombres
-            $activeBookings = Bookings::where('user_id', $userId)
-                ->with('properties:id,name')
+            // Lógica refinada para coincidir con las vistas de "Mis Viajes":
+            // - 'Accepted' con end_date >= hoy cubre tanto "Actual" como "Próximamente".
+            // - 'Pending' y 'processing' cubren "Pendiente".
+            $count = Bookings::where('user_id', $userId)
                 ->where(function($query) use ($today) {
                     $query->where(function($q) use ($today) {
                         $q->where('status', 'Accepted')
@@ -51,32 +60,25 @@ class RedaBookingController extends Controller
                     })
                     ->orWhereIn('status', ['Pending', 'processing']);
                 })
-                ->get();
-
-            // Mapeamos los resultados a un objeto { id: name }
-            $respuestaData = [];
-            foreach ($activeBookings as $booking) {
-                if ($booking->properties) {
-                    $respuestaData[$booking->property_id] = $booking->properties->name;
-                }
-            }
+                ->count();
 
             $respuesta = [
                 'success' => true,
-                'message' => __('Mapeo de propiedades con reservas activas obtenido correctamente'),
+                'message' => __('Conteo de reservaciones (Actual, Próximamente, Pendiente) obtenido correctamente'),
                 'mensaje_usuario' => '',
-                'respuesta' => $respuestaData,
+                'respuesta' => $count,
                 'code' => 200
             ];
 
-            return response()->json($respuesta, $respuesta['code']);
+            return response()->json($respuesta, 200);
 
         } catch (\Exception $e) {
+            Log::error("REDA Booking Error (getCount): " . $e->getMessage());
             $respuesta = [
                 'success' => false,
-                'message' => __('Error al obtener reservas activas'),
-                'mensaje_usuario' => __('Hubo un problema al verificar sus reservas.'),
-                'respuesta' => $e->getMessage(),
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Error al obtener el conteo de viajes'),
+                'respuesta' => 0,
                 'code' => 500
             ];
             return response()->json($respuesta, $respuesta['code']);

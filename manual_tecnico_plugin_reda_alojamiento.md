@@ -44,6 +44,9 @@
 - **packages/Reda/RedaAlojamiento/resources/js/general/ajax/obtenerConteoNoLeidos.js**
   Función AJAX para obtener el número de mensajes no leídos del usuario autenticado. Implementa el patrón de Promesas, maneja animaciones de espera mediante notificaciones.js y procesa errores siguiendo la estructura estandarizada de REDA.
 
+- **packages/Reda/RedaAlojamiento/resources/js/general/menus/obtenerConteoViajes.js**
+  Función AJAX para obtener el conteo de reservaciones activas (viajes) del usuario. Sigue la estructura de promesas y manejo de errores del plugin REDA para alimentar dinámicamente el dashboard.
+
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php**
   Controlador para la gestión de mediaciones (disputas). Maneja la lógica de negocio para crear, verificar y listar mediaciones. Incluye validaciones de estado de reserva para permitir mediaciones solo en reservaciones formales y no en simples consultas.

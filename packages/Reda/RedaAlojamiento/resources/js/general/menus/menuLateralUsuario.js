@@ -7,6 +7,7 @@
  */
 import { mediacionSvg } from '../iconos';
 import { obtenerConteoMediaciones } from './obtenerConteoMediaciones.js';
+import { obtenerConteoViajes } from './obtenerConteoViajes.js';
 
 /**
  * Función principal que orquestal la inyección de elementos de menú y dashboard.
@@ -414,7 +415,23 @@ export const menuLateralUsuario = () =>
         };
         actualizarContador();
 
+        // --- ACTUALIZAR CONTADOR DE VIAJES (DASHBOARD) ---
+        const actualizarContadorViajes = async () => {
+            const isDashboard = window.location.pathname.includes('/dashboard');
+            if (!isDashboard) return;
+
+            const respuesta = await obtenerConteoViajes();
+            if (respuesta.success) {
+                const count = respuesta.respuesta;
+                // Selector para el contador de viajes en el dashboard original
+                const $tripsLink = $('a[href*="/trips/active"]');
+                if ($tripsLink.length) {
+                    $tripsLink.find('p').text(count);
+                }
+            }
+        };
+        actualizarContadorViajes();
+
     })(jQuery);
 }
 menuLateralUsuario();
-
