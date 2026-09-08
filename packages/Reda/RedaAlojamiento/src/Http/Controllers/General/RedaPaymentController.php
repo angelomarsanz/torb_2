@@ -82,7 +82,7 @@ class RedaPaymentController extends PaymentController
     }
 
     /**
-     * Redirige al login asegurando que el destino final sea la propiedad con el hash de reserva.
+     * Redirige al login asegurando que el destino final sea la ruta intermedia de verificación.
      * Si el usuario ya está autenticado y tiene una reserva activa para esa propiedad,
      * lo redirige directamente a sus viajes activos con una alerta personalizada.
      * 
@@ -94,27 +94,63 @@ class RedaPaymentController extends PaymentController
         $propiedad = \App\Models\Properties::where('slug', $slug)->first();
         
         if (!Auth::check()) {
-            $urlDestino = url("properties/{$slug}#reservar");
+            // REDA: Usamos una ruta intermedia como 'url.intended' para que, 
+            // tras el login, podamos verificar si ya tiene una reserva antes de ir a la propiedad.
+            $urlDestino = route('reda.check_booking_redirect', ['slug' => $slug]);
             Session::put('url.intended', $urlDestino);
             return redirect()->guest('login');
         }
 
         // Si ya está autenticado, verificamos si tiene reserva activa para este inmueble
         if ($propiedad) {
-            $hoy = date('Y-m-d');
-            $reservaActiva = \App\Models\Bookings::where([
-                ['user_id', '=', Auth::id()],
-                ['property_id', '=', $propiedad->id],
-                ['status', '=', 'Accepted'],
-                ['end_date', '>=', $hoy]
-            ])->exists();
-
-            if ($reservaActiva) {
-                // Redirigir a viajes activos con parámetro para mostrar modal en frontend
+            if ($this->tieneReservaActiva($propiedad->id)) {
                 return redirect('trips/active?reda_alert=active_booking');
             }
         }
         
         return redirect(url("properties/{$slug}#reservar"));
+    }
+
+    /**
+     * Ruta intermedia que se ejecuta después del login (si venía de redirectReservar).
+     * Verifica si el usuario tiene una reserva activa para redirigirlo a viajes o a la propiedad.
+     * 
+     * @param string $slug El slug de la propiedad.
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function checkBookingRedirect($slug)
+    {
+        $propiedad = \App\Models\Properties::where('slug', $slug)->first();
+        
+        if ($propiedad && Auth::check()) {
+            if ($this->tieneReservaActiva($propiedad->id)) {
+                Log::info("REDA Payment: Usuario autenticado con reserva activa para {$slug}. Redirigiendo a viajes.");
+                return redirect('trips/active?reda_alert=active_booking');
+            }
+        }
+
+        return redirect(url("properties/{$slug}#reservar"));
+    }
+
+    /**
+     * Verifica si el usuario autenticado tiene una reserva activa o vigente.
+     * Considera estados: Accepted (vigente por fecha), Pending y processing.
+     * 
+     * @param int $propertyId
+     * @return bool
+     */
+    private function tieneReservaActiva($propertyId)
+    {
+        $hoy = date('Y-m-d');
+        return \App\Models\Bookings::where('user_id', Auth::id())
+            ->where('property_id', $propertyId)
+            ->where(function($query) use ($hoy) {
+                $query->where(function($q) use ($hoy) {
+                    $q->where('status', 'Accepted')
+                      ->where('end_date', '>=', $hoy);
+                })
+                ->orWhereIn('status', ['Pending', 'processing']);
+            })
+            ->exists();
     }
 }

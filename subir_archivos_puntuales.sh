@@ -233,6 +233,6 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
     )

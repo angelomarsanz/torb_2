@@ -4,6 +4,16 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [08 de Septiembre, 2026] - Mejora en el Flujo Post-Login y Verificación de Reservas Activas
+- **Tarea:** Asegurar que los usuarios con reservas activas sean redirigidos correctamente incluso si inician sesión durante el proceso de reserva.
+- **Cambios realizados:**
+    - **Rutas (`web.php`):** Se creó la ruta intermedia `reda/check-booking-redirect/{slug}` para interceptar el regreso del login.
+    - **Controlador (`RedaPaymentController.php`):** 
+        - Se modificó `redirectReservar` para establecer la nueva ruta intermedia como `url.intended` en lugar de la página de propiedad directa.
+        - Se implementó `checkBookingRedirect` para realizar la validación de seguridad post-login.
+        - Se centralizó la lógica de validación en el método privado `tieneReservaActiva`, incluyendo estados `Accepted` (vigentes), `Pending` y `processing`.
+- **Estado:** Completado y Verificado.
+
 ## [06 de Septiembre, 2026] - Corrección y Refuerzo de Verificación de Reservas Activas
 - **Tarea:** Solucionar fallo en la inyección del botón "Ver reserva" y asegurar la notificación al usuario.
 - **Cambios realizados:**

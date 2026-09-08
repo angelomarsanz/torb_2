@@ -165,6 +165,9 @@ Route::prefix('reda')->middleware(['web', 'locale'])->group(function () {
     // Ruta para redirección de reserva con login
     Route::get('auth-reserve/{slug}', [RedaPaymentController::class, 'redirectReservar'])->name('reda.auth_reserve');
 
+    // Ruta intermedia para verificar reservas activas después del login
+    Route::get('check-booking-redirect/{slug}', [RedaPaymentController::class, 'checkBookingRedirect'])->name('reda.check_booking_redirect');
+
 
     // ----------------------------------------------------------------------
     // 2. Rutas de Negocios Sin Login Requerido
