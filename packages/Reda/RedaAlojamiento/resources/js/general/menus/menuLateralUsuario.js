@@ -1,6 +1,18 @@
+/**
+ * Resumen: Script para la gestión y reestructuración del menú lateral y dashboard del usuario.
+ * Este archivo se encarga de inyectar dinámicamente las opciones del plugin REDA en el sidebar
+ * (escritorio y móvil) y añadir la tarjeta de "Negocios" en el tablero principal (Dashboard).
+ * Implementa la lógica de submenús colapsables para Alojamientos y Reseñas, e integra el 
+ * contador dinámico de mediaciones activas.
+ */
 import { mediacionSvg } from '../iconos';
 import { obtenerConteoMediaciones } from './obtenerConteoMediaciones.js';
 
+/**
+ * Función principal que orquestal la inyección de elementos de menú y dashboard.
+ * Realiza verificaciones de sesión, aplica traducciones dinámicas y gestiona eventos
+ * de colapso para mantener la consistencia visual con el proyecto original.
+ */
 export const menuLateralUsuario = () =>
 {
     (function( $ ) {

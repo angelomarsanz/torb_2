@@ -4,6 +4,18 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [08 de Septiembre, 2026] - Documentación Técnica de Menú Lateral y Dashboard
+- **Tarea:** Documentar el archivo de gestión de menús del usuario y actualizar el manual técnico.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/menus/menuLateralUsuario.js`: 
+        *   Se añadió el bloque de documentación inicial (Resumen) explicando su responsabilidad en la inyección dinámica de menús y tarjetas del Dashboard.
+        *   Se documentó la función principal `menuLateralUsuario` mediante JSDoc.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`:
+        *   Se agregó la entrada técnica correspondiente bajo la sección de JavaScript (General), detallando su funcionalidad de reestructuración de sidebar y dashboard.
+- **Estado:** Completado.
+
+---
+
 ## [08 de Septiembre, 2026] - Corrección de Bloqueo de Modal y Conflictos de Backdrop
 - **Tarea:** Solucionar el problema donde el modal de reserva aparecía opaco y deshabilitado tras la carga.
 - **Archivos Modificados:**
