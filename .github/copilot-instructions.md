@@ -17,7 +17,7 @@ Los nombres de variables deben estar en español.
 
 ## Memoria de Sesiones (Gemini CLI)
 - **Log de Progreso:** Cada vez que inicies una nueva sesión, debes leer obligatoriamente el archivo `LOG_DESARROLLO_REDA.md`. Esto te permitirá recordar automáticamente todos los trabajos realizados anteriormente sin que el usuario tenga que repetirlos.
-- **Registro de Avances:** Al finalizar una tarea importante, actualiza dicho archivo con un resumen técnico de los cambios.
+- **Registro de Avances:** Al finalizar "CADA PETICIÓN" que haga el usuario en la línea de comandos de Gemini CLI o e en el prompt de Gemini Code Assist se debe actualizar el archivo "LOG_DESARROLLO_REDA.md": Mencionar cada una de las rutas de los achivos que se modificaron o crearon y hacer un resumen técnico de los cambios que se realizaron en los archivos existentes o del código de los nuevos archivos creados. Así se podrá llevar un hilo de todas las modificacione que has realizado en la aplicación. Esta actividad debe ser ejecutada tanto si se está usando Gemini CLI como si se usa Gemini Code Assist que viene integrado con el IDE Cloud Editor.
 - **Exportación de Conversaciones:** Para guardar el diálogo literal, utiliza el comando `/chat share last_chat_export.md` y luego ejecuta el script `./registrar_sesion.sh`.
 
 ## Archivos de migraciones
