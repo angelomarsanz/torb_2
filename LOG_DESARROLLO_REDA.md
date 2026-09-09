@@ -4,6 +4,18 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [09 de Septiembre, 2026] - Detección de Información Sensible en Inbox
+- **Tarea:** Implementar una advertencia de seguridad cuando el usuario intente enviar números de teléfono o correos electrónicos en el chat.
+- **Archivos Creados/Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Se añadieron las traducciones para el modal de advertencia.
+    *   `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: Se integró el HTML de un nuevo modal de Bootstrap (`modalAdvertenciaMensajeReda`) con un mensaje de advertencia y recomendaciones de seguridad.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`: 
+        *   Se añadió la función helper `detectarInformacionSensible` que utiliza expresiones regulares para identificar patrones de emails y números de teléfono (secuencias de 7+ dígitos).
+        *   Se modificó el evento de clic en el botón `.chat` para interceptar el mensaje antes del envío. Si se detecta información sensible, se muestra el modal y se cancela el envío AJAX.
+- **Estado:** Completado.
+
+---
+
 ## [08 de Septiembre, 2026] - Corrección de Contador de "Mis viajes" en Dashboard
 - **Tarea:** Solucionar el problema donde el contador de viajes en el dashboard mostraba cero a pesar de existir reservaciones activas.
 - **Archivos Modificados:**

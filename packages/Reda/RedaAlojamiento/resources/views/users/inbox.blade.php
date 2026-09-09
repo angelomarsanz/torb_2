@@ -116,3 +116,24 @@ enriquecidos y detalles de la reserva.
         </div>
     </div>
 </div>
+
+{{-- Modal de advertencia de información sensible --}}
+<div class="modal fade" id="modalAdvertenciaMensajeReda" tabindex="-1" role="dialog" aria-labelledby="modalAdvertenciaMensajeRedaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title font-weight-700" id="modalAdvertenciaMensajeRedaLabel">{{ __('Advertencia de seguridad') }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+                <p class="text-16">{{ __('Estimado usuario hemos detectado que intenta enviar mensajes con números de teléfono y/o correos, le recomendamos no compartir ese tipo de información para prevenir estafas') }}</p>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-center">
+                <button type="button" class="btn btn-secondary shadow-none border-0" data-dismiss="modal">{{ __('Cerrar') }}</button>
+            </div>
+        </div>
+    </div>
+</div>

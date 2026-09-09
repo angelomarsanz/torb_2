@@ -211,6 +211,13 @@
         var msg = $('.cht_msg').val();
         if (!msg || !msg.trim()) return;
 
+        // --- VERIFICACIÓN DE SEGURIDAD REDA ---
+        if (detectarInformacionSensible(msg)) {
+            $('#modalAdvertenciaMensajeReda').modal('show');
+            return; // Detenemos el envío
+        }
+        // --------------------------------------
+
         var booking_id = $(this).data('booking');
         var receiver_id = $(this).data('receiver');
         var property_id = $(this).data('property');
@@ -262,6 +269,21 @@
         
         isSending = false;
     });
+
+    /**
+     * Detecta si una cadena contiene información sensible (teléfono o email).
+     * @param {string} text - El texto a analizar.
+     * @returns {boolean} True si detecta patrones, false en caso contrario.
+     */
+    function detectarInformacionSensible(text) {
+        // Regex para email
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+        // Regex para teléfono (buscamos secuencias de al menos 7-8 números que pueden tener espacios, guiones o puntos)
+        // Esta regex es una aproximación para detectar números de teléfono comunes
+        const phoneRegex = /(\+?\d[\d\s\.\-]{7,}\d)/g;
+        
+        return emailRegex.test(text) || phoneRegex.test(text);
+    }
 
     // Manejo de Enter muy específico para evitar burbujeo hacia otros scripts
     $(document).on('keyup', '.cht_msg', function(event) {
