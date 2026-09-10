@@ -4,20 +4,20 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [09 de Septiembre, 2026] - Detección de Información Sensible en Inbox
-- **Tarea:** Implementar una advertencia de seguridad cuando el usuario intente enviar números de teléfono o correos electrónicos en el chat.
-- **Archivos Creados/Modificados:**
-    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Se añadieron las traducciones para el modal de advertencia.
-    *   `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: Se integró el HTML de un nuevo modal de Bootstrap (`modalAdvertenciaMensajeReda`) con un mensaje de advertencia y recomendaciones de seguridad.
-    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`: 
-        *   Se añadió la función helper `detectarInformacionSensible` que utiliza expresiones regulares para identificar patrones de emails y números de teléfono (secuencias de 7+ dígitos).
-        *   Se modificó el evento de clic en el botón `.chat` para interceptar el mensaje antes del envío. Si se detecta información sensible, se muestra el modal y se cancela el envío AJAX.
-- **Estado:** Completado.
+## [09 de Septiembre, 2026] - Corrección de Error 500 en Verificación de Reservas Activas
+- **Tarea:** Resolver el error 500 (Internal Server Error) que ocurría cuando el script `reserve-injection.js` intentaba consultar las propiedades con reservas activas.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: 
+        *   Se implementó el método faltante `getActiveBookingPropertyIds`, el cual era referenciado en las rutas pero no estaba definido en el controlador.
+        *   Se añadió la importación de la fachada `Log` (`use Illuminate\Support\Facades\Log;`) para el registro correcto de errores.
+        *   El método ahora devuelve un objeto JSON con un mapa de `{ property_id: property_name }` para las reservas en estado 'Accepted' (vigentes), 'Pending' o 'processing'.
+- **Estado:** Corregido. El script `reserve-injection.js` ahora debería poder obtener los datos y cambiar el texto a "Ver reserva" correctamente.
 
 ---
 
-## [08 de Septiembre, 2026] - Corrección de Contador de "Mis viajes" en Dashboard
-- **Tarea:** Solucionar el problema donde el contador de viajes en el dashboard mostraba cero a pesar de existir reservaciones activas.
+## [09 de Septiembre, 2026] - Detección de Información Sensible en Inbox
+...
+
 - **Archivos Modificados:**
     *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Se añadió el método `getCountActiveBookings` con lógica unificada para contar reservaciones 'Accepted' (futuras/actuales), 'Pending' y 'processing'.
     *   `packages/Reda/RedaAlojamiento/routes/web.php`: Se registró la ruta `reda/bookings/count-active`.

@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Bookings;
 use Auth;
+use Illuminate\Support\Facades\Log;
 
 class RedaBookingController extends Controller
 {
@@ -24,6 +25,64 @@ class RedaBookingController extends Controller
      * 
      * @return \Illuminate\Http\JsonResponse
      */
+    public function getActiveBookingPropertyIds()
+    {
+        try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'User not authenticated',
+                    'mensaje_usuario' => '',
+                    'respuesta' => (object)[],
+                    'code' => 200
+                ], 200);
+            }
+
+            $userId = Auth::id();
+            $today = date('Y-m-d');
+
+            // Buscamos todas las reservas activas (Accepted futuras/hoy, Pending, processing)
+            $bookings = Bookings::with('properties')
+                ->where('user_id', $userId)
+                ->where(function($query) use ($today) {
+                    $query->where(function($q) use ($today) {
+                        $q->where('status', 'Accepted')
+                          ->where('end_date', '>=', $today);
+                    })
+                    ->orWhereIn('status', ['Pending', 'processing']);
+                })
+                ->get();
+
+            $map = [];
+            foreach ($bookings as $booking) {
+                if ($booking->properties) {
+                    $map[$booking->property_id] = $booking->properties->name;
+                }
+            }
+
+            $respuesta = [
+                'success' => true,
+                'message' => __('Listado de propiedades con reservas activas obtenido'),
+                'mensaje_usuario' => '',
+                'respuesta' => (object)$map,
+                'code' => 200
+            ];
+
+            return response()->json($respuesta, 200);
+
+        } catch (\Exception $e) {
+            Log::error("REDA Booking Error (getActiveIds): " . $e->getMessage());
+            $respuesta = [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Error al verificar reservas activas'),
+                'respuesta' => (object)[],
+                'code' => 500
+            ];
+            return response()->json($respuesta, $respuesta['code']);
+        }
+    }
+
     /**
      * Obtiene el conteo de reservaciones activas para el usuario autenticado.
      * Considera las categorías:
