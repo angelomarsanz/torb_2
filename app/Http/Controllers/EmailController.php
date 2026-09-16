@@ -14,7 +14,7 @@ use App\Models\{Accounts,
     Settings,
     Withdrawal,
 };
-use Auth, DateTime, Mail, Common;
+use Auth, DateTime, Mail, Common, Log;
 use Modules\Gateway\Entities\Gateway;
 
 class EmailController extends Controller
@@ -22,11 +22,14 @@ class EmailController extends Controller
 
     public function welcome_email($user)
     {
+        Log::info("Iniciando envío de correo de bienvenida para el usuario: " . $user->email);
         $emailSettings               = Settings::getAll()->where('type','email')->toArray();
         $emailConfig                 = Common::key_value('name','value',$emailSettings);
         $adminDetails                = Admin::where('status','active')->first();
         $emailConfig['email_address']= $adminDetails->email;
         $emailConfig['username']     = $adminDetails->username;
+
+        Log::info("Configuración de correo detectada: " . print_r($emailConfig, true));
 
         $token                       = Common::randomCode(100);
         $password_resets             = new PasswordResets;
@@ -96,13 +99,24 @@ class EmailController extends Controller
 
         if (env('APP_MODE', '') != 'test') {
             if ($emailConfig['driver']=='smtp' && $emailConfig['email_status']==1) {
-
-                Mail::send('emails.email_confirm_template', $data, function($message) use($data,$subject,$content) {
-                    $message->to($data['email'], $data['first_name'])->subject($subject);
-                });
+                Log::info("Intentando enviar por SMTP...");
+                try {
+                    Mail::send('emails.email_confirm_template', $data, function($message) use($data,$subject,$content) {
+                        $message->to($data['email'], $data['first_name'])->subject($subject);
+                    });
+                    Log::info("Correo enviado exitosamente por SMTP.");
+                } catch (\Exception $e) {
+                    Log::error("Fallo al enviar correo por SMTP: " . $e->getMessage());
+                    throw $e;
+                }
             } elseif ($emailConfig['driver']=='sendmail') {
+                Log::info("Intentando enviar por Sendmail...");
                 $this->sendPhpEmail($data,$emailConfig);
+            } else {
+                Log::warning("No se envió el correo. Driver: " . ($emailConfig['driver'] ?? 'N/A') . ", Status: " . ($emailConfig['email_status'] ?? 'N/A'));
             }
+        } else {
+            Log::info("APP_MODE es 'test', no se envía correo.");
         }
         return true;
     }
@@ -945,9 +959,9 @@ class EmailController extends Controller
         $mail->AltBody = 'This is a plain-text message body';
 
         if (!$mail->send()) {
-            echo 'Mailer Error: ' . $mail->ErrorInfo;
+            Log::error('Mailer Error: ' . $mail->ErrorInfo);
         } else {
-            echo 'Message sent!';
+            Log::info('Message sent via Sendmail!');
         }
     }
 

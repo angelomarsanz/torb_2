@@ -118,7 +118,7 @@ class UserController extends Controller
                 $email_controller->welcome_email($user);
 
             } catch (\Exception $e) {
-
+                Log::error("Error al enviar correo de bienvenida en UserController: " . $e->getMessage());
                 $errorMessage = ' Email was not sent due to '.$e->getMessage();
             }
 

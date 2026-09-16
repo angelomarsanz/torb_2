@@ -4,6 +4,28 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [16 de Septiembre, 2026] - Diagnóstico de Envío de Correos de Bienvenida y Localización de Configuraciones
+- **Tarea:** Investigar fallos en el envío de correos tras el registro de usuario y localizar las rutas de configuración en el admin.
+- **Archivos Modificados:**
+    *   `app/Http/Controllers/EmailController.php`:
+        *   Se añadió el uso de la fachada `Log` (`use Log;`).
+        *   Se implementaron logs informativos en `welcome_email` para registrar el inicio del proceso y la configuración de correo cargada.
+        *   Se agregaron bloques try-catch con logs de error detallados para el envío vía SMTP.
+        *   Se sustituyeron los `echo` por `Log::info` y `Log::error` en el método `sendPhpEmail` (Sendmail).
+    *   `app/Http/Controllers/UserController.php`:
+        *   Se añadió un log de error en el método `create` para capturar cualquier excepción lanzada durante la ejecución de `$email_controller->welcome_email($user)`.
+    *   `app/Http/Controllers/Admin/SettingsController.php`:
+        *   Se modificó el método `email` para permitir la recepción y guardado manual del campo `email_status`.
+        *   Se ajustó la lógica para que, si el usuario envía el estado manualmente, se respete esa decisión en lugar de depender exclusivamente del éxito de la prueba de envío automática.
+    *   `resources/views/admin/settings/email.blade.php`:
+        *   Se añadió un campo visible de tipo `select` para permitir al administrador activar o desactivar el sistema de correos manualmente (campo "Status").
+- **Hallazgos de Configuración Admin:**
+    *   **Servidor de Correo:** La configuración técnica (SMTP/Sendmail) se encuentra en la ruta `/admin/settings/email`. Se habilitó el control manual del estado.
+    *   **Contenido del Correo:** El texto del correo de bienvenida se define en la plantilla con ID 5, accesible en la ruta `/admin/email-template/5`.
+- **Estado:** Implementado el sistema de seguimiento y habilitada la activación manual del correo.
+
+---
+
 ## [09 de Septiembre, 2026] - Corrección de Error 500 en Verificación de Reservas Activas
 - **Tarea:** Resolver el error 500 (Internal Server Error) que ocurría cuando el script `reserve-injection.js` intentaba consultar las propiedades con reservas activas.
 - **Archivos Modificados:**

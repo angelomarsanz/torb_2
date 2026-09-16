@@ -305,7 +305,7 @@ class SettingsController extends Controller
                     'mail.port'       => isset($request->port) ?$request->port : '',
 
                     'mail.from'       => ['address' => isset($request->from_address) ? $request->from_address : '',
-                    'name'            => isset($request->from_name) ? $request->from_name : '' ],
+                    'name'            => isset($request->from_name) ? $request->from_name : ''],
 
                     'mail.encryption' => isset($request->encryption) ? $request->encryption : '',
 
@@ -319,28 +319,29 @@ class SettingsController extends Controller
                     $user['to']       = $fromInfo['address'];
                     $user['from']     = $adminDetails->email;
                     $user['fromName'] = ucfirst($adminDetails->username);
-                    try {
-                        $ok = Mail::send('emails.verify', ['user' => $user], function ($m) use ($user) {
-                            $m->from($user['from'], $user['fromName']);
-                            $m->to($user['to']);
-                            $m->subject('Verify SMTP Settings');
-                        });
-                        $field    = 'email_status';
-                        $res      =  DB::table('settings')->where(['name' => $field])->count();
-                        if ($res==0) {
-                            DB::insert(DB::raw("INSERT INTO settings(name,value,type) VALUES ('$field','1','email')"));
-                        } else {
-                            DB::table('settings')->where(['name' => $field])->update(array('name'=>$field,'value' => 1));
+                    
+                    $finalStatus = $request->email_status;
+
+                    // Only try to send verification if user didn't explicitly set status to 1 or if we want to auto-verify
+                    if (!isset($request->email_status)) {
+                        try {
+                            Mail::send('emails.verify', ['user' => $user], function ($m) use ($user) {
+                                $m->from($user['from'], $user['fromName']);
+                                $m->to($user['to']);
+                                $m->subject('Verify SMTP Settings');
+                            });
+                            $finalStatus = 1;
+                        } catch (\Exception $e) {
+                            $finalStatus = 0;
                         }
-                        Common::one_time_message('success', 'Updated Successfully');
-                    } catch (\Exception $e) {
-                        $field    = 'email_status';
-                        $res      =  DB::table('settings')->where(['name' => $field])->count();
-                        if ($res == 0) {
-                            DB::insert(DB::raw("INSERT INTO settings(name,value,type) VALUES ('$field','0','email')"));
-                        } else {
-                            DB::table('settings')->where(['name' => $field])->update(array('name'=>$field,'value' => 0));
-                        }
+                    }
+
+                    $field    = 'email_status';
+                    $res      =  DB::table('settings')->where(['name' => $field])->count();
+                    if ($res==0) {
+                        DB::insert(DB::raw("INSERT INTO settings(name,value,type) VALUES ('$field','$finalStatus','email')"));
+                    } else {
+                        DB::table('settings')->where(['name' => $field])->update(array('name'=>$field,'value' => $finalStatus));
                     }
 
                     if (env('APP_MODE', '') != 'test') {

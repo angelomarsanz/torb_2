@@ -18,7 +18,7 @@
 								<div class="workbench-container">
 									
 									<div class="workbench-sidebar">
-										<div class="text-muted mb-3 f-12 fw-bold text-uppercase letter-spacing-1 ps-2">Settings Menu</div>
+										<div class="text-muted mb-3 f-12 fw-bold text-uppercase letter-spacing-1 f-12 fw-bold text-uppercase letter-spacing-1 ps-2">Settings Menu</div>
 										@include('admin.common.settings_bar')
 									</div>
 
@@ -97,6 +97,18 @@
 																<span class="text-danger f-12">{{ $errors->first("encryption") }}</span>
 															</div>
 														</div>
+
+														{{-- Status --}}
+														<div class="settings-field-row">
+															<label for="email_status" class="settings-field-label">Status</label>
+															<div class="settings-field-input">
+																<select class="form-select settings-input" id="email_status" name="email_status">
+																	<option value="1" {{ $result['email_status'] == 1 ? 'selected' : '' }}>Active</option>
+																	<option value="0" {{ $result['email_status'] == 0 ? 'selected' : '' }}>Inactive</option>
+																</select>
+																<span class="text-danger f-12">{{ $errors->first('email_status') }}</span>
+															</div>
+														</div>
 													</div>
 
 													{{-- Section: Authentication --}}
@@ -151,7 +163,6 @@
 														</div>
 													</div>
 
-													<input type="hidden" class="email_status_check" name="email_status" value="{{ $result['email_status'] }}">
 												</div>
 
 												{{-- Form Footer --}}

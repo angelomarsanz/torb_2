@@ -8,21 +8,29 @@ ARCHIVOS_PHP_PUNTUALES=(
     # --- ARCHIVOS DEL PROYECTO ORIGINAL MODIFICADOS ---
     #"app/Http/Middleware/RedirectIfAuthenticated.php"
     #"config/pdf.php"
-    #"compilar.sh"
     #"composer.json"
     #"package.json"
     #"webpack.mix.js"
-    "manual_tecnico_plugin_reda_alojamiento.md"
-    "LOG_DESARROLLO_REDA.md"
-    #"registrar_sesion.sh"
-    #"subir.sh"
-    #"subir_archivos_puntuales.sh"
-    #".github/copilot-instructions.md"
-
     #"resources/views/admin/common/foot.blade.php"
     #"resources/views/admin/common/head.blade.php"
     #"resources/views/common/foot.blade.php"
     #"resources/views/common/head.blade.php"
+
+    "app/Http/Controllers/EmailController.php"
+    "app/Http/Controllers/UserController.php"
+
+    # --- ARCHIVOS PARA LAS DIRECTRICES Y DOCUMENTACIÓN DEL PROYECTO ---
+
+    #".github/copilot-instructions.md"
+    "manual_tecnico_plugin_reda_alojamiento.md"
+    "LOG_DESARROLLO_REDA.md"
+    #"registrar_sesion.sh"
+
+    # --- ARCHIVOS PARA SUBIR LOS CAMBIOS AL SERVIDOR Y COMPILAR ---
+
+    #"subir.sh"
+    #"subir_archivos_puntuales.sh"
+    #"compilar.sh"
 
     # --- PLUGIN REDA ALOJAMIENTO: GENERAL ---
     #"packages/Reda/RedaAlojamiento/composer.json"
