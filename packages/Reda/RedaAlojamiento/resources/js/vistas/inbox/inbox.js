@@ -376,6 +376,10 @@
 
     $(document).ready(function() {
         process();
+        // Mostrar modal de advertencia de privacidad al cargar la vista
+        if ($('#modalAdvertenciaPrivacidadReda').length) {
+            $('#modalAdvertenciaPrivacidadReda').modal('show');
+        }
     });
 
 })(jQuery);

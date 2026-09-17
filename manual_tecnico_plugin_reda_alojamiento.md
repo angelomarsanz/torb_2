@@ -81,11 +81,11 @@
 
 ### Vistas
 - **packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php**
-  Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Incluye un modal de advertencia de seguridad (`modalAdvertenciaMensajeReda`) para notificar al usuario sobre el intento de envío de datos sensibles.
+  Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Incluye modales de seguridad: `modalAdvertenciaMensajeReda` (al detectar datos sensibles en el envío) y `modalAdvertenciaPrivacidadReda` (aviso preventivo al cargar la vista).
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js**
-  Controlador Javascript para la vista de Inbox personalizada. Gestiona la carga de conversaciones, envío de mensajes por AJAX, navegación estilo WhatsApp en móviles, neutralización de conflictos y manejo dinámico de contadores de mensajes no leídos al interactuar con el chat. Implementa un sistema de interceptación de mensajes mediante expresiones regulares para detectar y advertir sobre el envío de números de teléfono, correos electrónicos y secuencias de 4 o más números (tanto en dígitos como escritos en letras en español), reforzando la seguridad del usuario y evitando el intercambio de datos de contacto externos.
+  Controlador Javascript para la vista de Inbox personalizada. Gestiona la carga de conversaciones, envío de mensajes por AJAX, navegación estilo WhatsApp en móviles, neutralización de conflictos y manejo dinámico de contadores de mensajes no leídos al interactuar con el chat. Implementa un sistema de aviso preventivo al cargar la página (`modalAdvertenciaPrivacidadReda`) y un sistema de interceptación de mensajes mediante expresiones regulares para detectar y advertir sobre el envío de números de teléfono, correos electrónicos y secuencias de 4 o más números (tanto en dígitos como escritos en letras en español), reforzando la seguridad del usuario y evitando el intercambio de datos de contacto externos.
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**

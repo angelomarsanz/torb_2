@@ -137,3 +137,24 @@ enriquecidos y detalles de la reserva.
         </div>
     </div>
 </div>
+
+{{-- Modal de advertencia de privacidad al cargar --}}
+<div class="modal fade" id="modalAdvertenciaPrivacidadReda" tabindex="-1" role="dialog" aria-labelledby="modalAdvertenciaPrivacidadRedaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title font-weight-700" id="modalAdvertenciaPrivacidadRedaLabel">{{ __('Aviso de seguridad') }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 3rem;"></i>
+                <p class="text-16">{{ __('Estimado usuario, no compartas datos personales o de contacto para prevenir estafas o la suspensión de tu cuenta.') }}</p>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-center">
+                <button type="button" class="btn btn-outline-success shadow-none" data-dismiss="modal">{{ __('Entendido') }}</button>
+            </div>
+        </div>
+    </div>
+</div>

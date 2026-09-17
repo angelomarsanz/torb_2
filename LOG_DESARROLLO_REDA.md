@@ -4,6 +4,13 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [17 de Septiembre, 2026] - Implementación de Modal de Advertencia en Inbox
+- **Tarea:** Agregar un modal de advertencia de seguridad/privacidad al cargar la vista de Inbox.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: Se añadió el HTML para el modal `modalAdvertenciaPrivacidadReda` con un mensaje de seguridad preventivo.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`: Se actualizó la función `$(document).ready` para disparar el modal automáticamente mediante Bootstrap.
+- **Detalle Técnico:** El modal advierte sobre no compartir datos personales para prevenir estafas y la suspensión de la cuenta. Soporta cierre por Escape, clic exterior y botón "Entendido".
+
 ## [16 de Septiembre, 2026] - Corrección de Error Fatal y Ajuste de Configuración SMTP
 - **Tarea:** Resolver el error `Class Log not found` y el fallo de conexión SMTP por discrepancia de certificado SSL.
 - **Archivos Modificados:**
