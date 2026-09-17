@@ -365,7 +365,7 @@ class Bookings extends Model
             return 'info';
         } elseif ($this->attributes['status'] == 'processing') {
             return 'secondary';
-        }elseif ($this->attributes['status'] == '') {
+        }elseif ($this->attributes['status'] == '' || $this->attributes['status'] == 'Inquiry') {
             return 'inquiry';
         }
 

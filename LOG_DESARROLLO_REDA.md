@@ -4,15 +4,18 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [17 de Septiembre, 2026] - Implementación de Modal de Advertencia en Inbox
-- **Tarea:** Agregar un modal de advertencia de seguridad/privacidad al cargar la vista de Inbox.
+## [17 de Septiembre, 2026] - Corrección de Visualización de Consultas en Listados de Viajes/Reservas
+- **Tarea:** Evitar que las consultas (iniciadas vía "Enviar mensaje") se muestren como reservaciones en "Mis Viajes" y "Mis Reservas".
 - **Archivos Modificados:**
-    *   `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: Se añadió el HTML para el modal `modalAdvertenciaPrivacidadReda` con un mensaje de seguridad preventivo.
-    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`: Se actualizó la función `$(document).ready` para disparar el modal automáticamente mediante Bootstrap.
-- **Detalle Técnico:** El modal advierte sobre no compartir datos personales para prevenir estafas y la suspensión de la cuenta. Soporta cierre por Escape, clic exterior y botón "Entendido".
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php`: Se cambió el estado por defecto de las consultas de `''` a `'Inquiry'`.
+    *   `app/Models/Bookings.php`: Se actualizó `getLabelColorAttribute` para reconocer el estado `'Inquiry'`.
+    *   `app/Http/Controllers/TripsController.php`: Se modificó `myTrips` para filtrar y excluir estados `'Inquiry'` o vacíos en la vista general.
+    *   `app/Http/Controllers/BookingController.php`: Se modificó `myBookings` para filtrar y excluir estados `'Inquiry'` o vacíos en la vista general del anfitrión.
+- **Detalle Técnico:** Las consultas ahora se identifican explícitamente como `Inquiry` en la base de datos, lo que permite segregarlas de las reservaciones reales en las interfaces de usuario de turistas y anfitriones.
 
-## [16 de Septiembre, 2026] - Corrección de Error Fatal y Ajuste de Configuración SMTP
-- **Tarea:** Resolver el error `Class Log not found` y el fallo de conexión SMTP por discrepancia de certificado SSL.
+## [17 de Septiembre, 2026] - Implementación de Modal de Advertencia en Inbox
+... (resto del archivo)
+
 - **Archivos Modificados:**
     *   `app/Http/Controllers/UserController.php`:
         *   Se corrigió la importación de fachadas usando `Illuminate\Support\Facades\...` para evitar errores de clase no encontrada.

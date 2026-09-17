@@ -76,6 +76,9 @@
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php**
   Controlador para gestiones relacionadas con las reservaciones dentro del ecosistema REDA. Proporciona métodos para verificar el estado de las reservas de un usuario, como la obtención de IDs de inmuebles con reservas activas (aceptadas vigentes, pendientes o en proceso) para adaptar la interfaz de usuario dinámicamente.
 
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php**
+  Controlador encargado de gestionar el inicio de conversaciones directas entre huéspedes y anfitriones desde la vista de propiedad. Implementa la lógica para buscar una conversación existente o crear un nuevo registro de tipo `Inquiry` (Consulta) en la tabla de reservaciones (`bookings`). Este estado permite que las consultas iniciales se mantengan separadas de las reservaciones reales en los listados de viajes y reservas del sistema.
+
 
 ## Mensajería (Inbox)
 

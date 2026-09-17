@@ -52,7 +52,7 @@ class ChatController extends Controller
                 $booking->user_id = $user_id;
                 $booking->start_date = date('Y-m-d');
                 $booking->end_date = date('Y-m-d', strtotime('+1 day'));
-                $booking->status = ''; // Inquiry
+                $booking->status = 'Inquiry'; // Inquiry
                 $booking->guest = 1;
                 $booking->currency_code = $property->property_price->currency_code ?? 'USD';
                 $booking->total_night = 1;

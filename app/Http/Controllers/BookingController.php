@@ -399,7 +399,7 @@ class BookingController extends Controller
                 $params           = [['status', 'Declined']];
                 break;
             default:
-                $params           = [];
+                $params           = [['status', '!=', 'Inquiry'], ['status', '!=', '']];
                 break;
         }
         $data['yesterday'] = Carbon::yesterday();
