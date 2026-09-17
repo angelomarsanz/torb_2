@@ -85,7 +85,7 @@
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js**
-  Controlador Javascript para la vista de Inbox personalizada. Gestiona la carga de conversaciones, envío de mensajes por AJAX, navegación estilo WhatsApp en móviles, neutralización de conflictos y manejo dinámico de contadores de mensajes no leídos al interactuar con el chat. Implementa un sistema de interceptación de mensajes mediante expresiones regulares para detectar y advertir sobre el envío de números de teléfono y correos electrónicos, reforzando la seguridad del usuario.
+  Controlador Javascript para la vista de Inbox personalizada. Gestiona la carga de conversaciones, envío de mensajes por AJAX, navegación estilo WhatsApp en móviles, neutralización de conflictos y manejo dinámico de contadores de mensajes no leídos al interactuar con el chat. Implementa un sistema de interceptación de mensajes mediante expresiones regulares para detectar y advertir sobre el envío de números de teléfono, correos electrónicos y secuencias de 4 o más números (tanto en dígitos como escritos en letras en español), reforzando la seguridad del usuario y evitando el intercambio de datos de contacto externos.
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**

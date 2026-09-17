@@ -34,15 +34,27 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [09 de Septiembre, 2026] - Detección de Información Sensible en Inbox
-...
-
+## [17 de Septiembre, 2026] - Mejora de Seguridad en Inbox y Detección de Datos Sensibles
+- **Tarea:** Reforzar el filtro de seguridad en el chat para evitar el intercambio de datos de contacto externos.
 - **Archivos Modificados:**
-    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Se añadió el método `getCountActiveBookings` con lógica unificada para contar reservaciones 'Accepted' (futuras/actuales), 'Pending' y 'processing'.
-    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Se registró la ruta `reda/bookings/count-active`.
-    *   `packages/Reda/RedaAlojamiento/resources/js/general/menus/obtenerConteoViajes.js`: Nueva función AJAX estandarizada.
-    *   `packages/Reda/RedaAlojamiento/resources/js/general/menus/menuLateralUsuario.js`: Se integró la llamada al nuevo endpoint para actualizar dinámicamente el valor en la tarjeta resumen del Dashboard.
-- **Estado:** Corregido.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`:
+        *   Se mejoró la función `detectarInformacionSensible` para incluir la detección de secuencias de 4 o más números (consecutivos o con separadores).
+        *   Se añadió la detección de secuencias de 4 o más números escritos en letras (español: "uno", "dos", etc.).
+        *   Se documentó internamente la función y el archivo siguiendo los estándares del proyecto.
+- **Estado:** Completado.
+
+---
+
+## [09 de Septiembre, 2026] - Detección de Información Sensible en Inbox
+- **Tarea:** Implementar un sistema de advertencia para prevenir que los usuarios compartan datos de contacto privados (teléfonos/emails) antes de confirmar una reserva.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`: 
+        *   Se implementó la lógica de interceptación de mensajes en el frontend.
+        *   Se utiliza `detectarInformacionSensible()` con expresiones regulares para email y patrones comunes de teléfono.
+        *   Si se detecta información sensible, se dispara el modal `#modalAdvertenciaMensajeReda` y se aborta el envío AJAX.
+    *   `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`:
+        *   Se añadió la estructura del modal de advertencia de seguridad.
+- **Estado:** Implementado.
 
 ---
 

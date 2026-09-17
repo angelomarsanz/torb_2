@@ -272,17 +272,34 @@
 
     /**
      * Detecta si una cadena contiene información sensible (teléfono o email).
+     * Se ha mejorado para detectar:
+     * 1. Emails.
+     * 2. Números de teléfono estándar.
+     * 3. Secuencias de 4 o más dígitos (evasión por bloques).
+     * 4. Secuencias de 4 o más números escritos en letras (español).
      * @param {string} text - El texto a analizar.
      * @returns {boolean} True si detecta patrones, false en caso contrario.
      */
     function detectarInformacionSensible(text) {
         // Regex para email
-        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-        // Regex para teléfono (buscamos secuencias de al menos 7-8 números que pueden tener espacios, guiones o puntos)
-        // Esta regex es una aproximación para detectar números de teléfono comunes
-        const phoneRegex = /(\+?\d[\d\s\.\-]{7,}\d)/g;
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
         
-        return emailRegex.test(text) || phoneRegex.test(text);
+        // Regex para teléfono (buscamos secuencias de al menos 7-8 números que pueden tener espacios, guiones o puntos)
+        const phoneRegex = /(\+?\d[\d\s\.\-]{7,}\d)/;
+
+        // Detectar secuencias de 4 o más números (consecutivos o con separadores como espacios, puntos o guiones)
+        // Esto ayuda a interceptar intentos de evadir el filtro enviando números en bloques pequeños.
+        const cuatroNumerosRegex = /\d[\s\.\-]*\d[\s\.\-]*\d[\s\.\-]*\d/;
+
+        // Detectar secuencias de 4 o más números escritos en letras (español)
+        // Ej: "tres cuatro nueve siete cinco"
+        const palabrasNumeros = '(cero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve)';
+        const numerosLetrasRegex = new RegExp('(' + palabrasNumeros + '[\\s\\.,\\-]*){4,}', 'i');
+        
+        return emailRegex.test(text) || 
+               phoneRegex.test(text) || 
+               cuatroNumerosRegex.test(text) || 
+               numerosLetrasRegex.test(text);
     }
 
     // Manejo de Enter muy específico para evitar burbujeo hacia otros scripts

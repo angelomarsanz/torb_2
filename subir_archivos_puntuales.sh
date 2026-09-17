@@ -16,12 +16,12 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"resources/views/common/foot.blade.php"
     #"resources/views/common/head.blade.php"
     #"app/Http/Middleware/RedirectIfAuthenticated.php"
-    "app/Http/Controllers/EmailController.php"
-    "app/Http/Controllers/UserController.php"
-    "app/Http/Controllers/Admin/SettingsController.php"
-    "app/Providers/AppServiceProvider.php"
-    "config/mail.php"
-    "resources/views/admin/settings/email.blade.php"
+    #"app/Http/Controllers/EmailController.php"
+    #"app/Http/Controllers/UserController.php"
+    #"app/Http/Controllers/Admin/SettingsController.php"
+    #"app/Providers/AppServiceProvider.php"
+    #"config/mail.php"
+    #"resources/views/admin/settings/email.blade.php"
 
     # --- ARCHIVOS PARA LAS DIRECTRICES Y DOCUMENTACIÓN DEL PROYECTO ---
 
@@ -223,7 +223,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js"
     #"packages/Reda/RedaAlojamiento/resources/js/chat-injection.js"
     #"packages/Reda/RedaAlojamiento/resources/js/general/iniciarChat.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js"
+    "packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js"
     #"packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js"
     #"packages/Reda/RedaAlojamiento/resources/js/general/menus/addPublicaExperienciaBtn.js"
 
@@ -247,5 +247,5 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
-    "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
+    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
     )
