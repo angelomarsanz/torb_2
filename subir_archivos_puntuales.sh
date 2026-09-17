@@ -6,15 +6,16 @@
 # Para no subir archivos, escribir la palabra "Ninguno".
 ARCHIVOS_PHP_PUNTUALES=(
     # --- ARCHIVOS DEL PROYECTO ORIGINAL MODIFICADOS ---
-    #"app/Http/Middleware/RedirectIfAuthenticated.php"
-    #"config/pdf.php"
     #"composer.json"
+    #"config/app.php"
+    #"config/pdf.php"
     #"package.json"
     #"webpack.mix.js"
     #"resources/views/admin/common/foot.blade.php"
     #"resources/views/admin/common/head.blade.php"
     #"resources/views/common/foot.blade.php"
     #"resources/views/common/head.blade.php"
+    #"app/Http/Middleware/RedirectIfAuthenticated.php"
     "app/Http/Controllers/EmailController.php"
     "app/Http/Controllers/UserController.php"
     "app/Http/Controllers/Admin/SettingsController.php"
