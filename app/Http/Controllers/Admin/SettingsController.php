@@ -320,6 +320,7 @@ class SettingsController extends Controller
                     $user['from']     = $adminDetails->email;
                     $user['fromName'] = ucfirst($adminDetails->username);
                     
+                    // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
                     $finalStatus = $request->email_status;
 
                     // Only try to send verification if user didn't explicitly set status to 1 or if we want to auto-verify
@@ -343,6 +344,7 @@ class SettingsController extends Controller
                     } else {
                         DB::table('settings')->where(['name' => $field])->update(array('name'=>$field,'value' => $finalStatus));
                     }
+                    // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
 
                     if (env('APP_MODE', '') != 'test') {
                         Settings::where(['name' => 'driver', 'type' => 'email'])->update(['value' => $request->driver]);

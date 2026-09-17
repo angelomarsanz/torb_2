@@ -99,6 +99,7 @@
 														</div>
 
 														{{-- Status --}}
+														{{-- Inicio cambios para el plugin packages/Reda/RedaAlojamiento/** --}}
 														<div class="settings-field-row">
 															<label for="email_status" class="settings-field-label">Status</label>
 															<div class="settings-field-input">
@@ -109,6 +110,7 @@
 																<span class="text-danger f-12">{{ $errors->first('email_status') }}</span>
 															</div>
 														</div>
+														{{-- Fin cambios para el plugin packages/Reda/RedaAlojamiento/** --}}
 													</div>
 
 													{{-- Section: Authentication --}}

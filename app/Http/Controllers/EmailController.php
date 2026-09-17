@@ -14,7 +14,12 @@ use App\Models\{Accounts,
     Settings,
     Withdrawal,
 };
-use Auth, DateTime, Mail, Common, Log;
+use Illuminate\Support\Facades\{
+    Auth,
+    Mail,
+    Log
+};
+use DateTime, Common;
 use Modules\Gateway\Entities\Gateway;
 
 class EmailController extends Controller
@@ -22,14 +27,18 @@ class EmailController extends Controller
 
     public function welcome_email($user)
     {
+        // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
         Log::info("Iniciando envío de correo de bienvenida para el usuario: " . $user->email);
+        // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
         $emailSettings               = Settings::getAll()->where('type','email')->toArray();
         $emailConfig                 = Common::key_value('name','value',$emailSettings);
-        $adminDetails                = Admin::where('status','active')->first();
-        $emailConfig['email_address']= $adminDetails->email;
-        $emailConfig['username']     = $adminDetails->username;
-
-        Log::info("Configuración de correo detectada: " . print_r($emailConfig, true));
+        
+        // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
+        // NO sobrescribir username con el del administrador para los logs reales de Laravel
+        $configActualLaravel = config('mail.mailers.smtp');
+        Log::info("Configuración de correo REAL de Laravel (SMTP): " . print_r($configActualLaravel, true));
+        Log::info("Configuración local detectada (DB): " . print_r($emailConfig, true));
+        // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
 
         $token                       = Common::randomCode(100);
         $password_resets             = new PasswordResets;
@@ -99,6 +108,7 @@ class EmailController extends Controller
 
         if (env('APP_MODE', '') != 'test') {
             if ($emailConfig['driver']=='smtp' && $emailConfig['email_status']==1) {
+                // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
                 Log::info("Intentando enviar por SMTP...");
                 try {
                     Mail::send('emails.email_confirm_template', $data, function($message) use($data,$subject,$content) {
@@ -109,14 +119,21 @@ class EmailController extends Controller
                     Log::error("Fallo al enviar correo por SMTP: " . $e->getMessage());
                     throw $e;
                 }
+                // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
             } elseif ($emailConfig['driver']=='sendmail') {
+                // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
                 Log::info("Intentando enviar por Sendmail...");
+                // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
                 $this->sendPhpEmail($data,$emailConfig);
             } else {
+                // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
                 Log::warning("No se envió el correo. Driver: " . ($emailConfig['driver'] ?? 'N/A') . ", Status: " . ($emailConfig['email_status'] ?? 'N/A'));
+                // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
             }
         } else {
+            // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
             Log::info("APP_MODE es 'test', no se envía correo.");
+            // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
         }
         return true;
     }

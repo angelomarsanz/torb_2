@@ -1,5 +1,27 @@
 # Documentación de Archivos del Plugin RedaAlojamiento
 
+## Modificaciones en Archivos del Core (Originales)
+*Excepciones delimitadas con comentarios de Inicio/Fin para el plugin REDA.*
+
+### Controladores (Admin)
+- **app/Http/Controllers/Admin/SettingsController.php**
+  Se modificó el método `email` para permitir el guardado manual del campo `email_status`. La lógica original dependía del éxito de un envío de prueba; con este cambio, se respeta la selección manual del administrador ("Active"/"Inactive") permitiendo la persistencia del sistema de correos incluso si la validación automática falla temporalmente.
+
+### Controladores (General)
+- **app/Http/Controllers/EmailController.php**
+  Se inyectaron logs de depuración en el método `welcome_email` para rastrear la configuración de SMTP y el estado del envío. Se actualizó el método `sendPhpEmail` para redirigir errores y confirmaciones al log de Laravel en lugar de imprimirlos en pantalla (`echo`), mejorando la estabilidad de las respuestas AJAX.
+
+- **app/Http/Controllers/UserController.php**
+  Se añadió un bloque `try-catch` en el método `create` (proceso de registro). Esto evita que un fallo en el servidor de correos (SMTP) bloquee el registro exitoso del usuario en la base de datos, permitiendo que la aplicación continúe el flujo y registre el error en el log para su posterior revisión.
+
+### Vistas (Admin)
+- **resources/views/admin/settings/email.blade.php**
+  Inyección de un campo `select` para la columna `email_status`. Esta modificación habilita la interfaz de usuario para que el administrador pueda forzar el estado del sistema de correos desde el panel de configuración de email.
+
+### Configuración
+- **config/mail.php**
+  Se añadió la opción `verify_peer` al transport `smtp` vinculada a la variable de entorno `MAIL_VERIFY_PEER`. Esta modificación permite desactivar opcionalmente la verificación de certificados SSL/TLS desde el archivo `.env`, facilitando la conexión a servidores SMTP con certificados compartidos o discrepancias de nombre de host (CN).
+
 ## Alojamientos (Hospedajes)
 
 ### JavaScript (Vistas)

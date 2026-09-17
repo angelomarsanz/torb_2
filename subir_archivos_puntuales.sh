@@ -15,9 +15,12 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"resources/views/admin/common/head.blade.php"
     #"resources/views/common/foot.blade.php"
     #"resources/views/common/head.blade.php"
-
     "app/Http/Controllers/EmailController.php"
     "app/Http/Controllers/UserController.php"
+    "app/Http/Controllers/Admin/SettingsController.php"
+    "app/Providers/AppServiceProvider.php"
+    "config/mail.php"
+    "resources/views/admin/settings/email.blade.php"
 
     # --- ARCHIVOS PARA LAS DIRECTRICES Y DOCUMENTACIÓN DEL PROYECTO ---
 

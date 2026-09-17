@@ -4,25 +4,22 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [16 de Septiembre, 2026] - Diagnóstico de Envío de Correos de Bienvenida y Localización de Configuraciones
-- **Tarea:** Investigar fallos en el envío de correos tras el registro de usuario y localizar las rutas de configuración en el admin.
+## [16 de Septiembre, 2026] - Corrección de Error Fatal y Ajuste de Configuración SMTP
+- **Tarea:** Resolver el error `Class Log not found` y el fallo de conexión SMTP por discrepancia de certificado SSL.
 - **Archivos Modificados:**
-    *   `app/Http/Controllers/EmailController.php`:
-        *   Se añadió el uso de la fachada `Log` (`use Log;`).
-        *   Se implementaron logs informativos en `welcome_email` para registrar el inicio del proceso y la configuración de correo cargada.
-        *   Se agregaron bloques try-catch con logs de error detallados para el envío vía SMTP.
-        *   Se sustituyeron los `echo` por `Log::info` y `Log::error` en el método `sendPhpEmail` (Sendmail).
     *   `app/Http/Controllers/UserController.php`:
-        *   Se añadió un log de error en el método `create` para capturar cualquier excepción lanzada durante la ejecución de `$email_controller->welcome_email($user)`.
-    *   `app/Http/Controllers/Admin/SettingsController.php`:
-        *   Se modificó el método `email` para permitir la recepción y guardado manual del campo `email_status`.
-        *   Se ajustó la lógica para que, si el usuario envía el estado manualmente, se respete esa decisión en lugar de depender exclusivamente del éxito de la prueba de envío automática.
-    *   `resources/views/admin/settings/email.blade.php`:
-        *   Se añadió un campo visible de tipo `select` para permitir al administrador activar o desactivar el sistema de correos manualmente (campo "Status").
-- **Hallazgos de Configuración Admin:**
-    *   **Servidor de Correo:** La configuración técnica (SMTP/Sendmail) se encuentra en la ruta `/admin/settings/email`. Se habilitó el control manual del estado.
-    *   **Contenido del Correo:** El texto del correo de bienvenida se define en la plantilla con ID 5, accesible en la ruta `/admin/email-template/5`.
-- **Estado:** Implementado el sistema de seguimiento y habilitada la activación manual del correo.
+        *   Se corrigió la importación de fachadas usando `Illuminate\Support\Facades\...` para evitar errores de clase no encontrada.
+    *   `app/Http/Controllers/EmailController.php`:
+        *   Se corrigió la importación de fachadas (`Auth`, `Mail`, `Log`) usando el espacio de nombres completo.
+    *   `config/mail.php`:
+        *   Se añadió la opción `verify_peer` al driver `smtp`, vinculada a la variable de entorno `MAIL_VERIFY_PEER`. Esto permite desactivar la verificación de certificados SSL/TLS en entornos donde el host no coincide con el certificado.
+- **Hallazgos Técnicos:**
+    *   El error de SMTP `Peer certificate CN='redetronic.top' did not match expected CN='mail.torbiangames.com'` indica que el servidor de correo usa un certificado compartido.
+- **Acciones Recomendadas al Usuario:**
+    *   Para solucionar el error de certificado, el usuario puede:
+        1. Cambiar `MAIL_HOST=redetronic.top` en su archivo `.env`.
+        2. O agregar `MAIL_VERIFY_PEER=false` en su archivo `.env`.
+- **Estado:** Corregido. El sistema de registro de usuarios ahora debería completar el envío de correos (o capturar el error sin romper la ejecución) tras corregir las importaciones.
 
 ---
 

@@ -9,9 +9,16 @@ use App\Http\{
 
 };
 use App\Rules\GoogleReCaptcha;
-use Illuminate\Support\Facades\Cache;
-use App\DataTables\TransactionDataTable;
-use Auth, Validator, Socialite, DateTime, Hash, DB, Session, Common;
+use Illuminate\Support\Facades\{
+    Auth,
+    Cache,
+    DB,
+    Hash,
+    Log,
+    Session,
+    Validator
+};
+use Socialite, DateTime, Common;
 use App\Models\{
     User,
     UserDetails,
@@ -113,6 +120,7 @@ class UserController extends Controller
 
             $this->wallet($user->id);
             $errorMessage = '';
+            // Inicio cambios para el plugin packages/Reda/RedaAlojamiento/**
             try {
 
                 $email_controller->welcome_email($user);
@@ -121,6 +129,7 @@ class UserController extends Controller
                 Log::error("Error al enviar correo de bienvenida en UserController: " . $e->getMessage());
                 $errorMessage = ' Email was not sent due to '.$e->getMessage();
             }
+            // Fin cambios para el plugin packages/Reda/RedaAlojamiento/**
 
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
                 $this->helper->one_time_message('success', __('You have registered successfully.').''.$errorMessage);

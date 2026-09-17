@@ -46,17 +46,27 @@ class AppServiceProvider extends ServiceProvider
                 $result = Settings::where('type', 'email')->pluck('value', 'name')->toArray();
                 if (isset($result['driver'])) {
                     \Config::set([
-                        'mail.driver'     => $result['driver'],
+                        'mail.default' => $result['driver'],
+                        'mail.mailers.smtp' => [
+                            'transport'  => 'smtp',
+                            'host'       => $result['host'],
+                            'port'       => $result['port'],
+                            'encryption' => $result['encryption'],
+                            'username'   => $result['username'],
+                            'password'   => $result['password'],
+                            'verify_peer'=> env('MAIL_VERIFY_PEER', true),
+                        ],
+                        'mail.from' => [
+                            'address' => $result['from_address'],
+                            'name'    => $result['from_name']
+                        ],
+                        // Mantener compatibilidad con versiones o plugins que miren la raíz
                         'mail.host'       => $result['host'],
                         'mail.port'       => $result['port'],
-                        'mail.from'       => [
-                                                'address' => $result['from_address'],
-                                                'name'    => $result['from_name']
-                                            ],
                         'mail.encryption' => $result['encryption'],
                         'mail.username'   => $result['username'],
-                        'mail.password'   => $result['password']
-                        ]);
+                        'mail.password'   => $result['password'],
+                    ]);
                 }
             }
 
