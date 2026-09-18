@@ -4,14 +4,44 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [17 de Septiembre, 2026] - Corrección de Visualización de Consultas en Listados de Viajes/Reservas
-- **Tarea:** Evitar que las consultas (iniciadas vía "Enviar mensaje") se muestren como reservaciones en "Mis Viajes" y "Mis Reservas".
+## [18 de Septiembre, 2026] - Ajuste de Jerarquía e Inyección Quirúrgica del Script de Ocultación de Consultas
+- **Tarea:** Mover el script de ocultación de consultas a la jerarquía superior y ajustar su inyección para evitar cargar todo el bundle `main.js` en vistas originales.
 - **Archivos Modificados:**
-    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php`: Se cambió el estado por defecto de las consultas de `''` a `'Inquiry'`.
-    *   `app/Models/Bookings.php`: Se actualizó `getLabelColorAttribute` para reconocer el estado `'Inquiry'`.
-    *   `app/Http/Controllers/TripsController.php`: Se modificó `myTrips` para filtrar y excluir estados `'Inquiry'` o vacíos en la vista general.
-    *   `app/Http/Controllers/BookingController.php`: Se modificó `myBookings` para filtrar y excluir estados `'Inquiry'` o vacíos en la vista general del anfitrión.
-- **Detalle Técnico:** Las consultas ahora se identifican explícitamente como `Inquiry` en la base de datos, lo que permite segregarlas de las reservaciones reales en las interfaces de usuario de turistas y anfitriones.
+    *   `packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js`: Movido desde `general/` a la raíz de JS.
+    *   `webpack.mix.js`: Añadida compilación independiente hacia `public/js/reda/general/ocultar-consultas.min.js`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/main.js`: Se eliminó el import de `ocultarConsultas`.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Middleware/InjectPluginAssets.php`: Se ajustó para inyectar `ocultar-consultas.min.js` quirúrgicamente en lugar de `reda-general-main.min.js`.
+- **Detalle Técnico:** Para cumplir con la directriz de evitar conflictos y siguiendo la jerarquía de los scripts de inyección (`chat` y `reserve`), se ha convertido el script de ocultación en un entry-point independiente. Esto permite que el middleware lo inyecte específicamente en las vistas del sistema original (Viajes/Reservas) sin arrastrar la lógica de menús y otras funcionalidades generales del plugin, garantizando una integración más limpia y segura.
+
+---
+
+## [18 de Septiembre, 2026] - Diagnóstico y Pruebas de Ocultación de Consultas (PAUSADO)
+- **Estado:** Pausado a petición del usuario tras múltiples intentos de depuración.
+- **Resumen de Intentos:**
+    1. **Estrategia Inicial:** Se intentó filtrar mediante PHP en `BookingController` y `TripsController`. Se revirtió por violar la regla de no modificar el core.
+    2. **Estrategia JS:** Se implementó `ocultar-consultas.js` con `MutationObserver` y selectores basados en la clase `.badge.Inquiry`.
+    3. **Depuración Profunda:** Se añadieron alertas y logs de consola (`REDA: Badge encontrado...`).
+- **Hallazgos Críticos:**
+    *   El script se carga y detecta las filas (`.row.border.p-2`), encontrando 4 elementos en la vista `/trips/active`.
+    *   Sin embargo, el filtrado por texto (`inquiry`, `consulta`) y por clase devuelve `false`.
+    *   Los logs del navegador muestran que las reservaciones detectadas tienen el texto **"Vencido"** y la clase **"Expired"**, pero no se identifican visualmente las reservaciones que el usuario considera "consultas".
+    *   Existe la posibilidad de que las consultas no estén llegando al DOM con el texto esperado o que el sistema original (`vRent`) esté sobreescribiendo el estado visual.
+- **Próximos Pasos:** Cuando se retome, será necesario inspeccionar manualmente el código fuente HTML (View Source) de las filas que el usuario desea ocultar para identificar un patrón único (ID, Slug o atributo oculto) que permita filtrarlas, ya que el badge de estatus no está siendo suficiente.
+
+---
+
+## [17 de Septiembre, 2026] - Reversión de Cambios en Código Base y Ajuste de Estrategia para Consultas
+- **Tarea:** Revertir la modificación de archivos originales del proyecto y ocultar las consultas (Inquiries) mediante Javascript para cumplir con las directrices de `GEMINI.md`.
+- **Archivos Revertidos (Estado Original Restaurado):**
+    *   `app/Http/Controllers/BookingController.php`: Se eliminó el filtro manual en `myBookings`.
+    *   `app/Http/Controllers/TripsController.php`: Se eliminó el filtro manual en `myTrips`.
+    *   `app/Models/Bookings.php`: Se eliminó el soporte para el estado `'Inquiry'` en `getLabelColorAttribute`.
+- **Archivos Modificados/Creados (Nueva Estrategia):**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php`: Se mantuvo el estado `'Inquiry'` para las nuevas consultas (dentro del plugin).
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/ocultarConsultas.js`: NUEVO script que identifica y oculta las filas de consultas en el DOM del frontend.
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/main.js`: Se integró el nuevo script de filtrado.
+- **Detalle Técnico:** En lugar de modificar los controladores originales, ahora se utiliza un MutationObserver en Javascript que detecta la presencia de badges con clase `Inquiry` en las vistas de viajes y reservaciones, ocultando automáticamente la fila correspondiente. Esto asegura que las consultas no interfieran con la experiencia de reservaciones reales sin alterar el núcleo del sistema.
+
 
 ## [17 de Septiembre, 2026] - Implementación de Modal de Advertencia en Inbox
 ... (resto del archivo)

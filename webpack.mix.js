@@ -52,6 +52,7 @@ if (buildAlojamiento) {
     mix.js('packages/Reda/RedaAlojamiento/resources/js/general/media.js', 'public/js/reda/general/reda-general-media.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/chat-injection.js', 'public/js/reda/general/chat-injection.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js', 'public/js/reda/general/reserve-injection.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js', 'public/js/reda/general/ocultar-consultas.min.js');
 
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js', 'public/js/reda/admin/general/soporte_tecnico/indexSoporteTecnico.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js', 'public/js/reda/admin/general/soporte_tecnico/showSoporteTecnico.min.js');

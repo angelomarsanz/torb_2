@@ -46,8 +46,8 @@
 - **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js**
   Controlador de administración para el panel de mediaciones (Disputas). Este archivo gestiona la lógica del dashboard de mediaciones para el administrador, permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo, gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
 
-### JavaScript (General)
-- **packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js**
+- **packages/Reda/RedaAlojamiento/resources/js/general/ocultarConsultas.js**
+  Script responsable de ocultar dinámicamente las consultas (Inquiries) en las vistas de "Mis Viajes" y "Mis Reservas" del proyecto original. Utiliza un MutationObserver para detectar la presencia de badges con estado 'Inquiry' en el DOM y ocultar las filas correspondientes. Esto permite mantener la interfaz limpia de consultas iniciales sin necesidad de modificar el código fuente de los controladores o modelos del núcleo.
   Script responsable de inyectar dinámicamente el botón de "Reservar" o "Ver reserva" en las tarjetas de inmuebles de la aplicación. Implementa lógica para detectar el `propertyId` y `slug`, verifica si el usuario está autenticado y consulta si existe una reserva activa (Accepted vigentes, Pending o processing) para cambiar el texto y enlace del botón de manera proactiva, incluyendo parámetros de alerta en la redirección.
 
 - **packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js**
