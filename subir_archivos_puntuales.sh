@@ -200,7 +200,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/productosServiciosEncontrados.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/calificacionExperienciaFrontend.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/toggleFavoritoComercio.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
+    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
     "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js"
 
     # --- Archivos Javascript fuera de la carpeta frontend ---
