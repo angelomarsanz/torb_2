@@ -69,12 +69,19 @@
 - **packages/Reda/RedaAlojamiento/resources/js/general/menus/obtenerConteoViajes.js**
   Función AJAX para obtener el conteo de reservaciones activas (viajes) del usuario. Sigue la estructura de promesas y manejo de errores del plugin REDA para alimentar dinámicamente el dashboard.
 
+### JavaScript (Vistas)
+- **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js**
+  Script encargado de gestionar la apertura y renderizado del modal de detalles de reservación. Intercepta los clics en los botones de "Ver reserva", solicita la información detallada al servidor mediante AJAX y construye dinámicamente un modal con estética de Airbnb que muestra la foto de la propiedad, ubicación, fechas de estancia, número de huéspedes, estado de la reserva y el costo total.
+
+- **packages/Reda/RedaAlojamiento/resources/js/general/reserve-injection.js**
+  Script responsable de inyectar dinámicamente el botón de "Reservar" o "Ver reserva" en las tarjetas de inmuebles de la aplicación. Implementa lógica para detectar el `propertyId` y `slug`, verifica si el usuario está autenticado y consulta si existe una reserva activa para cambiar el texto proactivamente. En el caso de "Ver reserva", configura el botón para abrir un modal detallado en lugar de realizar una redirección.
+
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php**
   Controlador para la gestión de mediaciones (disputas). Maneja la lógica de negocio para crear, verificar y listar mediaciones. Incluye validaciones de estado de reserva para permitir mediaciones solo en reservaciones formales y no en simples consultas.
 
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php**
-  Controlador para gestiones relacionadas con las reservaciones dentro del ecosistema REDA. Proporciona métodos para verificar el estado de las reservas de un usuario, como la obtención de IDs de inmuebles con reservas activas (aceptadas vigentes, pendientes o en proceso) para adaptar la interfaz de usuario dinámicamente.
+  Controlador para gestiones relacionadas con las reservaciones dentro del ecosistema REDA. Proporciona métodos para verificar el estado de las reservas de un usuario, como la obtención de IDs de inmuebles con reservas activas y la recuperación de detalles completos (foto, ubicación, fechas, costos) para su visualización en componentes interactivos del frontend.
 
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php**
   Controlador encargado de gestionar el inicio de conversaciones directas entre huéspedes y anfitriones desde la vista de propiedad. Implementa la lógica para buscar una conversación existente o crear un nuevo registro de tipo `Inquiry` (Consulta) en la tabla de reservaciones (`bookings`). Este estado permite que las consultas iniciales se mantengan separadas de las reservaciones reales en los listados de viajes y reservas del sistema.

@@ -4,6 +4,21 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [18 de Septiembre, 2026] - Implementación de Modal Detalle de Reserva en Frontend
+- **Tarea:** Cambiar el comportamiento del botón "Ver reserva" en las tarjetas de propiedades para que abra un modal detallado en lugar de redirigir a otra página.
+- **Archivos Creados:**
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js`: Script que maneja la lógica de apertura, consulta AJAX y renderizado del modal con Bootstrap 4.5.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Agregado el método `getBookingDetails` para obtener la información de una reserva activa (foto, ubicación, fechas, costo, etc.).
+    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Registrada la ruta `reda/bookings/details/{property_id}`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js`: Actualizada la lógica de inyección para añadir la clase `.btn-reda-ver-reserva-modal` y anular la redirección automática.
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Añadidas etiquetas de traducción necesarias para el modal ("Detalles de la reserva", "Costo Total", etc.).
+    *   `webpack.mix.js`: Registrada la compilación del nuevo archivo JS hacia `public/js/reda/vistas/frontend/verDetalleReservaModal.min.js`.
+    *   `packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php`: Inyectado el nuevo script minificado en el pie de página global del usuario.
+- **Detalle Técnico:** Se ha evitado modificar el core del sistema siguiendo las directrices del proyecto. La información se obtiene vía AJAX y el modal se construye dinámicamente en el DOM, utilizando la estética de Airbnb y componentes nativos de Bootstrap 4.5.
+
+---
+
 ## [18 de Septiembre, 2026] - Ajuste de Jerarquía e Inyección Quirúrgica del Script de Ocultación de Consultas
 - **Tarea:** Mover el script de ocultación de consultas a la jerarquía superior y ajustar su inyección para evitar cargar todo el bundle `main.js` en vistas originales.
 - **Archivos Modificados:**

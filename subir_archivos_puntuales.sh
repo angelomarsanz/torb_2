@@ -153,7 +153,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/lista_favoritos_comercios.blade.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (FUERA DE CARPETAS FRONTEND) ---
-    #"packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_confirmacion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_crop.blade.php"
@@ -201,9 +201,10 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/calificacionExperienciaFrontend.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/toggleFavoritoComercio.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
+    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js"
 
     # --- Archivos Javascript fuera de la carpeta frontend ---
-    "packages/Reda/RedaAlojamiento/resources/js/general/main.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/general/main.js"
     #"packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js"
     #"packages/Reda/RedaAlojamiento/resources/js/general/iconos/index.js"
     #"packages/Reda/RedaAlojamiento/resources/js/general/iconos/mediacionSvg.js"
@@ -229,8 +230,8 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js"
 
     #"packages/Reda/RedaAlojamiento/resources/js/chat-injection.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js"
-    packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js
+    "packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js"
+    #packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js
 
     # --- PLUGIN REDA ALOJAMIENTO: CONTROLADORES admin ---
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Experiencia/ExperienciaController.php"
@@ -251,5 +252,5 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
     )

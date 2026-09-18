@@ -95,11 +95,12 @@
             // Si NO estamos en viajes y tiene reserva activa -> Mostrar "Ver reserva"
             if (!isTripsPage && propertyId && activeBookingProperties[String(propertyId)]) {
                 const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
-                const propertyName = activeBookingProperties[String(propertyId)] || "";
 
                 if (!existingBtn.textContent.includes(verReservaText)) {
                     existingBtn.innerHTML = `<i class="far fa-calendar-check"></i> ${verReservaText}`;
-                    existingBtn.href = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}`;
+                    existingBtn.classList.add('btn-reda-ver-reserva-modal');
+                    existingBtn.setAttribute('data-property-id', propertyId);
+                    existingBtn.href = 'javascript:void(0)';
                 }
             } else if (existingBtn) {
                 // Si ya no es activa o estamos en viajes -> Asegurar que diga "Reservar"
@@ -135,18 +136,21 @@
         
         let targetUrl = propertySlug ? `${window.APP_URL}/properties/${propertySlug}#reservar` : `${window.APP_URL}/payments/book/${propertyId}`;
         let buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Reservar"]) || "Reservar";
+        let extraClass = '';
+        let dataAttrs = '';
 
         // Cambiar a "Ver reserva" si aplica (fuera de la página de viajes)
         if (!isTripsPage && window.AuthCheck && propertyId && activeBookingProperties[String(propertyId)]) {
-            const propertyName = activeBookingProperties[String(propertyId)] || "";
-            targetUrl = `${window.APP_URL}/trips/active?reda_alert=active_booking&property_id=${propertyId}&property_name=${encodeURIComponent(propertyName)}`;
+            targetUrl = 'javascript:void(0)';
             buttonText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
+            extraClass = 'btn-reda-ver-reserva-modal';
+            dataAttrs = `data-property-id="${propertyId}"`;
         } else if (!window.AuthCheck && propertySlug) {
             targetUrl = `${window.APP_URL}/reda/auth-reserve/${propertySlug}`;
         }
 
         buttonWrapper.innerHTML = `
-            <a href="${targetUrl}" class="btn-reda-chat-soft-v2 reda-btn-reservar">
+            <a href="${targetUrl}" class="btn-reda-chat-soft-v2 reda-btn-reservar ${extraClass}" ${dataAttrs}>
                 <i class="far fa-calendar-check"></i> ${buttonText}
             </a>
         `;

@@ -55,6 +55,7 @@ Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
     Route::get('reda/messaging/unread-count', [RedaInboxController::class, 'getUnreadCount'])->name('reda.messaging.unread_count');
     Route::get('reda/bookings/check-active', [RedaBookingController::class, 'getActiveBookingPropertyIds'])->name('reda.bookings.check_active');
     Route::get('reda/bookings/count-active', [RedaBookingController::class, 'getCountActiveBookings'])->name('reda.bookings.count_active');
+    Route::get('reda/bookings/details/{property_id}', [RedaBookingController::class, 'getBookingDetails'])->name('reda.bookings.details');
     Route::post('reda/messaging/booking', [RedaInboxController::class, 'message']);
     Route::post('reda/messaging/reply', [RedaInboxController::class, 'messageReply']);
 
