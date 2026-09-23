@@ -145,90 +145,69 @@ class RedaBookingController extends Controller
     }
 
     /**
-     * Obtiene los detalles de la reserva activa de un usuario para una propiedad específica.
+     * Obtiene los datos de las reservaciones que tienen algún pago registrado.
+     * Se considera pagada si transaction_id no está vacío, payment_method_id > 0
+     * o si el status es 'Accepted' o 'Processing'.
      * 
-     * @param int $property_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getBookingDetails($property_id)
+    public function getPaidBookingIds()
     {
         try {
             if (!Auth::check()) {
                 return response()->json([
-                    'success' => false,
+                    'success' => true,
                     'message' => 'User not authenticated',
-                    'mensaje_usuario' => __('Debes iniciar sesión para ver los detalles'),
-                    'respuesta' => '',
-                    'code' => 401
-                ], 401);
+                    'mensaje_usuario' => '',
+                    'respuesta' => ['items' => []],
+                    'code' => 200
+                ], 200);
             }
 
             $userId = Auth::id();
-            $today = date('Y-m-d');
-
-            // Buscamos la reserva más reciente que esté activa
-            $booking = Bookings::with(['properties.property_address', 'properties.property_photos'])
+            
+            $bookings = Bookings::with('properties')
                 ->where('user_id', $userId)
-                ->where('property_id', $property_id)
-                ->where(function($query) use ($today) {
-                    $query->where(function($q) use ($today) {
-                        $q->where('status', 'Accepted')
-                          ->where('end_date', '>=', $today);
+                ->where(function($query) {
+                    $query->where(function($q) {
+                        $q->where('transaction_id', '!=', '')
+                          ->where('transaction_id', '!=', ' ')
+                          ->whereNotNull('transaction_id');
                     })
-                    ->orWhereIn('status', ['Pending', 'processing']);
+                    ->orWhere('payment_method_id', '>', 0)
+                    ->orWhereIn('status', ['Accepted', 'Processing']);
                 })
-                ->orderBy('id', 'desc')
-                ->first();
+                ->get();
 
-            if (!$booking) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking not found',
-                    'mensaje_usuario' => __('No se encontró una reserva activa para este inmueble'),
-                    'respuesta' => '',
-                    'code' => 404
-                ], 404);
-            }
-
-            // Preparar los datos para el modal
-            $datos = [
-                'id' => $booking->id,
-                'codigo' => $booking->code,
-                'propiedad_nombre' => $booking->properties->name,
-                'propiedad_id' => $booking->properties->id,
-                'propiedad_foto' => $booking->properties->cover_photo,
-                'ubicacion' => [
-                    'ciudad' => $booking->properties->property_address->city ?? '',
-                    'estado' => $booking->properties->property_address->state ?? '',
-                    'pais' => $booking->properties->property_address->countries->name ?? '',
-                ],
-                'fecha_inicio' => date('d/m/Y', strtotime($booking->start_date)),
-                'fecha_fin' => date('d/m/Y', strtotime($booking->end_date)),
-                'huespedes' => $booking->guest,
-                'noches' => $booking->total_night,
-                'total' => $booking->total,
-                'simbolo_moneda' => $booking->currency->symbol ?? '$',
-                'estado' => $booking->status,
-                'estado_label' => $booking->label_color
-            ];
+            $elementos = $bookings->map(function($b) {
+                return [
+                    'id' => $b->id,
+                    'code' => $b->code,
+                    'property_name' => optional($b->properties)->name,
+                    'start_date' => date('M d, Y', strtotime($b->start_date)),
+                    'end_date' => date('M d, Y', strtotime($b->end_date))
+                ];
+            });
 
             $respuesta = [
                 'success' => true,
-                'message' => __('Detalles de la reserva obtenidos correctamente'),
+                'message' => __('Listado de reservaciones pagadas obtenido'),
                 'mensaje_usuario' => '',
-                'respuesta' => $datos,
+                'respuesta' => [
+                    'items' => $elementos
+                ],
                 'code' => 200
             ];
 
             return response()->json($respuesta, 200);
 
         } catch (\Exception $e) {
-            Log::error("REDA Booking Error (getDetails): " . $e->getMessage());
+            Log::error("REDA Booking Error (getPaidBookingIds): " . $e->getMessage());
             $respuesta = [
                 'success' => false,
                 'message' => $e->getMessage(),
-                'mensaje_usuario' => __('Error al obtener los detalles de la reserva'),
-                'respuesta' => '',
+                'mensaje_usuario' => __('Error al obtener reservaciones pagadas'),
+                'respuesta' => ['items' => []],
                 'code' => 500
             ];
             return response()->json($respuesta, $respuesta['code']);

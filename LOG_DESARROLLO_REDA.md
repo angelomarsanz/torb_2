@@ -4,6 +4,16 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [23 de Septiembre, 2026] - Implementación de Filtro de Pagos en Mis Viajes (Estrategia No Invasiva)
+- **Tarea:** Ocultar las reservaciones que no tienen pagos asociados en la vista de "Mis Viajes" (Frontend) sin modificar archivos core.
+- **Archivos Modificados/Creados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Agregado el método `getPaidBookingIds` que devuelve los datos identificativos (ID, Código, Nombre y Fechas) de reservaciones con pago.
+    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Registrada la ruta `reda/bookings/paid-ids`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js`: Implementada lógica de **Emparejamiento Multicapa (Fuzzy Matching)**. Ahora el script valida las filas del DOM comparando enlaces (IDs/Códigos) y contenido textual (Nombre de propiedad + Rango de fechas) contra la lista blanca del servidor.
+- **Detalle Técnico:** Se resolvió un problema de visibilidad donde registros legítimos se ocultaban por falta de IDs en el HTML original. La nueva lógica utiliza el nombre de la propiedad y las fechas formateadas para identificar inequívocamente cada reservación, asegurando que se muestren todos los viajes con pagos registrados (incluso si no han sido confirmados por el administrador) y manteniendo ocultas las consultas (Inquiries). Se cumple estrictamente con la directriz de no modificar archivos base.
+
+---
+
 ## [18 de Septiembre, 2026] - Implementación de Modal Detalle de Reserva en Frontend
 - **Tarea:** Cambiar el comportamiento del botón "Ver reserva" en las tarjetas de propiedades para que abra un modal detallado en lugar de redirigir a otra página.
 - **Archivos Creados:**
