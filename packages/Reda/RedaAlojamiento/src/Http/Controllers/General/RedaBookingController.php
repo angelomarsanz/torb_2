@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Log;
 class RedaBookingController extends Controller
 {
     /**
-     * Obtiene un mapa de IDs y datos de inmuebles con reservas activas o futuras para el usuario autenticado.
-     * Se ignoran las "Consultas" (reservas sin pago registrado) y las reservas pasadas.
+     * Obtiene un mapa de datos de inmuebles y reservaciones válidas para el usuario autenticado.
+     * Se filtran estrictamente las "Consultas" (sin pago) y las reservas vencidas.
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -31,7 +31,11 @@ class RedaBookingController extends Controller
                     'success' => true,
                     'message' => 'User not authenticated',
                     'mensaje_usuario' => '',
-                    'respuesta' => (object)[],
+                    'respuesta' => [
+                        'properties' => (object)[],
+                        'bookings' => [],
+                        'codes' => []
+                    ],
                     'code' => 200
                 ], 200);
             }
@@ -40,10 +44,11 @@ class RedaBookingController extends Controller
             $today = date('Y-m-d');
 
             /**
-             * Buscamos reservaciones que cumplan los criterios de "Ver reserva":
-             * 1. Que el usuario sea el dueño de la reserva.
-             * 2. Que la fecha de fin sea hoy o futura (Reservación vigente).
-             * 3. Que NO sea una consulta (debe tener algún rastro de pago).
+             * Criterios de "Reservación Válida" (Lista Blanca):
+             * 1. Dueño: El usuario autenticado.
+             * 2. Vigencia: Fecha de fin >= hoy.
+             * 3. No cancelada/rechazada/vencida (en DB).
+             * 4. PAGO: Debe tener rastro de pago o estar en proceso de aceptación formal.
              */
             $bookings = Bookings::with('properties')
                 ->where('user_id', $userId)
@@ -60,10 +65,16 @@ class RedaBookingController extends Controller
                 })
                 ->get();
 
-            $map = [];
+            $propertyMap = [];
+            $validBookingIds = [];
+            $validBookingCodes = [];
+
             foreach ($bookings as $booking) {
+                $validBookingIds[] = $booking->id;
+                if ($booking->code) $validBookingCodes[] = $booking->code;
+                
                 if ($booking->properties) {
-                    $map[$booking->property_id] = [
+                    $propertyMap[$booking->property_id] = [
                         'name' => $booking->properties->name,
                         'slug' => $booking->properties->slug
                     ];
@@ -72,9 +83,13 @@ class RedaBookingController extends Controller
 
             $respuesta = [
                 'success' => true,
-                'message' => __('Listado de propiedades con reservas activas/pagadas obtenido'),
+                'message' => __('Listado de reservaciones válidas obtenido'),
                 'mensaje_usuario' => '',
-                'respuesta' => (object)$map,
+                'respuesta' => [
+                    'properties' => (object)$propertyMap,
+                    'bookings' => $validBookingIds,
+                    'codes' => $validBookingCodes
+                ],
                 'code' => 200
             ];
 
@@ -86,7 +101,11 @@ class RedaBookingController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
                 'mensaje_usuario' => __('Error al verificar reservas activas'),
-                'respuesta' => (object)[],
+                'respuesta' => [
+                    'properties' => (object)[],
+                    'bookings' => [],
+                    'codes' => []
+                ],
                 'code' => 500
             ];
             return response()->json($respuesta, $respuesta['code']);

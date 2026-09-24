@@ -10,7 +10,11 @@
 
     console.log('REDA Reserve Injection: Iniciando script en ' + window.location.href);
 
-    let activeBookingProperties = {}; 
+    let activeBookingProperties = {
+        properties: {},
+        bookings: [],
+        codes: []
+    }; 
     let isFetchingBookings = false;
     let bookingsFetched = false;
     let isScanning = false;
@@ -31,7 +35,7 @@
                 success: function(data) {
                     if (data.success && typeof data.respuesta === 'object') {
                         activeBookingProperties = data.respuesta;
-                        console.log('REDA Reserve Injection: Mapa de reservas obtenido (Vigentes y Pagadas)');
+                        console.log('REDA Reserve Injection: Lista blanca sincronizada');
                     }
                     bookingsFetched = true;
                     resolve(data);
@@ -67,58 +71,61 @@
         const path = window.location.pathname;
         const isTripsPage = path.includes('/trips/active');
         
+        // 1. OBTENER IDENTIFICADORES
         let propertyId = getPropertyId(card);
         let propertySlug = getPropertySlug(card);
+        let bookingId = getBookingId(card);
+        let bookingCode = getBookingCode(card);
 
-        let infoReserva = null;
-        if (propertyId && activeBookingProperties[String(propertyId)]) {
-            infoReserva = activeBookingProperties[String(propertyId)];
-        } else if (propertySlug) {
-            for (let id in activeBookingProperties) {
-                if (activeBookingProperties[id].slug === propertySlug) {
-                    infoReserva = activeBookingProperties[id];
+        // 2. RECUPERAR ID DE PROPIEDAD DESDE EL MAPA SI NO ESTÁ EN EL DOM (POR SLUG)
+        if (!propertyId && propertySlug && bookingsFetched) {
+            for (let id in activeBookingProperties.properties) {
+                if (activeBookingProperties.properties[id].slug === propertySlug) {
                     propertyId = id;
                     break;
                 }
             }
         }
 
-        // --- DETERMINACIÓN DE LÓGICA "VER RESERVA" (REGLAS ESTRICTAS) ---
-        let forzarVerReserva = false;
-
-        if (isTripsPage) {
-            // Regla para Mis Viajes: Prioridad a la fecha de fin y estatus de finalización
-            const calendarText = $(card).find('i.fa-calendar').parent().text().trim();
-            const statusBadge = card.querySelector('.badge');
-            const textContent = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
-            
-            let esFechaPasada = false;
-            const fechas = calendarText.split('-');
-            if (fechas.length > 1) {
-                const fechaFinStr = fechas[1].trim(); 
-                const fechaFin = new Date(fechaFinStr);
-                const hoy = new Date();
-                hoy.setHours(0,0,0,0);
-                if (!isNaN(fechaFin) && fechaFin < hoy) {
-                    esFechaPasada = true;
-                }
+        // 3. DETERMINAR VIGENCIA DE FECHA (PARA PRIORIDAD)
+        let esFechaVigente = true; // Por defecto asumimos vigente para Home/Propiedad
+        const calendarText = $(card).find('i.fa-calendar').parent().text().trim();
+        const fechas = calendarText.split('-');
+        if (fechas.length > 1) {
+            const fechaFinStr = fechas[1].trim(); 
+            const fechaFin = new Date(fechaFinStr);
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            if (!isNaN(fechaFin) && fechaFin < hoy) {
+                esFechaVigente = false;
             }
-
-            const estadosReservar = ['completado', 'completada', 'vencido', 'vencida', 'rechazado', 'rechazada', 'completed', 'expired', 'declined', 'cancelled', 'cancelada'];
-            const estadosVer = ['actual', 'pendiente', 'próximamente', 'pending', 'processing', 'procesando', 'upcoming', 'current'];
-
-            if (esFechaPasada || estadosReservar.some(s => textContent.includes(s))) {
-                // Si la fecha ya pasó o es un estatus final, SIEMPRE mostrar "Reservar"
-                forzarVerReserva = false;
-            } else if (estadosVer.some(s => textContent.includes(s)) || !esFechaPasada) {
-                // Si la fecha es hoy/futura o tiene estatus vigente, mostrar "Ver reserva"
-                forzarVerReserva = true;
-            }
-        } else if (infoReserva) {
-            // Fuera de Mis Viajes, el servidor ya nos envía solo las vigentes y pagadas
-            forzarVerReserva = true;
         }
 
+        // 4. DETERMINAR SI DEBE SER "VER RESERVA" (Sincronizado con Servidor)
+        let forzarVerReserva = false;
+
+        if (bookingsFetched) {
+            const propEnWhitelist = !!(propertyId && activeBookingProperties.properties[propertyId]);
+            
+            if (isTripsPage) {
+                // En Mis Viajes: Prioridad a la FECHA y luego al ID específico
+                const idReservaEnWhitelist = (bookingId && activeBookingProperties.bookings.includes(Number(bookingId))) ||
+                                            (bookingCode && activeBookingProperties.codes.includes(bookingCode));
+                
+                // Si la fecha ya pasó -> Siempre "Reservar"
+                if (!esFechaVigente) {
+                    forzarVerReserva = false;
+                } else {
+                    // Si la fecha es vigente: "Ver reserva" si el ID o la Propiedad están en la lista blanca
+                    forzarVerReserva = idReservaEnWhitelist || propEnWhitelist;
+                }
+            } else {
+                // En Home o Propiedad: Confiamos en el mapa del servidor (que ya está filtrado por fecha y pago)
+                forzarVerReserva = propEnWhitelist;
+            }
+        }
+
+        // 5. LÓGICA DE INYECCIÓN / ACTUALIZACIÓN
         const existingRedaBtn = card.querySelector('.reda-reserve-btn');
         const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
         const reservarText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Reservar"]) || "Reservar";
@@ -133,7 +140,6 @@
                     btn.href = 'javascript:void(0)';
                 }
             } else {
-                // Si ya no debe ser "Ver reserva", lo revertimos a "Reservar"
                 if (btn.textContent.includes(verReservaText)) {
                     btn.innerHTML = `<i class="far fa-calendar-check"></i> ${reservarText}`;
                     btn.classList.remove('btn-reda-ver-reserva-modal');
@@ -191,6 +197,26 @@
             if (parts.length > 1) {
                 return parts[1].split('?')[0].split('#')[0];
             }
+        }
+        return null;
+    }
+
+    function getBookingId(card) {
+        const paymentLink = card.querySelector('a[href*="booking_payment/"]');
+        if (paymentLink) {
+            const href = paymentLink.getAttribute('href');
+            const parts = href.split('booking_payment/');
+            return parts.length > 1 ? parts[1].split('?')[0] : null;
+        }
+        return null;
+    }
+
+    function getBookingCode(card) {
+        const receiptLink = card.querySelector('a[href*="code="]');
+        if (receiptLink) {
+            const href = receiptLink.getAttribute('href');
+            const parts = href.split('code=');
+            return parts.length > 1 ? parts[1].split('&')[0] : null;
         }
         return null;
     }
