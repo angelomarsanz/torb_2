@@ -3,12 +3,6 @@
  * 
  * Este script se encarga de inyectar dinámicamente el botón de "Reservar" o "Ver reserva"
  * en las tarjetas de inmuebles (cards) detectadas en la página.
- * 
- * Funcionalidades:
- * - Detecta el ID y slug de la propiedad desde el DOM.
- * - Verifica si el usuario tiene una reserva activa para cambiar el texto del botón.
- * - Implementa un MutationObserver para manejar contenido cargado dinámicamente.
- * - Soporta emparejamiento por slug en la vista de viajes (/trips/active).
  */
 
 (function( $ ) {
@@ -16,14 +10,14 @@
 
     console.log('REDA Reserve Injection: Iniciando script en ' + window.location.href);
 
-    let activeBookingProperties = {}; // Estructura: { id: { name, slug } }
+    let activeBookingProperties = {}; 
     let isFetchingBookings = false;
     let bookingsFetched = false;
+    let isScanning = false;
+    let scanTimeout = null;
 
     /**
      * Realiza una petición AJAX para obtener los IDs y nombres de las propiedades con reservas activas.
-     * 
-     * @returns {Promise} Resuelve cuando la petición termina.
      */
     async function fetchActiveBookings() {
         if (!window.AuthCheck || isFetchingBookings || bookingsFetched) return;
@@ -37,7 +31,6 @@
                 success: function(data) {
                     if (data.success && typeof data.respuesta === 'object') {
                         activeBookingProperties = data.respuesta;
-                        console.log('REDA Reserve Injection: Mapa de reservas activas obtenido:', activeBookingProperties);
                     }
                     bookingsFetched = true;
                     resolve(data);
@@ -48,16 +41,24 @@
                 },
                 complete: function() {
                     isFetchingBookings = false;
-                    scan();
+                    debounceScan();
                 }
             });
         });
     }
 
     /**
+     * Ejecuta el escaneo con un pequeño retraso para evitar ejecuciones masivas.
+     */
+    function debounceScan() {
+        if (scanTimeout) clearTimeout(scanTimeout);
+        scanTimeout = setTimeout(() => {
+            scan();
+        }, 500);
+    }
+
+    /**
      * Inyecta el botón de reserva en una tarjeta específica si no existe ya.
-     * 
-     * @param {HTMLElement} card El elemento DOM de la tarjeta.
      */
     function addReserveButton(card) {
         if (card.querySelector('#booking_form')) return;
@@ -65,16 +66,13 @@
         const path = window.location.pathname;
         const isTripsPage = path.includes('/trips/active');
         
-        // 1. OBTENER IDENTIFICADORES (ID o Slug)
         let propertyId = getPropertyId(card);
         let propertySlug = getPropertySlug(card);
 
-        // 2. BUSCAR EN EL MAPA DE RESERVAS ACTIVAS/PASADAS
         let infoReserva = null;
         if (propertyId && activeBookingProperties[String(propertyId)]) {
             infoReserva = activeBookingProperties[String(propertyId)];
         } else if (propertySlug) {
-            // Busqueda por slug (útil en página de viajes)
             for (let id in activeBookingProperties) {
                 if (activeBookingProperties[id].slug === propertySlug) {
                     infoReserva = activeBookingProperties[id];
@@ -84,38 +82,48 @@
             }
         }
 
-        // 3. DETERMINAR SI DEBE SER "VER RESERVA"
+        // --- DETERMINACIÓN DE LÓGICA "VER RESERVA" (REGLAS ACTUALIZADAS) ---
         let forzarVerReserva = false;
+
         if (isTripsPage) {
-            const statusBadge = card.querySelector('.badge');
-            const statusText = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
-            
-            // Criterio A: Estatus específico
-            const estadosVer = ['actual', 'pendiente', 'próximamente', 'accepted', 'pending', 'processing'];
-            if (estadosVer.some(s => statusText.includes(s))) {
-                forzarVerReserva = true;
+            // Regla de Oro: LA FECHA TIENE PRIORIDAD MÁXIMA
+            const calendarText = $(card).find('i.fa-calendar').parent().text().trim();
+            const fechas = calendarText.split('-');
+            let fechaFinVigente = false;
+
+            if (fechas.length > 1) {
+                const fechaFinStr = fechas[1].trim(); 
+                const fechaFin = new Date(fechaFinStr);
+                const hoy = new Date();
+                hoy.setHours(0,0,0,0);
+
+                if (!isNaN(fechaFin) && fechaFin >= hoy) {
+                    fechaFinVigente = true;
+                }
             }
 
-            // Criterio B: Fecha final <= hoy
-            if (!forzarVerReserva) {
-                const calendarText = $(card).find('i.fa-calendar').parent().text().trim();
-                const fechas = calendarText.split('-');
-                if (fechas.length > 1) {
-                    const fechaFinStr = fechas[1].trim(); // Formato: "M d, Y"
-                    const fechaFin = new Date(fechaFinStr);
-                    const hoy = new Date();
-                    hoy.setHours(0,0,0,0);
-                    if (!isNaN(fechaFin) && fechaFin <= hoy) {
-                        forzarVerReserva = true;
-                    }
+            if (fechaFinVigente) {
+                // Si la fecha es futura o hoy, siempre es Ver Reserva
+                forzarVerReserva = true;
+            } else {
+                // Si la fecha ya pasó, verificamos si el estatus aún obliga a Ver Reserva
+                const statusBadge = card.querySelector('.badge');
+                const textContent = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
+                
+                const estadosVer = ['actual', 'pendiente', 'próximamente', 'pending', 'processing', 'procesando', 'upcoming', 'current'];
+                const estadosReservar = ['completado', 'completada', 'vencido', 'vencida', 'rechazado', 'rechazada', 'completed', 'expired', 'declined', 'cancelled', 'cancelada'];
+
+                if (estadosVer.some(s => textContent.includes(s))) {
+                    forzarVerReserva = true;
+                } else if (estadosReservar.some(s => textContent.includes(s))) {
+                    forzarVerReserva = false;
                 }
             }
         } else if (infoReserva) {
-            // Fuera de viajes, si está en el mapa -> Es Ver Reserva
+            // Fuera de Mis Viajes, confiamos en el mapa filtrado del servidor
             forzarVerReserva = true;
         }
 
-        // 4. LÓGICA DE INYECCIÓN / ACTUALIZACIÓN
         const existingRedaBtn = card.querySelector('.reda-reserve-btn');
         const verReservaText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Ver reserva"]) || "Ver reserva";
         const reservarText = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Reservar"]) || "Reservar";
@@ -129,11 +137,17 @@
                     btn.setAttribute('data-property-id', propertyId);
                     btn.href = 'javascript:void(0)';
                 }
+            } else {
+                if (btn.textContent.includes(verReservaText)) {
+                    btn.innerHTML = `<i class="far fa-calendar-check"></i> ${reservarText}`;
+                    btn.classList.remove('btn-reda-ver-reserva-modal');
+                    btn.removeAttribute('data-property-id');
+                    btn.href = propertySlug ? `${window.APP_URL}/properties/${propertySlug}#reservar` : `${window.APP_URL}/payments/book/${propertyId}`;
+                }
             }
             return;
         }
 
-        // INYECCIÓN INICIAL (Si no existe el botón)
         if (!propertySlug && !propertyId) return;
 
         const container = card.querySelector('.review-0') || card.querySelector('.card-body') || card;
@@ -186,19 +200,33 @@
     }
 
     async function scan() {
-        if (window.AuthCheck && !bookingsFetched && !isFetchingBookings) {
-            await fetchActiveBookings();
+        if (isScanning) return;
+        isScanning = true;
+
+        try {
+            if (window.AuthCheck && !bookingsFetched && !isFetchingBookings) {
+                await fetchActiveBookings();
+            }
+            const cardSelectors = '.card, .card-shadow, .card-1, .row.border.p-2.rounded-3, .col-md-6.col-lg-4.col-xl-3';
+            const cards = document.querySelectorAll(cardSelectors);
+            cards.forEach(addReserveButton);
+        } finally {
+            isScanning = false;
         }
-        const cardSelectors = '.card, .card-shadow, .card-1, .row.border.p-2.rounded-3, .col-md-6.col-lg-4.col-xl-3';
-        const cards = document.querySelectorAll(cardSelectors);
-        cards.forEach(addReserveButton);
     }
 
     function init() {
         scan();
-        const observer = new MutationObserver(() => scan());
+        const observer = new MutationObserver((mutations) => {
+            const shouldReact = mutations.some(m => {
+                return m.type === 'childList' && 
+                       !$(m.target).hasClass('reda-reserve-btn') && 
+                       !$(m.target).hasClass('reda-btn-reservar');
+            });
+            if (shouldReact) debounceScan();
+        });
         observer.observe(document.body, { childList: true, subtree: true });
-        setInterval(scan, 3000);
+        setInterval(debounceScan, 5000);
     }
 
     if (typeof jQuery !== 'undefined') {

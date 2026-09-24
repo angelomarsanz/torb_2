@@ -4,12 +4,17 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [24 de Septiembre, 2026] - Corrección de Error 500 y ReferenceError en Modal de Detalles de Reserva
-- **Tarea:** Resolver el error 500 en el servidor y el error de JavaScript al abrir el modal de detalles de reserva.
+## [24 de Septiembre, 2026] - Corrección de Error 500 y Optimización de Lógica en Modal de Reserva
+- **Tarea:** Resolver fallos en la apertura del modal y corregir la visualización incorrecta del botón "Ver reserva" en `/trips/active`.
 - **Archivos Modificados:**
-    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Corregida la relación `currencies` por `currency` (singular) en el método `getBookingDetails` y en el acceso al símbolo de la moneda (`$booking->currency->symbol`).
-    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js`: Se declaró la variable `json` (traducciones) dentro del manejador de eventos en `init` para corregir el error `ReferenceError: json is not defined` que ocurría al intentar notificar errores de red o servidor.
-- **Detalle Técnico:** El error 500 era provocado por una inconsistencia en el nombre de la relación del modelo `Bookings` (el core usa singular). En el frontend, el error de referencia impedía que el sistema de notificaciones informara al usuario en caso de fallos. Estos cambios restauran la funcionalidad del botón "Ver reserva" inyectado dinámicamente.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: 
+        *   Corregida relación `currencies` por `currency`.
+        *   Se eliminó la restricción del estado `'Expired'` en `getActiveBookingPropertyIds`, permitiendo que el mapa de reservas incluya viajes pasados para habilitar el modal.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js`: Definida variable `json` en `init` para evitar `ReferenceError`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js`: 
+        *   Se priorizó el mapa de reservas para forzar "Ver reserva" si existe un ID previo.
+        *   Se amplió la lista de estados detectados (`aceptado`, `procesando`, `vencido`, etc.) y se implementó detección por clases CSS (`vbadge-success`) para neutralizar problemas con traducciones.
+- **Detalle Técnico:** La lógica anterior fallaba en la vista de viajes porque los nombres de los estados estaban traducidos al español en el HTML, mientras que el script buscaba términos en inglés. Además, al excluir 'Expired' del controlador, el script no podía obtener el ID de la propiedad para abrir el modal en viajes finalizados. Con estas mejoras, el sistema es ahora bidireccional (Texto/Clase) y cubre el ciclo de vida completo de la reserva.
 
 ---
 

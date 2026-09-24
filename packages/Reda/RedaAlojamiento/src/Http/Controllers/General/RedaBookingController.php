@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 class RedaBookingController extends Controller
 {
     /**
-     * Obtiene un mapa de IDs y datos de inmuebles con reservas activas o pasadas para el usuario autenticado.
+     * Obtiene un mapa de IDs y datos de inmuebles con reservas activas o futuras para el usuario autenticado.
      * Incluye slugs para facilitar el emparejamiento en el frontend cuando el ID no es visible.
      * 
      * @return \Illuminate\Http\JsonResponse
@@ -37,14 +37,21 @@ class RedaBookingController extends Controller
             }
 
             $userId = Auth::id();
+            $today = date('Y-m-d');
 
             /**
-             * Buscamos reservaciones que no estén canceladas o rechazadas.
-             * Incluimos las pasadas para permitir "Ver Reserva" histórica.
+             * Buscamos reservaciones que cumplan los criterios de "Ver reserva":
+             * 1. Que no estén canceladas o rechazadas.
+             * 2. Que la fecha de fin sea hoy o futura.
+             * 3. O que estén en estatus pendiente/procesando.
              */
             $bookings = Bookings::with('properties')
                 ->where('user_id', $userId)
-                ->whereNotIn('status', ['Cancelled', 'Declined', 'Expired'])
+                ->whereNotIn('status', ['Cancelled', 'Declined'])
+                ->where(function($query) use ($today) {
+                    $query->where('end_date', '>=', $today)
+                          ->orWhereIn('status', ['Pending', 'Processing', 'processing']);
+                })
                 ->get();
 
             $map = [];
@@ -59,7 +66,7 @@ class RedaBookingController extends Controller
 
             $respuesta = [
                 'success' => true,
-                'message' => __('Listado de propiedades con reservas obtenido'),
+                'message' => __('Listado de propiedades con reservas activas/futuras obtenido'),
                 'mensaje_usuario' => '',
                 'respuesta' => (object)$map,
                 'code' => 200
