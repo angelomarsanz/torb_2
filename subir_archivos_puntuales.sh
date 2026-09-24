@@ -230,7 +230,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js"
 
     #"packages/Reda/RedaAlojamiento/resources/js/chat-injection.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js"
+    "packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js"
     packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js
 
     # --- PLUGIN REDA ALOJAMIENTO: CONTROLADORES admin ---

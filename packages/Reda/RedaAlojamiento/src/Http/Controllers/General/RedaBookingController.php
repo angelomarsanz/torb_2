@@ -18,10 +18,8 @@ use Illuminate\Support\Facades\Log;
 class RedaBookingController extends Controller
 {
     /**
-     * Obtiene un mapa de IDs y nombres de inmuebles con reservas activas o vigentes para el usuario autenticado.
-     * Se considera "Vigente" una reserva que esté:
-     * 1. En estado 'Accepted' y cuya fecha de finalización sea hoy o en el futuro.
-     * 2. En estado 'Pending' o 'processing' (reservas en curso de aprobación o pago).
+     * Obtiene un mapa de IDs y datos de inmuebles con reservas activas o pasadas para el usuario autenticado.
+     * Incluye slugs para facilitar el emparejamiento en el frontend cuando el ID no es visible.
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -39,30 +37,29 @@ class RedaBookingController extends Controller
             }
 
             $userId = Auth::id();
-            $today = date('Y-m-d');
 
-            // Buscamos todas las reservas activas (Accepted futuras/hoy, Pending, processing)
+            /**
+             * Buscamos reservaciones que no estén canceladas o rechazadas.
+             * Incluimos las pasadas para permitir "Ver Reserva" histórica.
+             */
             $bookings = Bookings::with('properties')
                 ->where('user_id', $userId)
-                ->where(function($query) use ($today) {
-                    $query->where(function($q) use ($today) {
-                        $q->where('status', 'Accepted')
-                          ->where('end_date', '>=', $today);
-                    })
-                    ->orWhereIn('status', ['Pending', 'processing']);
-                })
+                ->whereNotIn('status', ['Cancelled', 'Declined', 'Expired'])
                 ->get();
 
             $map = [];
             foreach ($bookings as $booking) {
                 if ($booking->properties) {
-                    $map[$booking->property_id] = $booking->properties->name;
+                    $map[$booking->property_id] = [
+                        'name' => $booking->properties->name,
+                        'slug' => $booking->properties->slug
+                    ];
                 }
             }
 
             $respuesta = [
                 'success' => true,
-                'message' => __('Listado de propiedades con reservas activas obtenido'),
+                'message' => __('Listado de propiedades con reservas obtenido'),
                 'mensaje_usuario' => '',
                 'respuesta' => (object)$map,
                 'code' => 200
@@ -77,6 +74,84 @@ class RedaBookingController extends Controller
                 'message' => $e->getMessage(),
                 'mensaje_usuario' => __('Error al verificar reservas activas'),
                 'respuesta' => (object)[],
+                'code' => 500
+            ];
+            return response()->json($respuesta, $respuesta['code']);
+        }
+    }
+
+    /**
+     * Obtiene los detalles de una reserva específica para mostrar en el modal.
+     * 
+     * @param int $propertyId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getBookingDetails($propertyId)
+    {
+        try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                    'mensaje_usuario' => __('Por favor, inicie sesión'),
+                    'respuesta' => '',
+                    'code' => 401
+                ], 401);
+            }
+
+            $userId = Auth::id();
+
+            // Buscamos la reserva más reciente para esta propiedad y este usuario
+            $booking = Bookings::with(['properties', 'host', 'currencies'])
+                ->where('user_id', $userId)
+                ->where('property_id', $propertyId)
+                ->whereNotIn('status', ['Cancelled', 'Declined'])
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if (!$booking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking not found',
+                    'mensaje_usuario' => __('No se encontró una reservación activa para esta propiedad'),
+                    'respuesta' => '',
+                    'code' => 404
+                ], 404);
+            }
+
+            $respuesta = [
+                'success' => true,
+                'message' => __('Detalles de reserva obtenidos'),
+                'mensaje_usuario' => '',
+                'respuesta' => [
+                    'propiedad_nombre' => optional($booking->properties)->name,
+                    'propiedad_foto' => optional($booking->properties)->cover_photo,
+                    'ubicacion' => [
+                        'ciudad' => optional($booking->properties->property_address)->city,
+                        'pais' => optional($booking->properties->property_address->countries)->name
+                    ],
+                    'estado' => __($booking->status),
+                    'estado_label' => strtolower($booking->status),
+                    'fecha_inicio' => date('M d, Y', strtotime($booking->start_date)),
+                    'fecha_fin' => date('M d, Y', strtotime($booking->end_date)),
+                    'huespedes' => $booking->guest,
+                    'noches' => $booking->total_night,
+                    'codigo' => $booking->code,
+                    'simbolo_moneda' => optional($booking->currencies)->symbol,
+                    'total' => $booking->total
+                ],
+                'code' => 200
+            ];
+
+            return response()->json($respuesta, 200);
+
+        } catch (\Exception $e) {
+            Log::error("REDA Booking Error (getBookingDetails): " . $e->getMessage());
+            $respuesta = [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Error al obtener detalles de la reserva'),
+                'respuesta' => '',
                 'code' => 500
             ];
             return response()->json($respuesta, $respuesta['code']);

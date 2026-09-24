@@ -4,6 +4,14 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [23 de Septiembre, 2026] - Ampliación de Lógica para Botón "Ver Reserva" en Frontend
+- **Tarea:** Cambiar el botón "Reservar" por "Ver Reserva" cuando exista una relación previa (Actual, Próximamente, Pendiente o Finalizada) y abrir el modal de detalles.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Se modificó `getActiveBookingPropertyIds` para incluir cualquier reservación que no esté cancelada o rechazada, cubriendo los estados solicitados (Actual, Próximamente, Pendiente y fechas pasadas).
+- **Detalle Técnico:** Al ampliar el universo de propiedades detectadas con "reserva activa", el script `reserve-injection.js` automáticamente sustituye el botón de reserva por el de detalles en las tarjetas de inmuebles. Esto permite que el usuario acceda rápidamente a la información de su estancia sin importar si esta ya concluyó o está en proceso, utilizando el modal unificado de `verDetalleReservaModal.js`. Se mantiene la integridad del sistema original al no modificar archivos core.
+
+---
+
 ## [23 de Septiembre, 2026] - Implementación de Filtro de Pagos en Mis Viajes (Estrategia No Invasiva)
 - **Tarea:** Ocultar las reservaciones que no tienen pagos asociados en la vista de "Mis Viajes" (Frontend) sin modificar archivos core.
 - **Archivos Modificados/Creados:**

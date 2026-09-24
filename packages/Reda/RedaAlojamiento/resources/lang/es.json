@@ -630,5 +630,15 @@
     "Estimado usuario usted tiene una reservación activa para la propiedad": "Estimado usuario usted tiene una reservación activa para la propiedad",
     "Estimado usuario ya usted tiene una reservación activa para esta propiedad": "Estimado usuario ya usted tiene una reservación activa para esta propiedad",
     "Estimado usuario hemos detectado que intenta enviar mensajes con números de teléfono y/o correos, le recomendamos no compartir ese tipo de información para prevenir estafas": "Estimado usuario hemos detectado que intenta enviar mensajes con números de teléfono y/o correos, le recomendamos no compartir ese tipo de información para prevenir estafas",
-    "Advertencia de seguridad": "Advertencia de seguridad"
+    "Advertencia de seguridad": "Advertencia de seguridad",
+    "Accepted": "Aceptado",
+    "Pending": "Pendiente",
+    "Processing": "En proceso",
+    "Cancelled": "Cancelado",
+    "Declined": "Rechazado",
+    "Expired": "Vencido",
+    "Current": "Actual",
+    "Upcoming": "Próximamente",
+    "Completed": "Completado",
+    "All": "Todos"
 }
