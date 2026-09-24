@@ -71,7 +71,7 @@
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js**
-  Script encargado de gestionar la apertura y renderizado del modal de detalles de reservación. Intercepta los clics en los botones de "Ver reserva", solicita la información detallada al servidor mediante AJAX y construye dinámicamente un modal con estética de Airbnb que muestra la foto de la propiedad, ubicación, fechas de estancia, número de huéspedes, estado de la reserva y el costo total.
+  Script encargado de gestionar la apertura y renderizado del modal de detalles de reservación. Intercepta los clics en los botones de "Ver reserva", solicita la información detallada al servidor mediante AJAX y construye dinámicamente un modal con estética de Airbnb. Incluye lógica de manejo de errores robusta con notificaciones traducidas.
 
 - **packages/Reda/RedaAlojamiento/resources/js/general/reserve-injection.js**
   Script responsable de inyectar dinámicamente el botón de "Reservar" o "Ver reserva" en las tarjetas de inmuebles de la aplicación. Implementa lógica para detectar el `propertyId` y `slug`, verifica si el usuario está autenticado y consulta si existe una reserva activa para cambiar el texto proactivamente. En el caso de "Ver reserva", configura el botón para abrir un modal detallado en lugar de realizar una redirección.

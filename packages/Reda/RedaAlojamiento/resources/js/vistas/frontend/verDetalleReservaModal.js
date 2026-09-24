@@ -126,6 +126,7 @@
         $(document).on('click', '.btn-reda-ver-reserva-modal', async function(e) {
             e.preventDefault();
             const propertyId = $(this).data('property-id');
+            const json = window.RedaAlojamientoJson || {};
 
             if (!propertyId) return;
 

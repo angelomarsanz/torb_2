@@ -4,6 +4,15 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [24 de Septiembre, 2026] - Corrección de Error 500 y ReferenceError en Modal de Detalles de Reserva
+- **Tarea:** Resolver el error 500 en el servidor y el error de JavaScript al abrir el modal de detalles de reserva.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Corregida la relación `currencies` por `currency` (singular) en el método `getBookingDetails` y en el acceso al símbolo de la moneda (`$booking->currency->symbol`).
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js`: Se declaró la variable `json` (traducciones) dentro del manejador de eventos en `init` para corregir el error `ReferenceError: json is not defined` que ocurría al intentar notificar errores de red o servidor.
+- **Detalle Técnico:** El error 500 era provocado por una inconsistencia en el nombre de la relación del modelo `Bookings` (el core usa singular). En el frontend, el error de referencia impedía que el sistema de notificaciones informara al usuario en caso de fallos. Estos cambios restauran la funcionalidad del botón "Ver reserva" inyectado dinámicamente.
+
+---
+
 ## [23 de Septiembre, 2026] - Ampliación de Lógica para Botón "Ver Reserva" en Frontend
 - **Tarea:** Cambiar el botón "Reservar" por "Ver Reserva" cuando exista una relación previa (Actual, Próximamente, Pendiente o Finalizada) y abrir el modal de detalles.
 - **Archivos Modificados:**

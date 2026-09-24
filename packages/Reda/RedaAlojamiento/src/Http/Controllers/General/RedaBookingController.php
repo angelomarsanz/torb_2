@@ -102,7 +102,7 @@ class RedaBookingController extends Controller
             $userId = Auth::id();
 
             // Buscamos la reserva más reciente para esta propiedad y este usuario
-            $booking = Bookings::with(['properties', 'host', 'currencies'])
+            $booking = Bookings::with(['properties', 'host', 'currency'])
                 ->where('user_id', $userId)
                 ->where('property_id', $propertyId)
                 ->whereNotIn('status', ['Cancelled', 'Declined'])
@@ -137,7 +137,7 @@ class RedaBookingController extends Controller
                     'huespedes' => $booking->guest,
                     'noches' => $booking->total_night,
                     'codigo' => $booking->code,
-                    'simbolo_moneda' => optional($booking->currencies)->symbol,
+                    'simbolo_moneda' => optional($booking->currency)->symbol,
                     'total' => $booking->total
                 ],
                 'code' => 200
