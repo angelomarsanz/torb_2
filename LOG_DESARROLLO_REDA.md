@@ -4,6 +4,15 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [24 de Septiembre, 2026] - Reemplazo de Calendario en Modal de Reservas con Flatpickr (Nueva Lógica)
+- **Tarea:** Solucionar el problema de sincronización errática de fechas de llegada y salida en el modal de reservas anulando el selector original del core e implementando un sistema limpio basado en Flatpickr.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/views/general/modal_reservar.blade.php`: Se integró la librería Flatpickr (CSS/JS y localización española) desde CDN. Se inyectaron estilos CSS personalizados con estética Airbnb y se configuró la ocultación quirúrgica del contenedor original de fechas (`#daterange-btn`).
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`: Refactorizado `mostrarModalFinal` para desactivar el `daterangepicker` original del core de forma segura (`.off('.daterangepicker')` y `.remove()`). Implementa inyección dinámica de nuevos inputs adaptados e inicializa Flatpickr en modo rango ordenado (el cambio en llegada fija la fecha mínima de salida y limpia periodos inválidos). Agregado `recargarPrecios` para invocar de manera robusta la función global `price_calculation()`.
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Registradas las claves de traducción `"Llegada"` y `"Salida"` para el frontend.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Actualizada la documentación de scripts y vistas correspondientes.
+- **Detalle Técnico:** Al independizar la interfaz visual del modal del daterangepicker original del core (el cual causaba loops infinitos y sincronizaciones duplicadas que igualaban checkin y checkout), se logró control absoluto sobre los eventos de selección. Flatpickr ahora se encarga de limitar las fechas, y sus valores se transfieren a los inputs ocultos originales solo cuando el usuario selecciona fechas válidas, lo que dispara automáticamente el cálculo exacto de tarifas del core mediante AJAX sin romper el flujo estándar de reservas.
+
 ## [24 de Septiembre, 2026] - Consistencia Global y Sincronización de Reservas
 - **Tarea:** Garantizar consistencia absoluta en los botones "Reservar/Ver reserva" en todas las vistas y actualizar la documentación técnica.
 - **Archivos Modificados/Creados:**

@@ -180,14 +180,140 @@
         },
 
         /**
-         * Muestra el modal físicamente después de las validaciones.
+         * Muestra el modal físicamente después de las validaciones, inhíbe el selector original
+         * y configura la nueva lógica de calendario Flatpickr.
          */
         mostrarModalFinal: function($form, $modalBody, $modal) {
+            const self = this;
             if (!$modalBody.find(this.config.formId).length) {
                 $modalBody.append($form);
                 $form.removeClass('d-none').show();
             }
+
+            // 1. Inhibir/Desactivar el daterangepicker original del core para evitar interferencias
+            const $daterangeBtn = $('#daterange-btn');
+            if ($daterangeBtn.length) {
+                $daterangeBtn.off('.daterangepicker');
+                if ($daterangeBtn.data('daterangepicker')) {
+                    console.log('REDA: Desactivando e inhibiendo daterangepicker original');
+                    $daterangeBtn.data('daterangepicker').remove();
+                }
+            }
+
+            // 2. Inyectar nuestros nuevos inputs de fecha si no existen en el formulario
+            if (!$form.find('.reda-new-daterange-container').length) {
+                console.log('REDA: Inyectando nuevos inputs de fecha compatibles con Flatpickr');
+                const checkInLabel = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Llegada"]) || "Llegada";
+                const checkOutLabel = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Salida"]) || "Salida";
+
+                const newDaterangeHtml = `
+                    <div class="row p-2 reda-new-daterange-container">
+                        <div class="col-6 p-0">
+                            <label>${checkInLabel}</label>
+                            <div class="mr-2">
+                                <input class="form-control reda-flatpickr-input" id="new_startDate" placeholder="dd-mm-yyyy" type="text" readonly required>
+                            </div>
+                        </div>
+                        <div class="col-6 p-0">
+                            <label>${checkOutLabel}</label>
+                            <div class="ml-2">
+                                <input class="form-control reda-flatpickr-input" id="new_endDate" placeholder="dd-mm-yyyy" type="text" readonly required>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Insertamos justo después del daterange-btn original (el cual estará oculto por CSS)
+                $('#daterange-btn').after(newDaterangeHtml);
+            }
+
+            // 3. Inicializar Flatpickr en los nuevos inputs de la modal
+            const initialStartDate = $('#startDate').val();
+            const initialEndDate = $('#endDate').val();
+
+            // Destruir instancias previas para evitar duplicidad de elementos/eventos al abrir varias veces
+            if (window.redaFpCheckIn && typeof window.redaFpCheckIn.destroy === 'function') {
+                window.redaFpCheckIn.destroy();
+            }
+            if (window.redaFpCheckOut && typeof window.redaFpCheckOut.destroy === 'function') {
+                window.redaFpCheckOut.destroy();
+            }
+
+            // Inicializar llegada (Check-In)
+            window.redaFpCheckIn = flatpickr("#new_startDate", {
+                dateFormat: "d-m-Y",
+                minDate: "today",
+                locale: "es",
+                defaultDate: initialStartDate || "today",
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates[0]) {
+                        console.log('REDA Flatpickr: Fecha de llegada cambiada a:', dateStr);
+                        // Sincronizar con el input original del core
+                        $("#startDate").val(dateStr);
+
+                        // Configurar la fecha mínima de salida (Checkout) para el día siguiente
+                        const nextDay = new Date(selectedDates[0]);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        window.redaFpCheckOut.set("minDate", nextDay);
+
+                        // Si el Checkout es menor o igual al Check-In, limpiarlo
+                        if (window.redaFpCheckOut.selectedDates[0] && window.redaFpCheckOut.selectedDates[0] <= selectedDates[0]) {
+                            window.redaFpCheckOut.clear();
+                            $("#endDate").val("");
+                        }
+
+                        // Forzar el recálculo de precios del core
+                        self.recargarPrecios();
+                    }
+                }
+            });
+
+            // Establecer fecha mínima inicial para el Checkout basada en el Check-In seleccionado
+            const minCheckOutDate = window.redaFpCheckIn.selectedDates[0]
+                ? new Date(window.redaFpCheckIn.selectedDates[0].getTime() + 86400000)
+                : "today";
+
+            // Inicializar salida (Check-Out)
+            window.redaFpCheckOut = flatpickr("#new_endDate", {
+                dateFormat: "d-m-Y",
+                minDate: minCheckOutDate,
+                locale: "es",
+                defaultDate: initialEndDate || "",
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates[0]) {
+                        console.log('REDA Flatpickr: Fecha de salida cambiada a:', dateStr);
+                        // Sincronizar con el input original del core
+                        $("#endDate").val(dateStr);
+
+                        // Forzar el recálculo de precios del core
+                        self.recargarPrecios();
+                    }
+                }
+            });
+
+            // Sincronizar el minDate del checkout inicialmente
+            if (window.redaFpCheckIn.selectedDates[0]) {
+                const nextDay = new Date(window.redaFpCheckIn.selectedDates[0]);
+                nextDay.setDate(nextDay.getDate() + 1);
+                window.redaFpCheckOut.set("minDate", nextDay);
+            }
+
+            // Ejecutar un recálculo inicial para asegurar que la modal abra con los datos cargados correctamente
+            self.recargarPrecios();
+
             $modal.modal('show');
+        },
+
+        /**
+         * Invoca de manera segura la función global de recálculo de precios del core del sistema (Laravel/vRent).
+         */
+        recargarPrecios: function() {
+            if (typeof window.price_calculation === 'function') {
+                window.price_calculation('', '', '');
+            } else if (typeof price_calculation === 'function') {
+                price_calculation('', '', '');
+            } else {
+                console.warn('REDA: No se detectó la función global price_calculation en la ventana.');
+            }
         },
 
         /**

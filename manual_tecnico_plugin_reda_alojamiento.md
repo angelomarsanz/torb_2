@@ -26,7 +26,11 @@
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js**
-  Gestiona el sistema de reserva en modal y botones flotantes para la vista de detalle de propiedad. Implementa la lógica para ocultar el sidebar original, inyectar el botón flotante con animación y manejar la apertura del modal mediante el hash `#reservar`. Incluye una verificación proactiva de reservas activas para prevenir duplicidades.
+  Gestiona el sistema de reserva en modal y botones flotantes para la vista de detalle de propiedad (property.single). Implementa la lógica para ocultar el sidebar original, inyectar el botón flotante con animación y manejar la apertura del modal mediante el hash `#reservar`. Incluye una verificación proactiva de reservas activas para prevenir duplicidades. Se actualizó para desactivar el `daterangepicker` original del core, inyectar inputs de fecha adaptados y configurar una lógica robusta mediante **Flatpickr** (Llegada y Salida con rango dinámico y fecha mínima de salida), sincronizándose con los inputs ocultos del core y gatillando el recálculo automático de precios (`price_calculation`).
+
+### Vistas (Usuario/Frontend)
+- **packages/Reda/RedaAlojamiento/resources/views/general/modal_reservar.blade.php**
+  Define la estructura HTML de la modal de reservación del plugin RedaAlojamiento. Carga e integra la librería de calendarios Flatpickr (CSS/JS) desde CDN, inyecta estilos Airbnb-style para los nuevos campos de selección de fechas (Llegada y Salida), y oculta quirúrgicamente los selectores de rango originales del core (#daterange-btn) para evitar conflictos.
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php**
