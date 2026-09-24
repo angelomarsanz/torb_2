@@ -31,6 +31,7 @@
                 success: function(data) {
                     if (data.success && typeof data.respuesta === 'object') {
                         activeBookingProperties = data.respuesta;
+                        console.log('REDA Reserve Injection: Mapa de reservas obtenido (Vigentes y Pagadas)');
                     }
                     bookingsFetched = true;
                     resolve(data);
@@ -82,45 +83,39 @@
             }
         }
 
-        // --- DETERMINACIÓN DE LÓGICA "VER RESERVA" (REGLAS ACTUALIZADAS) ---
+        // --- DETERMINACIÓN DE LÓGICA "VER RESERVA" (REGLAS ESTRICTAS) ---
         let forzarVerReserva = false;
 
         if (isTripsPage) {
-            // Regla de Oro: LA FECHA TIENE PRIORIDAD MÁXIMA
+            // Regla para Mis Viajes: Prioridad a la fecha de fin y estatus de finalización
             const calendarText = $(card).find('i.fa-calendar').parent().text().trim();
+            const statusBadge = card.querySelector('.badge');
+            const textContent = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
+            
+            let esFechaPasada = false;
             const fechas = calendarText.split('-');
-            let fechaFinVigente = false;
-
             if (fechas.length > 1) {
                 const fechaFinStr = fechas[1].trim(); 
                 const fechaFin = new Date(fechaFinStr);
                 const hoy = new Date();
                 hoy.setHours(0,0,0,0);
-
-                if (!isNaN(fechaFin) && fechaFin >= hoy) {
-                    fechaFinVigente = true;
+                if (!isNaN(fechaFin) && fechaFin < hoy) {
+                    esFechaPasada = true;
                 }
             }
 
-            if (fechaFinVigente) {
-                // Si la fecha es futura o hoy, siempre es Ver Reserva
-                forzarVerReserva = true;
-            } else {
-                // Si la fecha ya pasó, verificamos si el estatus aún obliga a Ver Reserva
-                const statusBadge = card.querySelector('.badge');
-                const textContent = statusBadge ? statusBadge.textContent.trim().toLowerCase() : '';
-                
-                const estadosVer = ['actual', 'pendiente', 'próximamente', 'pending', 'processing', 'procesando', 'upcoming', 'current'];
-                const estadosReservar = ['completado', 'completada', 'vencido', 'vencida', 'rechazado', 'rechazada', 'completed', 'expired', 'declined', 'cancelled', 'cancelada'];
+            const estadosReservar = ['completado', 'completada', 'vencido', 'vencida', 'rechazado', 'rechazada', 'completed', 'expired', 'declined', 'cancelled', 'cancelada'];
+            const estadosVer = ['actual', 'pendiente', 'próximamente', 'pending', 'processing', 'procesando', 'upcoming', 'current'];
 
-                if (estadosVer.some(s => textContent.includes(s))) {
-                    forzarVerReserva = true;
-                } else if (estadosReservar.some(s => textContent.includes(s))) {
-                    forzarVerReserva = false;
-                }
+            if (esFechaPasada || estadosReservar.some(s => textContent.includes(s))) {
+                // Si la fecha ya pasó o es un estatus final, SIEMPRE mostrar "Reservar"
+                forzarVerReserva = false;
+            } else if (estadosVer.some(s => textContent.includes(s)) || !esFechaPasada) {
+                // Si la fecha es hoy/futura o tiene estatus vigente, mostrar "Ver reserva"
+                forzarVerReserva = true;
             }
         } else if (infoReserva) {
-            // Fuera de Mis Viajes, confiamos en el mapa filtrado del servidor
+            // Fuera de Mis Viajes, el servidor ya nos envía solo las vigentes y pagadas
             forzarVerReserva = true;
         }
 
@@ -138,6 +133,7 @@
                     btn.href = 'javascript:void(0)';
                 }
             } else {
+                // Si ya no debe ser "Ver reserva", lo revertimos a "Reservar"
                 if (btn.textContent.includes(verReservaText)) {
                     btn.innerHTML = `<i class="far fa-calendar-check"></i> ${reservarText}`;
                     btn.classList.remove('btn-reda-ver-reserva-modal');

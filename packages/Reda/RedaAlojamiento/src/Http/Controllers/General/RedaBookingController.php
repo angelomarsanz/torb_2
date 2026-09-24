@@ -19,7 +19,7 @@ class RedaBookingController extends Controller
 {
     /**
      * Obtiene un mapa de IDs y datos de inmuebles con reservas activas o futuras para el usuario autenticado.
-     * Incluye slugs para facilitar el emparejamiento en el frontend cuando el ID no es visible.
+     * Se ignoran las "Consultas" (reservas sin pago registrado) y las reservas pasadas.
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -41,16 +41,22 @@ class RedaBookingController extends Controller
 
             /**
              * Buscamos reservaciones que cumplan los criterios de "Ver reserva":
-             * 1. Que no estén canceladas o rechazadas.
-             * 2. Que la fecha de fin sea hoy o futura.
-             * 3. O que estén en estatus pendiente/procesando.
+             * 1. Que el usuario sea el dueño de la reserva.
+             * 2. Que la fecha de fin sea hoy o futura (Reservación vigente).
+             * 3. Que NO sea una consulta (debe tener algún rastro de pago).
              */
             $bookings = Bookings::with('properties')
                 ->where('user_id', $userId)
-                ->whereNotIn('status', ['Cancelled', 'Declined'])
-                ->where(function($query) use ($today) {
-                    $query->where('end_date', '>=', $today)
-                          ->orWhereIn('status', ['Pending', 'Processing', 'processing']);
+                ->where('end_date', '>=', $today)
+                ->whereNotIn('status', ['Cancelled', 'Declined', 'Expired'])
+                ->where(function($query) {
+                    $query->where(function($q) {
+                        $q->where('transaction_id', '!=', '')
+                          ->where('transaction_id', '!=', ' ')
+                          ->whereNotNull('transaction_id');
+                    })
+                    ->orWhere('payment_method_id', '>', 0)
+                    ->orWhereIn('status', ['Accepted', 'Processing', 'processing']);
                 })
                 ->get();
 
@@ -66,7 +72,7 @@ class RedaBookingController extends Controller
 
             $respuesta = [
                 'success' => true,
-                'message' => __('Listado de propiedades con reservas activas/futuras obtenido'),
+                'message' => __('Listado de propiedades con reservas activas/pagadas obtenido'),
                 'mensaje_usuario' => '',
                 'respuesta' => (object)$map,
                 'code' => 200

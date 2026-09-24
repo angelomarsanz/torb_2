@@ -4,17 +4,12 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [24 de Septiembre, 2026] - Corrección de Error 500 y Optimización de Lógica en Modal de Reserva
-- **Tarea:** Resolver fallos en la apertura del modal y corregir la visualización incorrecta del botón "Ver reserva" en `/trips/active`.
+## [24 de Septiembre, 2026] - Refinamiento de Lógica: Exclusión de Consultas y Reservas Pasadas
+- **Tarea:** Asegurar que solo las reservaciones con pago y vigentes muestren "Ver reserva" en todas las vistas (Home, Propiedad y Viajes).
 - **Archivos Modificados:**
-    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: 
-        *   Corregida relación `currencies` por `currency`.
-        *   Se eliminó la restricción del estado `'Expired'` en `getActiveBookingPropertyIds`, permitiendo que el mapa de reservas incluya viajes pasados para habilitar el modal.
-    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js`: Definida variable `json` en `init` para evitar `ReferenceError`.
-    *   `packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js`: 
-        *   Se priorizó el mapa de reservas para forzar "Ver reserva" si existe un ID previo.
-        *   Se amplió la lista de estados detectados (`aceptado`, `procesando`, `vencido`, etc.) y se implementó detección por clases CSS (`vbadge-success`) para neutralizar problemas con traducciones.
-- **Detalle Técnico:** La lógica anterior fallaba en la vista de viajes porque los nombres de los estados estaban traducidos al español en el HTML, mientras que el script buscaba términos en inglés. Además, al excluir 'Expired' del controlador, el script no podía obtener el ID de la propiedad para abrir el modal en viajes finalizados. Con estas mejoras, el sistema es ahora bidireccional (Texto/Clase) y cubre el ciclo de vida completo de la reserva.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Se filtró el método `getActiveBookingPropertyIds` para ignorar "Consultas" (registros sin `transaction_id` ni `payment_method_id`) y reservaciones cuya `end_date` sea menor a la fecha actual.
+    *   `packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js`: Se ajustó la prioridad de decisión. Ahora la fecha de fin tiene precedencia absoluta: si la fecha venció, se muestra "Reservar" aunque el estatus sea "Pendiente". También se sincronizó con el mapa filtrado del servidor para las vistas fuera de "Mis Viajes".
+- **Detalle Técnico:** Se resolvieron discrepancias visuales donde consultas futuras (ID 47) o reservaciones pendientes pasadas (ID 44) mostraban incorrectamente el botón de detalles. El mapa del servidor actúa ahora como una "lista blanca" de propiedades con reservaciones legítimas y vigentes.
 
 ---
 
