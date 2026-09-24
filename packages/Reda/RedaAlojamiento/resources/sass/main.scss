@@ -4258,3 +4258,31 @@
     transition: all 0.5s ease;
     background-color: #f0fff4 !important; /* Un verde muy suave de fondo */
 }
+
+/* --- FORMULARIO DE BÚSQUEDA DE PROPIEDADES (HOME Y SEARCH) --- */
+#front-search-form #daterange-btn {
+    display: none !important;
+}
+
+.reda-new-daterange-container-front {
+    width: 100%;
+
+    .input-group-text {
+        background-color: #fff !important;
+        border-left: 0 !important;
+        cursor: pointer;
+    }
+
+    .reda-flatpickr-input {
+        background-color: #fff !important;
+        cursor: pointer !important;
+        border-right: 0 !important;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        height: 52px;
+        color: #484848;
+        font-size: 14px;
+        font-weight: 400;
+    }
+}
+

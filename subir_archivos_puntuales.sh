@@ -153,8 +153,8 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/lista_favoritos_comercios.blade.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (FUERA DE CARPETAS FRONTEND) ---
-    #"packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php"
-    #"packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_confirmacion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_crop.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_notificaciones.blade.php"
@@ -200,8 +200,9 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/productosServiciosEncontrados.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/calificacionExperienciaFrontend.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/toggleFavoritoComercio.js"
-    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js"
+    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js"
 
     # --- Archivos Javascript fuera de la carpeta frontend ---
     #"packages/Reda/RedaAlojamiento/resources/js/general/main.js"

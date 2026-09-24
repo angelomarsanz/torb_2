@@ -4,6 +4,17 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [24 de Septiembre, 2026] - Reemplazo de Calendario en Formulario de Búsqueda de Propiedades con Flatpickr
+- **Tarea:** Corregir el fallo de sincronización idéntica entre fechas de check-in y check-out en el formulario de búsqueda de propiedades de la vista principal (Home) aplicando el mismo procedimiento modular implementado en el modal de reservaciones (inactivar `daterangepicker`, ocultar inputs originales, inyectar inputs nuevos e inicializar Flatpickr en español).
+- **Archivos Modificados/Creados:**
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js`: **NUEVO ARCHIVO**. Script modular que detecta el formulario `#front-search-form`, neutraliza e inhibe la librería `daterangepicker` original (incluso envolviendo de forma segura `window.dateRangeBtn`), oculta `#daterange-btn`, remueve el atributo `required` de los inputs ocultos originales (`#startDate` y `#endDate`), inyecta los nuevos campos visibles con iconos de calendario (`#new_startDate`, `#new_endDate`), e inicializa Flatpickr en español con rango estricto y fecha mínima dinámica. Sincroniza en tiempo real los valores hacia los inputs originales para asegurar la sumisión correcta hacia `/search`.
+    *   `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: Se añadieron los estilos CSS necesarios para forzar la ocultación del selector original (`#front-search-form #daterange-btn { display: none !important; }`) y dar estilo armónico a los nuevos inputs (`.reda-new-daterange-container-front`).
+    *   `packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php`: Se incluyó la hoja de estilo de Flatpickr (`flatpickr.min.css`) en la cabecera para garantizar disponibilidad inmediata de estilos.
+    *   `packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php`: Se registró el script `busquedaPropiedades.min.js` para que se ejecute en las páginas del frontend.
+    *   `webpack.mix.js`: Se registró la compilación de `busquedaPropiedades.js` hacia `public/js/reda/vistas/frontend/busquedaPropiedades.min.js`.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Se documentó el nuevo archivo y sus responsabilidades técnicas.
+- **Detalle Técnico:** Al aplicar la misma arquitectura desacoplada del modal de reservaciones, el formulario de búsqueda principal se independiza completamente del comportamiento errático de `daterangepicker` (que igualaba automáticamente las fechas de checkin y checkout). El nuevo procedimiento no modifica ningún archivo original de Laravel vRent, cumpliendo al 100% las directrices del proyecto y garantizando que el envío del formulario a la ruta `/search` reciba los parámetros `checkin` y `checkout` con exactitud y sin interferencias.
+
 ## [24 de Septiembre, 2026] - Reemplazo de Calendario en Modal de Reservas con Flatpickr (Nueva Lógica)
 - **Tarea:** Solucionar el problema de sincronización errática de fechas de llegada y salida en el modal de reservas anulando el selector original del core e implementando un sistema limpio basado en Flatpickr.
 - **Archivos Modificados:**

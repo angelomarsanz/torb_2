@@ -100,6 +100,7 @@ if (buildAlojamiento) {
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js', 'public/js/reda/vistas/frontend/propiedad_detalle.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js', 'public/js/reda/vistas/pago/frontend/pagos.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js', 'public/js/reda/vistas/frontend/verDetalleReservaModal.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js', 'public/js/reda/vistas/frontend/busquedaPropiedades.min.js');
 }
 
 mix.options({
