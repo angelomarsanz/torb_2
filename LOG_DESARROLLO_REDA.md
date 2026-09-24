@@ -4,12 +4,14 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
-## [24 de Septiembre, 2026] - Refinamiento de Lógica: Exclusión de Consultas y Reservas Pasadas
-- **Tarea:** Asegurar que solo las reservaciones con pago y vigentes muestren "Ver reserva" en todas las vistas (Home, Propiedad y Viajes).
-- **Archivos Modificados:**
-    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Se filtró el método `getActiveBookingPropertyIds` para ignorar "Consultas" (registros sin `transaction_id` ni `payment_method_id`) y reservaciones cuya `end_date` sea menor a la fecha actual.
-    *   `packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js`: Se ajustó la prioridad de decisión. Ahora la fecha de fin tiene precedencia absoluta: si la fecha venció, se muestra "Reservar" aunque el estatus sea "Pendiente". También se sincronizó con el mapa filtrado del servidor para las vistas fuera de "Mis Viajes".
-- **Detalle Técnico:** Se resolvieron discrepancias visuales donde consultas futuras (ID 47) o reservaciones pendientes pasadas (ID 44) mostraban incorrectamente el botón de detalles. El mapa del servidor actúa ahora como una "lista blanca" de propiedades con reservaciones legítimas y vigentes.
+## [24 de Septiembre, 2026] - Consistencia Global y Sincronización de Reservas
+- **Tarea:** Garantizar consistencia absoluta en los botones "Reservar/Ver reserva" en todas las vistas y actualizar la documentación técnica.
+- **Archivos Modificados/Creados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: Se rediseñó el método `getActiveBookingPropertyIds` para devolver una "Lista Blanca" triple (Propiedades, Reservas, Códigos) filtrando por pago y vigencia real.
+    *   `packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js`: Refactorizado para usar la lista blanca como fuente de verdad. Implementa detección por ID/Código en Viajes y por Propiedad en Home/Propiedad. Se añadió una jerarquía donde la fecha de fin tiene prioridad absoluta para revertir botones a "Reservar".
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Actualizado con las nuevas responsabilidades de controladores y scripts.
+    *   `REDA_PAUTAS_DESARROLLO.md`: **NUEVO ARCHIVO** creado para centralizar reglas de consistencia entre vistas y protecciones de estabilidad (ciclos infinitos).
+- **Detalle Técnico:** Se logró consistencia total entre el Home, el Detalle de Propiedad y Mis Viajes. El sistema ahora es bidireccional: la fecha de fin decide la vigencia y la lista blanca del servidor decide la legitimidad del pago, eliminando discrepancias causadas por traducciones o estados ambiguos en el core.
 
 ---
 
