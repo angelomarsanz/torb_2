@@ -46,7 +46,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php"
     #"packages/Reda/RedaAlojamiento/src/Helpers/helpers.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Middleware/CheckPluginAuth.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Middleware/InjectPluginAssets.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Middleware/InjectPluginAssets.php"
 
     "packages/Reda/RedaAlojamiento/resources/sass/main.scss"
     "packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss"
@@ -154,13 +154,13 @@ ARCHIVOS_PHP_PUNTUALES=(
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (FUERA DE CARPETAS FRONTEND) ---
     "packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php"
-    "packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_confirmacion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_crop.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_notificaciones.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/modal_listado_infinito.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/general/paginacion.blade.php"
-    "packages/Reda/RedaAlojamiento/resources/views/general/modal_reservar.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/general/modal_reservar.blade.php"
 
 
     #"packages/Reda/RedaAlojamiento/resources/views/administrativo/administrativos/index.blade.php"
@@ -202,7 +202,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/toggleFavoritoComercio.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js"
-    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js"
 
     # --- Archivos Javascript fuera de la carpeta frontend ---
     #"packages/Reda/RedaAlojamiento/resources/js/general/main.js"

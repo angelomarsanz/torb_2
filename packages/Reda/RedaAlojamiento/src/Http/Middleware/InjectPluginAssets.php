@@ -18,20 +18,20 @@ class InjectPluginAssets
         $response = $next($request);
 
         // Check if it's a standard response and contains HTML
-        if (method_exists($response, 'getContent') && 
-            $response->headers->get('Content-Type') && 
+        if (method_exists($response, 'getContent') &&
+            $response->headers->get('Content-Type') &&
             str_contains($response->headers->get('Content-Type'), 'text/html')) {
 
             $content = $response->getContent();
 
             // Check if it's not an admin page and script not already there
             if (!$request->is('admin*') && !str_contains($content, 'chat-injection.min.js')) {
-                
+
                 // Added ?v= parameter to force browser refresh after compilation
                 $ocultarScriptUrl = '/public/js/reda/general/ocultar-consultas.min.js?v=' . time();
                 $chatScriptUrl = '/public/js/reda/general/chat-injection.min.js?v=' . time();
                 $reserveScriptUrl = '/public/js/reda/general/reserve-injection.min.js?v=' . time();
-                
+
                 $scriptTag = '<!-- REDA PLUGIN -->';
                 $scriptTag .= '<script src="' . $ocultarScriptUrl . '"></script>';
                 $scriptTag .= '<script src="' . $chatScriptUrl . '"></script>';
