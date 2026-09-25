@@ -50,21 +50,32 @@ Esos estilos se agregan al proyecto principal en los archivos:
 "packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php"
 Los índices o listas para las vistas de escritorio pueden hacerse con "table" pero para las vistas de celular deben ser más modernos tipo tarjetas bien ordenadas y con una buena interfaz agradable para manipular en el celular.
 
-## JavaScript Específico (Frontend)
+## JavaScript Específico (Backend y Frontend)
 - Utiliza la sintaxis moderna de ES6+ (`const`, `let`, funciones flecha).
 - Se usará javascript puro con jquery. Aprovechando al máximo jquery y cualquier otra librería de javascript que permita simplificar el código y economizar tiempo de desarrollo.
 - El código Javascript del plugin se encuentra en: 
 Para el admin: packages/Reda/RedaAlojamiento/resources/js/admin/
     Y se divide en dos carpetas: 
         general (javascript para uso general en el proyecto)
-        vistas (javascript para cada vista)
+        vistas (javascript para nuevos módulos del plugin)
 Para el frontend: packages/Reda/RedaAlojamiento/resources/js
     Igualmente se divide en dos carpetas:
         general (javascript para uso general en el proyecto)
-        vistas (javascript para cada vista)
-Los archivos de javascript se agregan al proyecto principal en:
-"packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php"
-"packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php"
+        vistas (javascript para nuevos módulos del plugin)
+Para archivos que cambian el comportamiento de las vistas del dashboard del usuario:
+packages/Reda/RedaAlojamiento/resourses/js/vistas/dashboard/
+Para archivos que cambian el comportamiento de las vistas del frontend:
+packages/Reda/RedaAlojamiento/resourses/js/vistas/frontend/
+Para archivos javascript de uso general en el dashboard del usuario y el frontend de la aplicación:
+packages/Reda/RedaAlojamiento/resourses/js/general/
+Para archivos de nuevos módulos del plugin
+packages/Reda/RedaAlojamiento/resourses/js/vistas
+Para archivos del admin (backend)
+packages/Reda/RedaAlojamiento/resourses/admin/
+Para que se carguen los archivos javascript se deben agregar a alguno de estos archivos según corresponda:
+packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php
+packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php
+packages/Reda/RedaAlojamiento/resources/js/general/main.js
 
 Las peticiones ajax tendrán esta estructura:
     Función llamadora:
