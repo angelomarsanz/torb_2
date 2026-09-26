@@ -5,6 +5,9 @@ namespace Reda\RedaAlojamiento;
 
 use Illuminate\Support\ServiceProvider;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaInboxController;
+use Reda\RedaAlojamiento\Http\Controllers\General\RedaPaymentController;
+use Reda\RedaAlojamiento\Http\Controllers\General\RedaUsuarioController;
+use Reda\RedaAlojamiento\Http\Controllers\General\RedaLoginController;
 use Illuminate\Support\Facades\Route;
 
 // CAMBIO 2: Nuevo nombre de la clase
@@ -110,9 +113,24 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
                      */
                     $route->withoutMiddleware(['guest', 'guest:users', 'guest:admin', 'auth', 'reda.auth']);
                 }
+
+                // 3. Sobrescribir Registro y Confirmación de Correo (PLUGIN REDA)
+                if ($route->uri() === 'create' && in_array('POST', $route->methods())) {
+                    $route->uses([\Reda\RedaAlojamiento\Http\Controllers\General\RedaUsuarioController::class, 'create']);
+                }
+
+                if (str_contains($route->uri(), 'users/confirm_email') && in_array('GET', $route->methods())) {
+                    $route->uses([\Reda\RedaAlojamiento\Http\Controllers\General\RedaUsuarioController::class, 'confirmEmail']);
+                    $route->withoutMiddleware(['guest', 'guest:users', 'auth', 'reda.auth']);
+                }
+
+                // 4. Sobrescribir Autenticación (Login) para exigir correo confirmado
+                if ($route->uri() === 'authenticate' && in_array('POST', $route->methods())) {
+                    $route->uses([\Reda\RedaAlojamiento\Http\Controllers\General\RedaLoginController::class, 'authenticate']);
+                }
             }
 
-            // 3. Asignamos nombres a rutas de login si no los tienen
+            // 5. Asignamos nombres a rutas de login si no los tienen
             foreach ($routes as $route) {
                 if ($route->uri() === 'login' && !$route->getName()) {
                     $route->name('login');

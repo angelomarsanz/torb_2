@@ -102,6 +102,7 @@ if (buildAlojamiento) {
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js', 'public/js/reda/vistas/frontend/verDetalleReservaModal.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js', 'public/js/reda/vistas/frontend/busquedaPropiedades.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/desgloseHuespedes.js', 'public/js/reda/vistas/frontend/desgloseHuespedes.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js', 'public/js/reda/vistas/frontend/verificacionCorreo.min.js');
 }
 
 mix.options({

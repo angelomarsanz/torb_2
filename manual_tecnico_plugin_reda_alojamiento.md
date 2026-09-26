@@ -11,9 +11,6 @@
 - **app/Http/Controllers/EmailController.php**
   Se inyectaron logs de depuración en el método `welcome_email` para rastrear la configuración de SMTP y el estado del envío. Se actualizó el método `sendPhpEmail` para redirigir errores y confirmaciones al log de Laravel en lugar de imprimirlos en pantalla (`echo`), mejorando la estabilidad de las respuestas AJAX.
 
-- **app/Http/Controllers/UserController.php**
-  Se añadió un bloque `try-catch` en el método `create` (proceso de registro). Esto evita que un fallo en el servidor de correos (SMTP) bloquee el registro exitoso del usuario en la base de datos, permitiendo que la aplicación continúe el flujo y registre el error en el log para su posterior revisión.
-
 ### Vistas (Admin)
 - **resources/views/admin/settings/email.blade.php**
   Inyección de un campo `select` para la columna `email_status`. Esta modificación habilita la interfaz de usuario para que el administrador pueda forzar el estado del sistema de correos desde el panel de configuración de email.
@@ -144,3 +141,27 @@
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**
   Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, marca de mensajes leídos, procesamiento de respuestas con virtualización de datos y obtención del conteo de mensajes no leídos. Implementa una lógica de ordenamiento por prioridad para destacar conversaciones con mensajes pendientes.
+
+## Verificación de Correo (Signup y Login)
+
+### Controladores
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaUsuarioController.php**
+  Controlador que extiende de `App\Http\Controllers\UserController` para desacoplar el flujo de registro y confirmación de correo de los archivos del core. Sobrescribe `create` para registrar al usuario, enviar el correo de verificación vía `welcome_email` e interrumpir el inicio de sesión automático, redirigiendo a login con una notificación de cuenta pendiente. Sobrescribe `confirmEmail` para permitir la activación de la cuenta desde el enlace del correo sin requerir una sesión activa previa, activando el estado en `users`, actualizando `users_verification.email = 'yes'` y redirigiendo a login con el modal de confirmación exitosa.
+
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaLoginController.php**
+  Controlador que extiende de `App\Http\Controllers\LoginController` para proteger el acceso al sistema. Sobrescribe `authenticate` para comprobar las credenciales del usuario; si la contraseña es correcta pero `users_verification.email` no es 'yes', bloquea el inicio de sesión y redirige a la vista de login con la variable flash `correo_no_verificado` para desplegar el modal interactivo de aviso y corrección de correo.
+
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php**
+  Controlador encargado de la actualización y reenvío del correo de confirmación. Ofrece el método `actualizarCorreoYReenviar` que valida que la cuenta exista, que aún no esté verificada en `users_verification` (`email != 'yes'`), que el nuevo correo no esté registrado por otro usuario, actualiza el registro en la tabla `users`, limpia tokens previos y reenvía el correo de confirmación invocando `EmailController@welcome_email`.
+
+### Vistas
+- **packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php**
+  Estructura de modales Bootstrap 4.5 e inyección de datos de sesión a JavaScript (`window.RedaVerificacionData`). Contiene:
+  1. `#reda_modal_confirmar_email_signup`: Muestra el email ingresado en el registro y pregunta "¿Por favor verifique si la dirección de su correo es correcta?", con botones "Email correcto" y "Corregir email" (con formulario y validación).
+  2. `#reda_modal_correo_no_verificado_login`: Alerta en login cuando el usuario tiene credenciales válidas pero su correo no ha sido verificado, con opción para corregir el email y reenviar el enlace vía AJAX.
+  3. `#reda_modal_correo_confirmado_exito`: Mensaje de confirmación exitosa con botón para "Iniciar sesión" tras hacer clic en el enlace del correo.
+
+### JavaScript (Vistas)
+- **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js**
+  Controlador JavaScript del flujo de verificación y corrección de correo. Intercepta el formulario `#signup_form` previa validación con jQuery Validate y `ageValidate()`, abre el modal de confirmación antes del envío y actualiza el campo si se corrige. Detecta si la sesión contiene `correo_no_verificado` para desplegar el modal en login con la petición AJAX de actualización. Detecta `correo_confirmado_exitoso` para desplegar el modal de bienvenida y enfocar el login.
+

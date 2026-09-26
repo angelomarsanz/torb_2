@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaInboxController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaPaymentController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaBookingController;
+use Reda\RedaAlojamiento\Http\Controllers\General\VerificacionCorreoController;
 
 // ----------------------------------------------------------------------
 // IMPORTACIÓN DE CONTROLADORES
@@ -173,6 +174,9 @@ Route::prefix('reda')->middleware(['web', 'locale'])->group(function () {
 
     // Ruta intermedia para verificar reservas activas después del login
     Route::get('check-booking-redirect/{slug}', [RedaPaymentController::class, 'checkBookingRedirect'])->name('reda.check_booking_redirect');
+
+    // Ruta para actualizar correo no verificado y reenviar confirmación
+    Route::post('usuarios/actualizar-correo-verificacion', [VerificacionCorreoController::class, 'actualizarCorreoYReenviar'])->name('reda.usuarios.actualizar_correo_verificacion');
 
 
     // ----------------------------------------------------------------------
