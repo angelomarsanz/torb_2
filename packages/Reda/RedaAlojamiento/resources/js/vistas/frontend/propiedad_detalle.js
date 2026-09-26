@@ -297,6 +297,91 @@
                 window.redaFpCheckOut.set("minDate", nextDay);
             }
 
+            // 4. Ocultar el selector de huéspedes original del core e inyectar el desglose de Adultos y Niños
+            const $guestSelect = $form.find('#number_of_guests');
+            const $originalGuestRow = $guestSelect.closest('.row');
+            $originalGuestRow.addClass('d-none');
+
+            if (!$form.find('.reda-new-guests-container').length) {
+                console.log('REDA: Inyectando nuevos selectores de Adulto(s) y Niño(s)');
+                const adultosLabel = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Adulto(s)"]) || "Adulto(s)";
+                const ninosLabel = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Niño(s)"]) || "Niño(s)";
+
+                // Capacidad máxima de la propiedad obtenida del último option del select original
+                const maxCapacidad = parseInt($guestSelect.find('option').last().val()) || 1;
+                const initialGuests = parseInt($guestSelect.val()) || 1;
+
+                const newGuestsHtml = `
+                    <div class="row p-2 reda-new-guests-container">
+                        <div class="col-6 p-0">
+                            <label class="font-weight-600 text-uppercase text-13">${adultosLabel}</label>
+                            <div class="mr-2">
+                                <select id="reda_adultos" name="adultos" class="form-control reda-flatpickr-input" style="height: 45px; border-radius: 8px;">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6 p-0">
+                            <label class="font-weight-600 text-uppercase text-13">${ninosLabel}</label>
+                            <div class="ml-2">
+                                <select id="reda_ninos" name="ninos" class="form-control reda-flatpickr-input" style="height: 45px; border-radius: 8px;">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $originalGuestRow.after(newGuestsHtml);
+
+                const sincronizarHuespedes = function(adultosSel, ninosSel) {
+                    adultosSel = parseInt(adultosSel) || 1;
+                    ninosSel = parseInt(ninosSel) || 0;
+
+                    // Ajustar si la suma excede la capacidad máxima
+                    if (adultosSel + ninosSel > maxCapacidad) {
+                        ninosSel = Math.max(0, maxCapacidad - adultosSel);
+                    }
+
+                    // Opciones de Adultos: mínimo 1, máximo maxCapacidad - ninosSel
+                    const maxAdultos = Math.max(1, maxCapacidad - ninosSel);
+                    let optAdultos = '';
+                    for (let i = 1; i <= maxCapacidad; i++) {
+                        if (i <= maxAdultos) {
+                            optAdultos += `<option value="${i}" ${i === adultosSel ? 'selected' : ''}>${i}</option>`;
+                        }
+                    }
+                    $('#reda_adultos').html(optAdultos);
+
+                    // Opciones de Niños: mínimo 0, máximo maxCapacidad - adultosSel
+                    const maxNinos = Math.max(0, maxCapacidad - adultosSel);
+                    let optNinos = '';
+                    for (let i = 0; i <= maxCapacidad - 1; i++) {
+                        if (i <= maxNinos) {
+                            optNinos += `<option value="${i}" ${i === ninosSel ? 'selected' : ''}>${i}</option>`;
+                        }
+                    }
+                    $('#reda_ninos').html(optNinos);
+
+                    const total = adultosSel + ninosSel;
+                    $guestSelect.val(total);
+                };
+
+                sincronizarHuespedes(initialGuests, 0);
+
+                $(document).off('change', '#reda_adultos').on('change', '#reda_adultos', function() {
+                    const ad = parseInt($(this).val()) || 1;
+                    const ni = parseInt($('#reda_ninos').val()) || 0;
+                    sincronizarHuespedes(ad, ni);
+                    self.recargarPrecios();
+                });
+
+                $(document).off('change', '#reda_ninos').on('change', '#reda_ninos', function() {
+                    const ad = parseInt($('#reda_adultos').val()) || 1;
+                    const ni = parseInt($(this).val()) || 0;
+                    sincronizarHuespedes(ad, ni);
+                    self.recargarPrecios();
+                });
+            }
+
             // Ejecutar un recálculo inicial para asegurar que la modal abra con los datos cargados correctamente
             self.recargarPrecios();
 

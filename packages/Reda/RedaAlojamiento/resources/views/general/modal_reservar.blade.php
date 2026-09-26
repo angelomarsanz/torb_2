@@ -5,19 +5,22 @@
  * Responsabilidades:
  * - Renderiza la modal Bootstrap donde se inyecta el formulario original del core (#booking_form).
  * - Carga e integra la librería de calendarios Flatpickr (CSS/JS) desde CDN.
- * - Aplica estilos personalizados Airbnb-style para los nuevos campos de selección de fechas (Llegada y Salida).
- * - Oculta quirúrgicamente los selectores de rango originales del core (#daterange-btn) para evitar conflictos en la modal.
+ * - Aplica estilos personalizados Airbnb-style para los nuevos campos de selección de fechas (Llegada y Salida)
+ *   y para el desglose de huéspedes (Adultos y Niños).
+ * - Oculta quirúrgicamente los selectores de rango y huéspedes originales del core para evitar conflictos en la modal.
 --}}
 
 {{-- Estilos de Flatpickr y personalización de la modal --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     /* Estilos personalizados para los nuevos inputs de llegada y salida en la modal */
-    .reda-new-daterange-container {
+    .reda-new-daterange-container,
+    .reda-new-guests-container {
         margin-top: 15px;
         margin-bottom: 15px;
     }
-    .reda-new-daterange-container label {
+    .reda-new-daterange-container label,
+    .reda-new-guests-container label {
         font-weight: 600;
         font-size: 13px;
         color: #484848;
@@ -37,8 +40,9 @@
         width: 100%;
         box-sizing: border-box;
     }
-    /* Ocultar el selector de rango original dentro de la modal */
-    #modalReservarBody #daterange-btn {
+    /* Ocultar los selectores originales del core dentro de la modal */
+    #modalReservarBody #daterange-btn,
+    #modalReservarBody #number_of_guests {
         display: none !important;
     }
 </style>

@@ -27,17 +27,52 @@
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js**
   Gestiona el sistema de reserva en modal y botones flotantes para la vista de detalle de propiedad (property.single). Implementa la lógica para ocultar el sidebar original, inyectar el botón flotante con animación y manejar la apertura del modal mediante el hash `#reservar`. Incluye una verificación proactiva de reservas activas para prevenir duplicidades. Se actualizó para desactivar el `daterangepicker` original del core, inyectar inputs de fecha adaptados y configurar una lógica robusta mediante **Flatpickr** (Llegada y Salida con rango dinámico y fecha mínima de salida), sincronizándose con los inputs ocultos del core y gatillando el recálculo automático de precios (`price_calculation`).
+  **Actualización Desglose Huéspedes (Airbnb-style):** Oculta el selector `#number_of_guests` original dentro de la modal e inyecta dos selectores dinámicos para "Adulto(s)" y "Niño(s)". Sincroniza dinámicamente las opciones para respetar la capacidad máxima (`accommodates`), actualiza `#number_of_guests` con el total y gatilla el recálculo de precios y tarifas en tiempo real.
+
+- **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/desgloseHuespedes.js**
+  Script encargado de actualizar dinámicamente y de forma no invasiva todas las vistas de la aplicación donde se muestra el conteo de huéspedes, sustituyendo etiquetas monolíticas ("X Guests") por el desglose detallado "X Adulto(s), Y Niño(s)":
+  1. `/payments/book/{id}`: Actualiza la tarjeta de resumen e inyecta los campos ocultos `adultos` y `ninos` en `#checkout-form`.
+  2. `/booking/requested`: Consulta vía AJAX a `huespedes-info` mediante el código de reserva y actualiza encabezados y resúmenes.
+  3. `/booking/{id}`: Consulta vía AJAX y actualiza el detalle para el anfitrión.
+  4. `/admin/bookings/detail/{id}`: Actualiza el renglón de noches y huéspedes en el panel de administración.
+  5. `/my-bookings`: Enriquece el indicador de camas y huéspedes en las tarjetas de listado de viajes.
+
+- **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js**
+  Script para abrir el modal con los detalles de una reserva activa del usuario. Se actualizó para mostrar en el renglón de "Huéspedes" el desglose detallado de adultos y niños recuperado desde `RedaBookingController@getBookingDetails`.
 
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js**
   Gestiona el control y selección de fechas en el formulario de búsqueda de propiedades (`#front-search-form`) en la vista principal (Home) y en el buscador de propiedades. Desactiva y neutraliza de forma segura la inicialización de `daterangepicker` del core para evitar que sobreescriba y sincronice involuntariamente las fechas de check-in y check-out con el mismo valor. Oculta el contenedor `#daterange-btn` e inyecta dinámicamente nuevos campos de fecha independientes (`#new_startDate`, `#new_endDate`) controlados por la librería **Flatpickr** con localización en español. Sincroniza en tiempo real los valores seleccionados con los campos originales (`#startDate`, `#endDate`) para que el envío del formulario procese correctamente los parámetros de búsqueda hacia `/search`.
 
-### Vistas (Usuario/Frontend)
+### Vistas (Usuario/Frontend y Admin)
 - **packages/Reda/RedaAlojamiento/resources/views/general/modal_reservar.blade.php**
-  Define la estructura HTML de la modal de reservación del plugin RedaAlojamiento. Carga e integra la librería de calendarios Flatpickr (CSS/JS) desde CDN, inyecta estilos Airbnb-style para los nuevos campos de selección de fechas (Llegada y Salida), y oculta quirúrgicamente los selectores de rango originales del core (#daterange-btn) para evitar conflictos.
+  Define la estructura HTML de la modal de reservación del plugin RedaAlojamiento. Carga e integra la librería de calendarios Flatpickr (CSS/JS) desde CDN, inyecta estilos Airbnb-style para los nuevos campos de selección de fechas (Llegada y Salida) y para el desglose de huéspedes (Adultos y Niños), y oculta quirúrgicamente los selectores de rango y de huéspedes originales del core para evitar conflictos.
+
+- **packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php**
+  Archivo maestro del pie de página del usuario. Se actualizó para inyectar en `window.RedaSessionHuespedes` los valores de sesión de adultos y niños, y cargar el script `desgloseHuespedes.min.js`.
+
+- **packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php**
+  Archivo maestro del pie de página del administrador. Se actualizó para cargar `desgloseHuespedes.min.js`.
+
+### Base de Datos y Modelos
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_09_25_000000_crear_tabla_reserva_huespedes.php**
+  Migración (no ejecutada en local) que define la tabla auxiliar `reserva_huespedes` con claves `id`, `reserva_id`, `adultos`, `ninos` y marcas de tiempo, cumpliendo con la nomenclatura en español y valores nulos por directriz REDA.
+
+- **packages/Reda/RedaAlojamiento/src/Models/Reserva/ReservaHuesped.php**
+  Modelo Eloquent para la tabla auxiliar `reserva_huespedes`. Ofrece relación con `App\Models\Bookings` y atributo calculado `total_huespedes`.
+
+### Observadores y Helpers
+- **packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php**
+  Observador registrado en `RedaAlojamientoServiceProvider` para el modelo original `App\Models\Bookings`. Al crearse una reserva (`created`), intercepta los valores de adultos y niños asegurados en sesión o en la petición y los persiste tanto en la tabla original `booking_details` (`field = 'adultos'`, `field = 'ninos'`) como en la tabla auxiliar `reserva_huespedes` (si está migrada).
+
+- **packages/Reda/RedaAlojamiento/src/Helpers/helpers.php**
+  Se incorporó la función helper `reda_obtener_desglose_huespedes($booking)`. Implementa una jerarquía de consulta: primero `reserva_huespedes`, luego `booking_details` y como fallback retrocompatible para reservas antiguas asigna el total de `guest` a Adultos y `0` a Niños. Retorna array asociativo con `adultos`, `ninos`, `total` y `texto` formateado.
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php**
-  Controlador extendido para gestionar el flujo de pagos y redirecciones de reserva. Asegura que los datos de la reserva se mantengan persistentes durante el proceso de login y valida si el usuario ya posee una reservación vigente antes de permitir el acceso al formulario de reserva, redirigiendo con alertas personalizadas si es necesario.
+  Controlador extendido para gestionar el flujo de pagos y redirecciones de reserva. Asegura que los datos de la reserva se mantengan persistentes durante el proceso de login y valida si el usuario ya posee una reservación vigente antes de permitir el acceso al formulario de reserva, redirigiendo con alertas personalizadas si es necesario. Se actualizó para asegurar en sesión `payment_adultos` y `payment_ninos`.
+
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php**
+  Controlador para consultas de reservas. Se enriqueció `getBookingDetails` para retornar `adultos`, `ninos` y `huespedes_desglose`. Se incorporó el método `getHuespedesInfo` que devuelve el desglose de huéspedes por `booking_id` o `code` para consumo de las vistas AJAX.
 
 ## Mediaciones (Disputas)
 ... (resto del archivo)

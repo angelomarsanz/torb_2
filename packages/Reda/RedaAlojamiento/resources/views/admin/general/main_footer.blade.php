@@ -12,3 +12,4 @@
 
 {{-- 3. Scripts de uso general del plugin --}}
 <script type="text/javascript" src="{{  asset('public/js/reda/admin/general/reda-admin-general-main.min.js') }}?v={{ time() }}"></script>
+<script type="text/javascript" src="{{  asset('public/js/reda/vistas/frontend/desgloseHuespedes.min.js') }}?v={{ time() }}"></script>

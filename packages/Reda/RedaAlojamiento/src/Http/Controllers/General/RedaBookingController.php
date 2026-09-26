@@ -151,6 +151,8 @@ class RedaBookingController extends Controller
                 ], 404);
             }
 
+            $desgloseHuespedes = reda_obtener_desglose_huespedes($booking);
+
             $respuesta = [
                 'success' => true,
                 'message' => __('Detalles de reserva obtenidos'),
@@ -167,6 +169,9 @@ class RedaBookingController extends Controller
                     'fecha_inicio' => date('M d, Y', strtotime($booking->start_date)),
                     'fecha_fin' => date('M d, Y', strtotime($booking->end_date)),
                     'huespedes' => $booking->guest,
+                    'adultos' => $desgloseHuespedes['adultos'],
+                    'ninos' => $desgloseHuespedes['ninos'],
+                    'huespedes_desglose' => $desgloseHuespedes['texto'],
                     'noches' => $booking->total_night,
                     'codigo' => $booking->code,
                     'simbolo_moneda' => optional($booking->currency)->symbol,
@@ -187,6 +192,65 @@ class RedaBookingController extends Controller
                 'code' => 500
             ];
             return response()->json($respuesta, $respuesta['code']);
+        }
+    }
+
+    /**
+     * Obtiene el desglose detallado de huéspedes (Adultos y Niños) para una reservación
+     * identificada por su ID o su código alfanumérico.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getHuespedesInfo(Request $request)
+    {
+        try {
+            $booking = null;
+
+            if ($request->filled('booking_id')) {
+                $booking = Bookings::with('booking_details')->find($request->booking_id);
+            } elseif ($request->filled('code')) {
+                $booking = Bookings::with('booking_details')->where('code', $request->code)->first();
+            }
+
+            if (!$booking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reserva no encontrada',
+                    'mensaje_usuario' => __('Reserva no encontrada'),
+                    'respuesta' => '',
+                    'code' => 404
+                ], 404);
+            }
+
+            $desglose = reda_obtener_desglose_huespedes($booking);
+
+            $respuesta = [
+                'success' => true,
+                'message' => __('Desglose de huéspedes obtenido con éxito'),
+                'mensaje_usuario' => '',
+                'respuesta' => [
+                    'id' => $booking->id,
+                    'codigo' => $booking->code,
+                    'total_huespedes' => $booking->guest,
+                    'adultos' => $desglose['adultos'],
+                    'ninos' => $desglose['ninos'],
+                    'texto' => $desglose['texto']
+                ],
+                'code' => 200
+            ];
+
+            return response()->json($respuesta, 200);
+
+        } catch (\Exception $e) {
+            Log::error("REDA Booking Error (getHuespedesInfo): " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Error al obtener el desglose de huéspedes'),
+                'respuesta' => '',
+                'code' => 500
+            ], 500);
         }
     }
 

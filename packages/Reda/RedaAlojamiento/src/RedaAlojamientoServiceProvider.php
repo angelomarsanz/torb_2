@@ -34,6 +34,7 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
     {
         // Registrar observadores
         \App\Models\Messages::observe(\Reda\RedaAlojamiento\Observers\MensajeObserver::class);
+        \App\Models\Bookings::observe(\Reda\RedaAlojamiento\Observers\ReservaObserver::class);
 
         $router = $this->app['router'];
 

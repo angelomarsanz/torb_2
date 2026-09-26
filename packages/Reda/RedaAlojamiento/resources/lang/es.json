@@ -1,4 +1,12 @@
 {
+    "Adulto": "Adulto",
+    "Adultos": "Adultos",
+    "Adulto(s)": "Adulto(s)",
+    "Niño": "Niño",
+    "Niños": "Niños",
+    "Niño(s)": "Niño(s)",
+    "Desglose de huéspedes obtenido con éxito": "Desglose de huéspedes obtenido con éxito",
+    "Error al obtener el desglose de huéspedes": "Error al obtener el desglose de huéspedes",
     "Llegada": "Llegada",
     "Salida": "Salida",
     "Reservar": "Reservar",

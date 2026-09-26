@@ -1,6 +1,6 @@
 {{-- Archivo maestro para inyectar recursos al final del <body> del Usuario --}}
 
-{{-- 1. Traducciones de Laravel a JS --}}
+{{-- 1. Traducciones y Variables de Sesión de Laravel a JS --}}
 <script>
     // Silenciador de errores de terceros (evita bloqueos por scripts originales)
     window.dateRangeBtn = window.dateRangeBtn || null;
@@ -12,6 +12,12 @@
     if (typeof window.RedaAlojamientoJson !== 'object' || window.RedaAlojamientoJson === null) {
         window.RedaAlojamientoJson = {};
     }
+
+    // Datos de huéspedes en sesión para la página de pago
+    window.RedaSessionHuespedes = {
+        adultos: {{ (int) (Session::get('payment_adultos') ?? (Session::get('reda_payment_data.adultos') ?? (Session::get('payment_number_of_guests') ?? 1))) }},
+        ninos: {{ (int) (Session::get('payment_ninos') ?? (Session::get('reda_payment_data.ninos') ?? 0)) }}
+    };
 </script>
 
 {{-- 2. Modales de uso general --}}
@@ -25,6 +31,7 @@
 <script src="{{ asset('public/js/reda/vistas/pago/frontend/pagos.min.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('public/js/reda/vistas/frontend/verDetalleReservaModal.min.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('public/js/reda/vistas/frontend/busquedaPropiedades.min.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('public/js/reda/vistas/frontend/desgloseHuespedes.min.js') }}?v={{ time() }}"></script>
 
 @if(Route::currentRouteName() == 'property.single')
     <script src="{{ asset('public/js/reda/vistas/frontend/propiedad_detalle.min.js') }}?v={{ time() }}"></script>

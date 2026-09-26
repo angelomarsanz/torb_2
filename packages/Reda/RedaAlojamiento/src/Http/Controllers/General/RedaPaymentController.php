@@ -40,14 +40,16 @@ class RedaPaymentController extends PaymentController
             Session::put('reda_payment_data', $datosReserva);
             Session::put('payment_property_id', $idPropiedad);
             
-            // Compatibilidad con el controlador padre
+            // Compatibilidad con el controlador padre y desglose REDA
             Session::put([
-                'payment_checkin'        => $request->checkin,
-                'payment_checkout'       => $request->checkout,
+                'payment_checkin'          => $request->checkin,
+                'payment_checkout'         => $request->checkout,
                 'payment_number_of_guests' => $request->number_of_guests,
-                'payment_booking_type'   => $request->booking_type,
-                'payment_booking_status' => $request->booking_status,
-                'payment_booking_id'     => $request->booking_id,
+                'payment_adultos'          => $request->adultos ?? $request->number_of_guests,
+                'payment_ninos'            => $request->ninos ?? 0,
+                'payment_booking_type'     => $request->booking_type,
+                'payment_booking_status'   => $request->booking_status,
+                'payment_booking_id'       => $request->booking_id,
             ]);
             Session::save();
         }

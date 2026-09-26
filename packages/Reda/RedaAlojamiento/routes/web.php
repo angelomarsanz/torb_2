@@ -165,6 +165,9 @@ Route::prefix('reda')->middleware(['web', 'locale'])->group(function () {
     // Pago / Reserva (Sobrescritura para evitar pérdida de datos pre-login)
     Route::match(['get', 'post'], 'payments/book/{id?}', [RedaPaymentController::class, 'index']);
 
+    // Ruta para consultar desglose de huéspedes (Adultos y Niños)
+    Route::get('bookings/huespedes-info', [RedaBookingController::class, 'getHuespedesInfo'])->name('reda.bookings.huespedes_info');
+
     // Ruta para redirección de reserva con login
     Route::get('auth-reserve/{slug}', [RedaPaymentController::class, 'redirectReservar'])->name('reda.auth_reserve');
 

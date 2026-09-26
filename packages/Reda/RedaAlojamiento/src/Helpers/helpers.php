@@ -84,3 +84,92 @@ if (!function_exists('reda_get_profile_src')) {
         return '/public/images/profile/' . $id . '/' . $profileImage;
     }
 }
+
+if (!function_exists('reda_obtener_desglose_huespedes')) {
+    /**
+     * Obtiene el desglose de huéspedes (Adultos y Niños) para una reservación.
+     * Consulta prioritariamente la tabla auxiliar 'reserva_huespedes', luego 'booking_details',
+     * y como fallback seguro para reservas históricas asigna todos los 'guest' a Adultos.
+     *
+     * @param \App\Models\Bookings|int|object $booking Instancia de reserva o su ID
+     * @return array ['adultos' => int, 'ninos' => int, 'total' => int, 'texto' => string]
+     */
+    function reda_obtener_desglose_huespedes($booking)
+    {
+        if (is_numeric($booking)) {
+            $booking = \App\Models\Bookings::with('booking_details')->find($booking);
+        }
+
+        if (!$booking) {
+            return [
+                'adultos' => 1,
+                'ninos' => 0,
+                'total' => 1,
+                'texto' => '1 ' . __('Adulto')
+            ];
+        }
+
+        $adultos = null;
+        $ninos = null;
+
+        // 1. Intentar consultar desde la tabla auxiliar 'reserva_huespedes' si existe
+        if (\Illuminate\Support\Facades\Schema::hasTable('reserva_huespedes') && isset($booking->id)) {
+            $registro = \Reda\RedaAlojamiento\Models\Reserva\ReservaHuesped::where('reserva_id', $booking->id)->first();
+            if ($registro) {
+                $adultos = (int) $registro->adultos;
+                $ninos = (int) $registro->ninos;
+            }
+        }
+
+        // 2. Si no se encontró en tabla auxiliar, consultar en la relación 'booking_details'
+        if ($adultos === null && isset($booking->booking_details)) {
+            $detalleAdultos = $booking->booking_details->firstWhere('field', 'adultos');
+            $detalleNinos = $booking->booking_details->firstWhere('field', 'ninos');
+
+            if ($detalleAdultos) {
+                $adultos = (int) $detalleAdultos->value;
+            }
+            if ($detalleNinos) {
+                $ninos = (int) $detalleNinos->value;
+            }
+        }
+
+        // 3. Si la relación no estaba cargada pero tenemos el id del booking
+        if ($adultos === null && isset($booking->id)) {
+            $detalleAdultos = \App\Models\BookingDetails::where('booking_id', $booking->id)->where('field', 'adultos')->first();
+            $detalleNinos = \App\Models\BookingDetails::where('booking_id', $booking->id)->where('field', 'ninos')->first();
+
+            if ($detalleAdultos) {
+                $adultos = (int) $detalleAdultos->value;
+            }
+            if ($detalleNinos) {
+                $ninos = (int) $detalleNinos->value;
+            }
+        }
+
+        // 4. Fallback retrocompatible: Si la reserva no posee desglose explícito, todos los 'guest' son Adultos
+        $totalGuest = isset($booking->guest) ? (int) $booking->guest : 1;
+        if ($adultos === null) {
+            $adultos = max(1, $totalGuest);
+            $ninos = 0;
+        }
+        if ($ninos === null) {
+            $ninos = 0;
+        }
+
+        $total = $adultos + $ninos;
+
+        // Construcción de texto descriptivo en español
+        $textoAdultos = "{$adultos} " . ($adultos == 1 ? __('Adulto') : __('Adultos'));
+        $textoNinos = $ninos > 0 ? ", {$ninos} " . ($ninos == 1 ? __('Niño') : __('Niños')) : '';
+        $textoCompleto = $textoAdultos . $textoNinos;
+
+        return [
+            'adultos' => $adultos,
+            'ninos' => $ninos,
+            'total' => $total,
+            'texto' => $textoCompleto
+        ];
+    }
+}
+

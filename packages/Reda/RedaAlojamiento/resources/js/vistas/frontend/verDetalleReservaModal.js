@@ -88,7 +88,7 @@
                                     <div class="list-group list-group-flush mb-3">
                                         <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-2 border-top-0">
                                             <span class="text-muted"><i class="fas fa-users mr-2"></i> ${json["Huéspedes"] || "Huéspedes"}</span>
-                                            <span class="font-weight-bold">${data.huespedes}</span>
+                                            <span class="font-weight-bold">${data.huespedes_desglose || data.huespedes}</span>
                                         </div>
                                         <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-2">
                                             <span class="text-muted"><i class="fas fa-moon mr-2"></i> ${json["Noches"] || "Noches"}</span>
