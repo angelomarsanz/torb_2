@@ -54,3 +54,24 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
     1.  `manual_tecnico_plugin_reda_alojamiento.md` (Descripción funcional/técnica).
     2.  `LOG_DESARROLLO_REDA.md` (Resumen del avance diario).
     3.  Este archivo (`REDA_PAUTAS_DESARROLLO.md`) si introduce una nueva regla de consistencia o precaución técnica.
+
+---
+
+## 6. Entorno de Trabajo y Prohibición de Compilación/Comandos en Cloud Shell Editor
+
+- **Cloud Shell Editor es ÚNICAMENTE repositorio de código fuente:**
+  - Solo se crean, modifican y guardan archivos fuente (`.js`, `.scss`, `.php`, `.blade.php`, `.json`, `.md`).
+  - **PROHIBIDO COMPILAR / MINIFICAR:** NUNCA ejecutar `npm run dev`, `npm run prod`, `npx mix`, `webpack` ni generar archivos `.min.js` o `.min.css` en este entorno.
+  - **PROHIBIDO EJECUTAR ARTISAN / MIGRACIONES:** NUNCA ejecutar `php artisan ...` en Cloud Shell. Las migraciones solo se redactan, no se ejecutan aquí.
+- **Servidor Vesta de Desarrollo:**
+  - Es el único lugar donde se suben los archivos fuente vía FTP (`subir.sh` o `subir_archivos_puntuales.sh`).
+  - Es el único lugar donde se compila (`./compilar.sh`) y donde se ejecutan las migraciones (`sudo -u appvac php8.2 artisan migrate`) y las pruebas funcionales.
+- **PROHIBIDO MODIFICAR O EJECUTAR LOS SCRIPTS DE SUBIDA (`subir.sh` y `subir_archivos_puntuales.sh`):**
+  - La IA NUNCA debe ejecutar `./subir.sh` ni `./subir_archivos_puntuales.sh`.
+  - La IA NUNCA debe modificar el contenido de `subir.sh` ni de `subir_archivos_puntuales.sh`. Esos scripts son de gestión exclusiva y manual del usuario.
+- **PROTOCOLO DE COMANDOS (SUGERIR Y DETENER):**
+  - La IA NUNCA debe ejecutar comandos de consola directamente (`php artisan ...`, `npm run ...`, `./compilar.sh`, etc.).
+  - Siempre debe sugerir por escrito el comando que el usuario debe ejecutar en el servidor (ej: *"Por favor ejecute en el servidor Vesta: `sudo -u appvac php8.2 artisan migrate`"* o *"Por favor ejecute `./compilar.sh`"*).
+  - La IA debe **DETENER su respuesta** en ese punto y esperar a que el usuario confirme la ejecución para reactivar y proseguir con el siguiente paso.
+
+

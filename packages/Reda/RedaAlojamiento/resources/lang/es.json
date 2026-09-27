@@ -679,5 +679,9 @@
     "Current": "Actual",
     "Upcoming": "Próximamente",
     "Completed": "Completado",
-    "All": "Todos"
+    "All": "Todos",
+    "El comprobante de pago es obligatorio.": "El comprobante de pago es obligatorio.",
+    "Por favor adjunte el comprobante de pago.": "Por favor adjunte el comprobante de pago.",
+    "El mensaje al anfitrión es obligatorio.": "El mensaje al anfitrión es obligatorio.",
+    "Por favor escriba un mensaje para el anfitrión.": "Por favor escriba un mensaje para el anfitrión."
 }

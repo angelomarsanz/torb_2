@@ -165,3 +165,9 @@
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js**
   Controlador JavaScript del flujo de verificación y corrección de correo. Intercepta el formulario `#signup_form` previa validación con jQuery Validate y `ageValidate()`, abre el modal de confirmación antes del envío y actualiza el campo si se corrige. Detecta si la sesión contiene `correo_no_verificado` para desplegar el modal en login con la petición AJAX de actualización. Detecta `correo_confirmado_exitoso` para desplegar el modal de bienvenida y enfocar el login.
 
+## Flujo de Pago y Confirmación de Reservas
+
+### JavaScript (Vistas)
+- **packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js**
+  Controlador JavaScript del lado del cliente para el formulario de confirmación de pago (`#payment-form`). Implementa validación estricta y reactiva en el cliente cuando aplica la carga de comprobante de pago (`attachment[]`) y nota/mensaje al anfitrión (`note`), como ocurre en pasarelas de Transferencia Bancaria Directa (`DirectBankTransfer`). Utiliza intercepción en fase de captura del DOM (Capture Phase) en el botón de confirmación (`#payment-form-submit`) y en el evento `submit` del formulario para adelantarse a scripts de terceros que deshabilitan el botón de manera prematura. Si falta alguno de los campos obligatorios, cancela la propagación del evento, previene el envío, restaura el estado interactivo del botón y el spinner, y muestra mensajes de error en español estilizados en los contenedores correspondientes (`span.text-danger`), evitando la recarga del navegador y garantizando que el usuario no pierda el archivo del comprobante adjunto. Incluye limpiadores de errores en tiempo real en los eventos `change` e `input`, enfoca y desplaza la vista hacia el primer campo inválido, y activa la animación de espera ("Su reserva está siendo procesada") únicamente cuando el formulario es 100% válido.
+

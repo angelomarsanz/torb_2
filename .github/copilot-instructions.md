@@ -147,7 +147,7 @@ Siempre que se haga una petición ajax se debe mostrar una animación "Espera" h
 Esas reglas de las peticiones ajax son solo para los archivos nuevos que se creen en el plugin packages/Reda/RedaAlojamiento. Si los archivos originales del proyecto no cumplen con esas reglas se dejan como están ya que ellos fueron creados de acuerdo a las directrices del autor del proyecto original
 
 ## Herramienta de desarrollo
-webpack.mix.js
+- webpack.mix.js (La configuración de Laravel Mix y los scripts se definen aquí, pero se compilan EXCLUSIVAMENTE en el servidor Vesta de desarrollo mediante `./compilar.sh`. NUNCA compilar en el entorno local de Cloud Shell Editor).
 
 ## PHP 
 - Para la conexión a base de datos, usa la librería `PDO`. Nunca uses funciones antiguas como `mysql_*`.
@@ -228,12 +228,24 @@ Y en cada vista .blade se colocó este script en la sección 'validation_script'
 Cuando se modifique un código existente y se encuentre con una traducción que está en packages/Reda/RedaAlojamiento/resources/lang/es/messages.php se debe crear esas traducciones en es.json y ya no usar la de message.php, así poco a poco se van a ir sustituyendo las traducciones de message.php por las de es.json.
 
 
-## PC LOCAL, servidor del IDE Cloud Shell Editor y servidor VESTA DE DESARROLLO
-- Este proyecto en mi computadora personal es solo para mantener los archivos fuentes, no para hacer pruebas. Las pruebas se hacen en un servidor Vesta creado especialmente para desarrollo.
-- En el IDE Cloud Shell Editor no se ejecuta este proyecto para realizar pruebas, solo es como un lugar donde se tienen los archivos fuentes y se codifica, más no se hace pruebas, así que cuando la IA este revisando un problema en uno o más archivos y quiera por ejemplo ejecutar php artisan... o algún comando de Linux, no creo que de los resultados esperados. Donde se pueden ejecutar esos comandos es el servidor Vesta que es donde se ejecuta y hacen las pruebas de funcionamiento de la aplicación y las IA no tienen acceso al servidor Vesta quien pudiera ejecutar esos comandos es que personalmente acceda vía remota al servidor Vesta y ejecute esos comandos usando estos prefijos:
-sudo -u appvac
-Si requiere php
-sudo -u appvac php8.2
+## Entorno de Trabajo: PC Local, IDE Cloud Shell Editor y Servidor VESTA DE DESARROLLO (REGLA CRÍTICA MANDATORIA)
+- **El entorno de Cloud Shell Editor es EXCLUSIVAMENTE un repositorio para archivos fuente:**
+  - Este entorno se utiliza únicamente para crear, modificar, inspeccionar y mantener el **código fuente** (`.php`, `.js`, `.scss`, `.blade.php`, `.json`, `.md`).
+  - **ESTRICTAMENTE PROHIBIDO COMPILAR O MINIFICAR EN CLOUD SHELL:** La IA NUNCA debe ejecutar comandos de compilación como `npm run dev`, `npm run prod`, `npx mix`, `webpack`, `compilar.sh` ni generar o modificar manualmente archivos minificados (`.min.js`, `.min.css`). Los archivos minificados no se generan ni se guardan aquí.
+  - **ESTRICTAMENTE PROHIBIDO EJECUTAR COMANDOS ARTISAN O DE BASE DE DATOS EN CLOUD SHELL:** La IA NUNCA debe ejecutar `php artisan ...` (como `php artisan migrate`, seeders, optimizaciones, tests, o levantamiento de servidores). En Cloud Shell las migraciones solo se redactan, nunca se ejecutan.
+- **El Servidor Vesta de Desarrollo es el ÚNICO lugar para compilar, migrar y realizar pruebas:**
+  - Los archivos creados o modificados en Cloud Shell se suben vía FTP al servidor Vesta mediante los scripts `subir.sh` o `subir_archivos_puntuales.sh`.
+  - En el servidor Vesta es donde se compilan y minifican los assets ejecutando `./compilar.sh` (o `sudo -u appvac npm run prod`).
+  - En el servidor Vesta es donde se ejecutan las migraciones y comandos artisan:
+    `sudo -u appvac php8.2 artisan migrate`
+  - La IA no tiene acceso al servidor Vesta. Es el usuario quien accede remotamente a Vesta para subir archivos, compilar, migrar y realizar las pruebas de funcionamiento.
+- **ESTRICTAMENTE PROHIBIDO MODIFICAR O EJECUTAR LOS SCRIPTS DE SUBIDA:**
+  - La IA NUNCA debe ejecutar `./subir.sh` ni `./subir_archivos_puntuales.sh`.
+  - La IA NUNCA debe modificar el archivo `subir.sh` ni el archivo `subir_archivos_puntuales.sh`. Estos archivos son de gestión exclusiva y manual del usuario.
+- **PROTOCOLO MANDATORIO PARA EJECUCIÓN DE COMANDOS (SUGERIR Y DETENER):**
+  - La IA NUNCA debe ejecutar directamente comandos como `php artisan ...`, `npm run ...`, `./compilar.sh`, `composer ...` ni comandos de sistema en el servidor.
+  - La IA SIEMPRE debe **sugerir al usuario por escrito** el comando exacto que debe ejecutar (por ejemplo: *"Por favor, ejecute en el servidor Vesta: `sudo -u appvac php8.2 artisan migrate`"* o *"Por favor ejecute `./compilar.sh`"*).
+  - La IA debe **DETENER su respuesta** en ese punto exacto, indicando al usuario que ejecute el comando y esperando a que el usuario lo realice y confirme la acción para poder reactivar y continuar con el siguiente paso del proceso.
 
 ## Escribir en el log de Laravel
 Hacerlo de esta manera:
@@ -294,8 +306,14 @@ Para los formatos numéricos en php se usará packages/Reda/RedaAlojamiento/src/
 ## Animación de espera en el frontend
 Se debe usar packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js para la animación de espera en el frontend ya sea en el dashboard del usuario o en cualquier vista en el frontend a la que tenga el usuario común indistintamente si ha hecho login o no
 
-## Subida de archivos al servidor Vesta de Desarrollo
-Los archivos se suben vía FTP al servidor Vesta de Desarrollo para sus respectivas pruebas. Para subir los archivos se usa el script: subir.sh y subir_archivos_puntuales.sh. No se deben modificar esos archivos. Esos archivos solo los puedo modificar yo de mnera manual cuando corresponda
+## Subida de archivos al servidor Vesta de Desarrollo y Manejo de Scripts (REGLA MANDATORIA)
+- Los archivos se suben vía FTP al servidor Vesta de Desarrollo para sus respectivas pruebas mediante los scripts `subir.sh` y `subir_archivos_puntuales.sh`.
+- **PROHIBIDO MODIFICAR Y PROHIBIDO EJECUTAR ESTOS SCRIPTS:** La IA NUNCA debe ejecutar `./subir.sh` ni `./subir_archivos_puntuales.sh`. Tampoco debe modificar el archivo `subir.sh` ni el archivo `subir_archivos_puntuales.sh`. Esos archivos solo los puede modificar y ejecutar el usuario de manera manual cuando corresponda.
+- **SUGERIR COMANDOS Y PAUSAR LA RESPUESTA:** Cuando se requiera ejecutar algún comando (`php artisan ...`, `npm run ...`, `./compilar.sh`, migraciones, etc.):
+  - La IA NUNCA debe ejecutarlos directamente.
+  - La IA debe escribir en la respuesta la sugerencia explícita para que el usuario lo ejecute (por ejemplo: "Por favor ejecute en el servidor Vesta: `sudo -u appvac php8.2 artisan migrate`" o "Por favor ejecute `./compilar.sh`").
+  - La IA debe **DETENER su respuesta** en ese punto y esperar a que el usuario confirme la ejecución antes de continuar con el siguiente paso.
+
 ## Documentación archivos del plugin
 Todos los archivos que se creen dentro del plugin packages/Reda/RedaAlojamiento deben documentarse al inicio del archivo. Crear un resumen de lo que hace el archivo. Así también cada función que contenga ese archivo debe documentarse
 Además de documentar individualmente cada archivo, cada vez que se cree un archivo en el plugin packages/Reda/RedaAlojamiento se debe agregar un resumen de la documentación de ese archivo en manual_tecnico_plugin_reda_alojamiento.md : Se coloca la ruta y el nombre del archivo como un título y luego dejando una sangría se coloca el resumen.
