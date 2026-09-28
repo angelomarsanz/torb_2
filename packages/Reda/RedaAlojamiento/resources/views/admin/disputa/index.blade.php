@@ -199,10 +199,18 @@
         window.RedaTrans = @json(__('reda-alojamiento::messages'));
         @php
             $adminId = Auth::guard('admin')->id();
-            $isFullAdmin = \DB::table('role_admin')
-                ->where('admin_id', $adminId)
-                ->where('role_id', 1)
-                ->exists();
+            $isFullAdmin = false;
+            if ($adminId) {
+                $isFullAdmin = \DB::table('role_admin')
+                    ->leftJoin('roles', 'role_admin.role_id', '=', 'roles.id')
+                    ->where('role_admin.admin_id', $adminId)
+                    ->where(function ($q) {
+                        $q->whereIn('role_admin.role_id', [1, 2])
+                          ->orWhereIn(\DB::raw('LOWER(roles.name)'), ['admin', 'atención al usuario', 'atencion al usuario'])
+                          ->orWhereIn(\DB::raw('LOWER(roles.display_name)'), ['admin', 'atención al usuario', 'atencion al usuario']);
+                    })
+                    ->exists();
+            }
         @endphp
         window.RedaAdminAccess = {
             isFullAdmin: @json($isFullAdmin)

@@ -171,3 +171,18 @@
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js**
   Controlador JavaScript del lado del cliente para el formulario de confirmación de pago (`#payment-form`). Implementa validación estricta y reactiva en el cliente cuando aplica la carga de comprobante de pago (`attachment[]`) y nota/mensaje al anfitrión (`note`), como ocurre en pasarelas de Transferencia Bancaria Directa (`DirectBankTransfer`). Utiliza intercepción en fase de captura del DOM (Capture Phase) en el botón de confirmación (`#payment-form-submit`) y en el evento `submit` del formulario para adelantarse a scripts de terceros que deshabilitan el botón de manera prematura. Si falta alguno de los campos obligatorios, cancela la propagación del evento, previene el envío, restaura el estado interactivo del botón y el spinner, y muestra mensajes de error en español estilizados en los contenedores correspondientes (`span.text-danger`), evitando la recarga del navegador y garantizando que el usuario no pierda el archivo del comprobante adjunto. Incluye limpiadores de errores en tiempo real en los eventos `change` e `input`, enfoca y desplaza la vista hacia el primer campo inválido, y activa la animación de espera ("Su reserva está siendo procesada") únicamente cuando el formulario es 100% válido.
 
+## Administración y Menú Lateral (Backend)
+
+### JavaScript (Administración General)
+- **packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js**
+  Orquesta la inyección reactiva y no invasiva de las opciones del plugin REDA en el menú lateral de AdminLTE: "Negocios", "Mediaciones" y "Soporte Técnico". Incorpora lógica adaptativa para la inyección de "Mediaciones": si el usuario conectado no posee el elemento `Bookings` en su menú lateral (como ocurre con el Rol 2 "Atención al usuario"), el script busca puntos de anclaje jerárquicos alternativos (`#menu-negocios`, `Properties`, `Customers`, `Dashboard` o el final del contenedor `.sidebar-menu`). Verifica que el usuario tenga acceso permitido mediante `window.RedaAdminUser.tieneAccesoMediaciones` (roles 1 y 2), resalta la opción activa al navegar en `/admin/reda/disputas`, mantiene la animación de espera al interactuar y actualiza el contador dinámico de mediaciones activas vía AJAX.
+
+### Vistas (Administración General)
+- **packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php**
+  Archivo maestro para la inyección de modales y scripts globales en el panel administrativo. Expone hacia el contexto global de JavaScript el objeto `window.RedaAdminUser` con el ID del administrador, su `roleId`, su nombre de rol y la bandera booleana `tieneAccesoMediaciones` (activa para los roles 1 "Admin" y 2 "Atención al usuario"), permitiendo que los scripts frontend conozcan el perfil del usuario autenticado sin llamadas adicionales.
+
+### Controladores (Administración)
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php**
+  Controlador para el panel de mediaciones en el backend. Se actualizó la verificación de privilegios directos en base de datos (`role_admin`) para que tanto el Rol 1 (Admin) como el Rol 2 (Atención al usuario) sean reconocidos con acceso completo a las mediaciones. Permite listar todos los casos paginados (`obtenerDisputasPaginadas`), obtener el conteo de mediaciones activas (`obtenerConteoDisputasActivas`) y consultar el modal con el detalle completo del caso (`getDetailModal`) sin restricciones indebidas ni respuestas 403 Forbidden.
+
+

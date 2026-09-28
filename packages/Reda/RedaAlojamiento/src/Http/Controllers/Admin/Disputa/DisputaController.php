@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Controlador de Mediaciones (Disputas) para el Panel Administrativo.
+ * 
+ * Gestiona el listado, filtrado, conteo y detalle de casos de mediación entre
+ * turistas y anfitriones en el backend de Torbian. Permite acceso y gestión tanto
+ * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario).
+ * 
+ * @package Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa
+ */
+
 namespace Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa;
 
 use App\Http\Controllers\Controller;
@@ -20,7 +30,32 @@ class DisputaController extends Controller
     }
 
     /**
+     * Verifica si el administrador actual tiene permisos completos para gestionar mediaciones.
+     * Tienen acceso tanto el Rol 1 (Admin) como el Rol 2 (Atención al usuario).
+     *
+     * @param int|null $adminId
+     * @return bool
+     */
+    private function tieneAccesoCompletoMediaciones($adminId): bool
+    {
+        if (!$adminId) {
+            return false;
+        }
+
+        return \DB::table('role_admin')
+            ->leftJoin('roles', 'role_admin.role_id', '=', 'roles.id')
+            ->where('role_admin.admin_id', $adminId)
+            ->where(function ($q) {
+                $q->whereIn('role_admin.role_id', [1, 2])
+                  ->orWhereIn(\DB::raw('LOWER(roles.name)'), ['admin', 'atención al usuario', 'atencion al usuario'])
+                  ->orWhereIn(\DB::raw('LOWER(roles.display_name)'), ['admin', 'atención al usuario', 'atencion al usuario']);
+            })
+            ->exists();
+    }
+
+    /**
      * Obtiene el listado de mediaciones paginado para el administrador.
+     * Permite visualización completa a roles 1 (Admin) y 2 (Atención al usuario).
      */
     public function obtenerDisputasPaginadas(Request $request)
     {
@@ -29,14 +64,8 @@ class DisputaController extends Controller
         // Obtenemos el ID del administrador activo
         $adminId = auth()->guard('admin')->id();
         
-        // Verificación directa en BD para evitar problemas de caché o modelos sin PK
-        $isFullAdmin = false;
-        if ($adminId) {
-            $isFullAdmin = \DB::table('role_admin')
-                ->where('admin_id', $adminId)
-                ->where('role_id', 1)
-                ->exists();
-        }
+        // Verificación directa en BD: Rol 1 (Admin) y Rol 2 (Atención al usuario) tienen acceso completo
+        $isFullAdmin = $this->tieneAccesoCompletoMediaciones($adminId);
 
         $consulta = Disputa::query();
 
@@ -205,20 +234,15 @@ class DisputaController extends Controller
     /**
      * Obtiene el conteo de mediaciones activas para el administrador.
      * Se consideran activas aquellas cuyo estado es diferente a 'Cerrado' o 'Cerrada'.
+     * Permite conteo completo a roles 1 (Admin) y 2 (Atención al usuario).
      */
     public function obtenerConteoDisputasActivas()
     {
         try {
             $adminId = auth()->guard('admin')->id();
             
-            // Verificación directa en BD para evitar problemas de caché o modelos sin PK
-            $isFullAdmin = false;
-            if ($adminId) {
-                $isFullAdmin = \DB::table('role_admin')
-                    ->where('admin_id', $adminId)
-                    ->where('role_id', 1)
-                    ->exists();
-            }
+            // Verificación directa en BD: Rol 1 (Admin) y Rol 2 (Atención al usuario) tienen acceso completo
+            $isFullAdmin = $this->tieneAccesoCompletoMediaciones($adminId);
 
             $query = Disputa::query();
 
@@ -259,17 +283,12 @@ class DisputaController extends Controller
 
     /**
      * Retorna el HTML del modal de detalle de mediación para el administrador.
+     * Permite acceso tanto a rol 1 (Admin) como a rol 2 (Atención al usuario).
      */
     public function getDetailModal($id)
     {
         $adminId = auth()->guard('admin')->id();
-        $isFullAdmin = false;
-        if ($adminId) {
-            $isFullAdmin = \DB::table('role_admin')
-                ->where('admin_id', $adminId)
-                ->where('role_id', 1)
-                ->exists();
-        }
+        $isFullAdmin = $this->tieneAccesoCompletoMediaciones($adminId);
 
         $disputa = Disputa::findOrFail($id);
 
