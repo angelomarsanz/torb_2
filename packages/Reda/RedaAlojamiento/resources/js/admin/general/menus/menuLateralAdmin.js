@@ -128,6 +128,10 @@ export const menuLateralAdmin = () =>
                         // Animación de espera al hacer clic en Mediaciones
                         $(document).on('click', '.btn-menu-mediacion', function(e) {
                             if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
+                                if (window.location.href.includes('admin/reda/disputas')) {
+                                    e.preventDefault();
+                                    return;
+                                }
                                 if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
                                     window.RedaNotificaciones.esperar();
                                 }

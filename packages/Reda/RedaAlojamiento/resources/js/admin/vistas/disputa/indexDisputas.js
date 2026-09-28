@@ -1072,8 +1072,21 @@ import {
      * @param {number} pagina - Página a cargar.
      */
     const cargarMediaciones = async (estatus, pagina = 1) => {
-        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
-            window.RedaNotificaciones.esperar();
+        const trans = window.RedaAlojamientoJson || {};
+
+        // 1. Mostrar spinner inline en el contenedor principal para carga fluida
+        $('#disputas-list-container').html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">${trans["Cargando..."] || "Cargando..."}</span>
+                </div>
+                <p class="text-muted mt-2">${trans["Cargando mediaciones..."] || "Cargando mediaciones..."}</p>
+            </div>
+        `);
+
+        // 2. Ocultar inmediatamente cualquier modal de espera residual del clic del menú lateral
+        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+            window.RedaNotificaciones.ocultar();
         }
 
         try {
@@ -1091,14 +1104,12 @@ import {
                 if (mediacionesCargadas.length > 0) {
                     seleccionarMediacion(mediacionesCargadas[0].id, false);
                 } else {
-                    const trans = window.RedaAlojamientoJson || {};
                     $('#disputas-cabecera-lateral').addClass('d-none');
                     $('#reda-timeline-container').html(`<p class="text-center text-muted small w-100">${trans["Selecciona una mediación para ver su progreso."] || "Selecciona una mediación para ver su progreso."}</p>`);
                     $('#disputas-reservacion-sidebar').addClass('d-none');
                     $('#disputas-info-extra-content').html(`<p class="text-14 text-muted">${trans["Aquí aparecerá información relevante sobre el estado general de tus mediaciones."] || "Aquí aparecerá información relevante sobre el estado general de tus mediaciones."}</p>`);
                 }
             } else {
-                const trans = window.RedaAlojamientoJson || {};
                 $('#disputas-list-container').html(`
                     <div class="alert alert-danger mt-4">
                         ${data.mensaje_usuario}
@@ -1107,6 +1118,11 @@ import {
             }
         } catch (error) {
             console.error('Error al cargar mediaciones:', error);
+            $('#disputas-list-container').html(`
+                <div class="alert alert-danger mt-4">
+                    ${trans["Error al cargar las mediaciones. Intente de nuevo."] || "Error al cargar las mediaciones. Intente de nuevo."}
+                </div>
+            `);
         } finally {
             if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
                 window.RedaNotificaciones.ocultar();

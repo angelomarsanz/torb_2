@@ -26,12 +26,20 @@ window.RedaNotificaciones = {
             $footer.addClass('d-none');
             $modal.find('.btn-close').addClass('d-none');
 
-            // Evitar que se cierre al hacer clic fuera o presionar ESC
-            // En Bootstrap 5 con jQuery bridge:
-            $modal.modal({
-                backdrop: 'static',
-                keyboard: false
-            }).modal('show');
+            // Apertura con Bootstrap 5 nativo si existe, o jQuery como fallback
+            const modalEl = document.getElementById('modal-notificacion');
+            if (modalEl && window.bootstrap && bootstrap.Modal) {
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                bsModal.show();
+            } else if (typeof $modal.modal === 'function') {
+                $modal.modal({
+                    backdrop: 'static',
+                    keyboard: false
+                }).modal('show');
+            }
         })(jQuery);
     },
 
@@ -80,20 +88,66 @@ window.RedaNotificaciones = {
             });
 
             // Si ya estaba abierto, solo actualizamos contenido, si no, lo mostramos
-            $modal.modal('show');
+            const modalEl = document.getElementById('modal-notificacion');
+            if (modalEl && window.bootstrap && bootstrap.Modal) {
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                bsModal.show();
+            } else if (typeof $modal.modal === 'function') {
+                $modal.modal('show');
+            }
         })(jQuery);
     },
 
     /**
      * Oculta el modal de notificación si está abierto.
+     * Incorpora soporte nativo Bootstrap 5 y doble temporizador de refuerzo contra bloqueos por transición.
      */
     ocultar: function() {
         (function( $ ) {
             "use strict";
             const $modal = $('#modal-notificacion');
-            if ($modal.length) {
+            if (!$modal.length) return;
+
+            const modalEl = document.getElementById('modal-notificacion');
+            if (modalEl && window.bootstrap && bootstrap.Modal) {
+                const bsModal = bootstrap.Modal.getInstance(modalEl);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            }
+            if (typeof $modal.modal === 'function') {
                 $modal.modal('hide');
             }
+
+            // Refuerzo definitivo para Bootstrap 5:
+            // Si Bootstrap estaba en medio de una transición (_isTransitioning),
+            // el comando hide() es ignorado. Por ello forzamos la limpieza tras un breve instante.
+            const forzarLimpieza = () => {
+                if ($modal.hasClass('show') || ($('.modal-backdrop').length > 0 && $('.modal.show').not('#modal-notificacion').length === 0)) {
+                    $modal.removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
+                    
+                    if (modalEl && window.bootstrap && bootstrap.Modal) {
+                        const bsModal = bootstrap.Modal.getInstance(modalEl);
+                        if (bsModal) {
+                            bsModal._isShown = false;
+                            bsModal._isTransitioning = false;
+                        }
+                    }
+                    if ($modal.data('bs.modal')) {
+                        $modal.data('bs.modal')._isShown = false;
+                        $modal.data('bs.modal')._isTransitioning = false;
+                    }
+
+                    // Limpiar backdrop solo si no hay otro modal abierto
+                    if ($('.modal.show').not('#modal-notificacion').length === 0) {
+                        $('.modal-backdrop').remove();
+                        $('body').removeClass('modal-open').css('padding-right', '').css('overflow', '');
+                    }
+                }
+            };
+
+            setTimeout(forzarLimpieza, 150);
+            setTimeout(forzarLimpieza, 350);
         })(jQuery);
     }
 };
