@@ -20,6 +20,9 @@ import {
     let mediacionesCargadas = [];
     let mediacionSeleccionadaId = null;
     let observadorEnfoque = null;
+    let agentesDisponibles = [];
+    let rolAdminActual = window.RedaAdminAccess?.roleId ?? window.RedaAdminUser?.roleId ?? null;
+    let adminIdActual = window.RedaAdminAccess?.adminId ?? window.RedaAdminUser?.id ?? null;
 
     // Estado para el visor de medios
     let currentZoom = 1;
@@ -260,26 +263,179 @@ import {
     };
 
     /**
+     * Petición AJAX para asignar un agente a una mediación o tomarla (Admin / Agente).
+     * @param {number|string} disputaId - ID de la mediación.
+     * @param {number|string|null} agenteId - ID del agente seleccionado (opcional si es rol 2).
+     * @returns {Promise} Promesa con la respuesta del servidor.
+     */
+    const asignarAgenteDisputa = (disputaId, agenteId = null) => {
+        return new Promise((resolve) => {
+            const postData = {
+                disputa_id: disputaId,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            };
+            if (agenteId !== null && agenteId !== undefined) {
+                postData.agente_id = agenteId;
+            }
+
+            $.ajax({
+                url: APP_URL + '/admin/reda/disputas/asignar-agente',
+                type: 'POST',
+                data: postData,
+                success: (data) => resolve(data),
+                error: (x) => {
+                    let respuestaServidor = {};
+                    try {
+                        respuestaServidor = JSON.parse(x.responseText);
+                    } catch (e) {
+                        respuestaServidor = {};
+                    }
+
+                    const mensajeErrorBase = window.RedaAlojamientoJson["Error en el servidor de Torbian"] || 'Error en el servidor de Torbian';
+                    const detalleError = respuestaServidor.message ? `<br />${respuestaServidor.message}` : '';
+
+                    let respuesta = {
+                        'success': false,
+                        'message': window.RedaAlojamientoJson["Error al asignar la mediación."] || 'Error al asignar la mediación.',
+                        'mensaje_usuario': respuestaServidor.mensaje_usuario ?? `${mensajeErrorBase}.${detalleError}`,
+                        'respuesta': respuestaServidor.respuesta || '',
+                        'code': x.status !== 0 ? x.status : 504,
+                    };
+                    resolve(respuesta);
+                }
+            });
+        });
+    };
+
+    /**
+     * Genera el bloque visual de agente asignado con foto y nombre.
+     * @param {object} item - Objeto de la mediación.
+     * @param {string} agenteNombre - Nombre del agente.
+     * @param {string} agenteFotoUrl - Ruta de la foto del agente.
+     * @returns {string} HTML del agente asignado.
+     */
+    const generarBloqueAgenteAsignadoHtml = (item, agenteNombre, agenteFotoUrl) => {
+        const trans = window.RedaAlojamientoJson || {};
+        const fotoFinal = getFullUrl(agenteFotoUrl);
+        const puedeEditar = (rolAdminActual == 1);
+        const disputaId = item ? item.id : '';
+
+        return `
+            <div class="d-flex align-items-center mb-3 bloque-agente-${disputaId}">
+                <div class="symbol symbol-30px symbol-circle me-2 position-relative">
+                    <img src="${fotoFinal}" alt="Agente" class="rounded-circle">
+                    <div class="position-absolute reda-status-badge-pos">
+                        <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm reda-status-badge-icon">
+                            <i class="fas fa-user-tie f-10 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column overflow-hidden flex-grow-1">
+                    <span class="text-muted text-10 leading-tight">${trans["Agente:"] || "Agente:"}</span>
+                    <span class="text-dark fw-600 text-12 text-truncate" title="${agenteNombre}">${agenteNombre}</span>
+                </div>
+                ${puedeEditar ? `
+                    <button type="button" class="btn btn-link btn-sm text-muted p-0 ms-1 btn-cambiar-agente-asignado"
+                            data-disputa-id="${disputaId}"
+                            title="${trans["Cambiar agente"] || "Cambiar agente"}">
+                        <i class="fas fa-edit text-12"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+    };
+
+    /**
+     * Genera la sección del agente: selector para Rol 1, switch para Rol 2,
+     * o la foto y nombre si ya está asignado.
+     * @param {object} item - Datos de la mediación.
+     * @returns {string} HTML de la sección de agente.
+     */
+    const generarSeccionAgenteHtml = (item) => {
+        const trans = window.RedaAlojamientoJson || {};
+
+        // Caso 1: La mediación YA tiene agente asignado -> Mostrar foto de perfil y nombre
+        if (item.id_usuario_agente_asignado && item.agente) {
+            return generarBloqueAgenteAsignadoHtml(item, item.agente.nombre, item.agente.foto);
+        }
+
+        // Caso 2: El usuario admin logueado tiene Rol 1 (Admin) -> Input select con los agentes
+        if (rolAdminActual == 1) {
+            let opcionesAgentes = `<option value="">-- ${trans["Seleccionar agente..."] || "Seleccionar agente..."} --</option>`;
+            if (Array.isArray(agentesDisponibles) && agentesDisponibles.length > 0) {
+                agentesDisponibles.forEach(ag => {
+                    const rolEtiqueta = ag.rol_nombre ? ` (${ag.rol_nombre})` : '';
+                    opcionesAgentes += `<option value="${ag.id}">${ag.nombre}${rolEtiqueta}</option>`;
+                });
+            }
+
+            return `
+                <div class="mb-3 bloque-agente-${item.id}">
+                    <div class="d-flex align-items-center mb-1">
+                        <span class="text-muted text-10 leading-tight">${trans["Asignar agente:"] || "Asignar agente:"}</span>
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select form-select-sm select-asignar-agente-disputa text-11" data-disputa-id="${item.id}">
+                            ${opcionesAgentes}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Caso 3: El usuario admin logueado tiene Rol 2 (Atención al usuario) -> Suiche "Tomar mediación"
+        if (rolAdminActual == 2) {
+            const switchId = `switch_tomar_${item.id}_${Math.random().toString(36).substr(2, 5)}`;
+            return `
+                <div class="mb-3 bloque-agente-${item.id}">
+                    <div class="d-flex align-items-center">
+                        <div class="form-check form-switch m-0 d-flex align-items-center">
+                            <input class="form-check-input switch-tomar-mediacion cursor-pointer"
+                                   type="checkbox"
+                                   role="switch"
+                                   id="${switchId}"
+                                   data-disputa-id="${item.id}"
+                                   style="width: 2.2em; height: 1.2em;">
+                            <label class="form-check-label ms-2 text-12 fw-600 text-success cursor-pointer" for="${switchId}">
+                                ${trans["Tomar mediación"] || "Tomar mediación"}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Caso 4: Fallback informativo si no se detecta rol 1 ni 2
+        const agenteFoto = `${APP_URL}/public/img/unnamed.png`;
+        const agenteNombre = trans["Pendiente de asignación"] || "Pendiente de asignación";
+        return `
+            <div class="d-flex align-items-center mb-3 bloque-agente-${item.id}">
+                <div class="symbol symbol-30px symbol-circle me-2 position-relative">
+                    <img src="${agenteFoto}" alt="Agente" class="rounded-circle">
+                    <div class="position-absolute reda-status-badge-pos">
+                        <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm reda-status-badge-icon">
+                            <i class="fas fa-user-clock f-10 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column overflow-hidden">
+                    <span class="text-muted text-10 leading-tight">${trans["Agente:"] || "Agente:"}</span>
+                    <span class="text-muted italic small leading-tight text-12 text-truncate" title="${agenteNombre}">${agenteNombre}</span>
+                </div>
+            </div>
+        `;
+    };
+
+    /**
      * Renderiza las fotos y nombres de los involucrados en la mediación (Turista, Anfitrión, Agente).
      * @param {object} item - Datos de la mediación.
      * @returns {string} HTML del bloque de personas.
      */
     const generarBloquePersonasHtml = (item) => {
         const trans = window.RedaAlojamientoJson || {};
-        
-        const getFullUrl = (path) => {
-            if (!path) return `${APP_URL}/public/img/unnamed.png`;
-            if (path.startsWith('http')) return path;
-            return `${APP_URL}/${path.startsWith('/') ? path.substring(1) : path}`;
-        };
 
-        const agenteFoto = item.agente ? getFullUrl(item.agente.foto) : `${APP_URL}/public/img/unnamed.png`;
         const anfitrionFoto = getFullUrl(item.anfitrion_foto);
         const turistaFoto = getFullUrl(item.turista_foto);
-
-        const agenteNombre = item.agente ? item.agente.nombre : trans["Pendiente de asignación"] || "Pendiente de asignación";
-        const agenteIcono = item.agente ? 'fas fa-user-tie' : 'fas fa-user-clock';
-        const agenteClaseNombre = item.agente ? 'text-dark' : 'text-muted italic small leading-tight';
 
         // Identificación del demandante basada en ID y Rol inicial
         const demandanteLabel = ` - ${trans["demandante"] || "demandante"}`;
@@ -315,27 +471,13 @@ import {
                         <span class="text-dark text-12 text-truncate" title="${item.turista_nombre}">${item.turista_nombre}</span>
                     </div>
                 </div>
-                <div class="d-flex align-items-center mb-3">
-                    <div class="symbol symbol-30px symbol-circle me-2 position-relative">
-                        <img src="${agenteFoto}" alt="Agente" class="rounded-circle">
-                        <div class="position-absolute reda-status-badge-pos">
-                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm reda-status-badge-icon">
-                                <i class="${agenteIcono} f-10 text-success"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex flex-column overflow-hidden">
-                        <span class="text-muted text-10 leading-tight">${trans["Agente:"] || "Agente:"}</span>
-                        <span class="${agenteClaseNombre} text-12 text-truncate" title="${agenteNombre}">${agenteNombre}</span>
-                    </div>
-                </div>
+                ${generarSeccionAgenteHtml(item)}
                 <div class="mt-2 border-top pt-2">
                     <button class="btn btn-outline-success btn-sm w-100 border-0 text-12 btn-ver-mensajes-mediacion"
                             data-booking-id="${item.booking_id}"
                             data-id="${item.id}">
                         <i class="far fa-comments me-1"></i> ${trans["Ver conversación"] || "Ver conversación"}(${item.conteo_mensajes_nuevos ?? 0})
                     </button>
-                </div>
                 </div>
             </div>
         `;
@@ -1093,6 +1235,16 @@ import {
             const data = await obtenerMediacionesPaginadas(estatus, pagina);
 
             if (data.success) {
+                if (data.respuesta.agentes && Array.isArray(data.respuesta.agentes)) {
+                    agentesDisponibles = data.respuesta.agentes;
+                }
+                if (data.respuesta.rol_admin !== undefined && data.respuesta.rol_admin !== null) {
+                    rolAdminActual = Number(data.respuesta.rol_admin);
+                }
+                if (data.respuesta.admin_id !== undefined && data.respuesta.admin_id !== null) {
+                    adminIdActual = Number(data.respuesta.admin_id);
+                }
+
                 mediacionSeleccionadaId = null; // Reset selection state for new results
                 mediacionesCargadas = data.respuesta.data;
                 renderizarLista(mediacionesCargadas);
@@ -1204,10 +1356,16 @@ import {
 
             // Manejo de clics en los items de la lista para seleccionar
             $(document).on('click', '.card-mediacion', function(e) {
-                // Si el clic fue en un elemento expandible o botón o trigger de visor, no procesamos la selección
+                // Si el clic fue en un elemento expandible, botón, trigger de visor o controles de asignación de agente, no procesamos la selección
                 if ($(e.target).closest('.reda-expandible').length || 
                     $(e.target).closest('.btn-ver-mensajes-mediacion').length ||
-                    $(e.target).closest('.reda-viewer-trigger').length) {
+                    $(e.target).closest('.reda-viewer-trigger').length ||
+                    $(e.target).closest('.select-asignar-agente-disputa').length ||
+                    $(e.target).closest('.switch-tomar-mediacion').length ||
+                    $(e.target).closest('.btn-cambiar-agente-asignado').length ||
+                    $(e.target).closest('.btn-cancelar-cambio-agente').length ||
+                    $(e.target).closest('.form-switch').length ||
+                    $(e.target).closest('.form-check-label').length) {
                     return;
                 }
                 const id = $(this).attr('data-id');
@@ -1389,6 +1547,172 @@ import {
                     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
                         window.RedaNotificaciones.ocultar();
                     }
+                }
+            });
+
+            // -------------------------------------------------------------
+            // GESTIÓN DE AGENTE EN MEDIACIONES (ROL 1 SELECT, ROL 2 SWITCH)
+            // -------------------------------------------------------------
+
+            // Evento: Selección de agente desde <select> (Rol 1)
+            $(document).on('change', '.select-asignar-agente-disputa', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const select = $(this);
+                const disputaId = select.data('disputa-id');
+                const agenteId = select.val();
+                const trans = window.RedaAlojamientoJson || {};
+
+                if (!agenteId) return;
+
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                    window.RedaNotificaciones.esperar();
+                }
+
+                const respuesta = await asignarAgenteDisputa(disputaId, agenteId);
+
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
+                }
+
+                if (respuesta.success) {
+                    const item = mediacionesCargadas.find(m => m.id == disputaId);
+                    if (item) {
+                        item.id_usuario_agente_asignado = respuesta.respuesta.agente_id;
+                        item.agente = {
+                            id: respuesta.respuesta.agente_id,
+                            nombre: respuesta.respuesta.agente_nombre,
+                            foto: respuesta.respuesta.agente_foto
+                        };
+                    }
+
+                    const nuevoBloqueHtml = generarBloqueAgenteAsignadoHtml(item, respuesta.respuesta.agente_nombre, respuesta.respuesta.agente_foto);
+                    $(`.bloque-agente-${disputaId}`).replaceWith(nuevoBloqueHtml);
+
+                    if (mediacionSeleccionadaId == disputaId && window.innerWidth >= 768) {
+                        renderizarResumenMediacion(item, '#disputas-info-extra-content');
+                    }
+
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        window.RedaNotificaciones.notificar(trans["¡Éxito!"] || "¡Éxito!", respuesta.mensaje_usuario, 'exito');
+                    }
+                } else {
+                    select.val('');
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        window.RedaNotificaciones.notificar(trans["Error"] || "Error", respuesta.mensaje_usuario, 'error');
+                    } else {
+                        alert(respuesta.mensaje_usuario);
+                    }
+                }
+            });
+
+            // Evento: Suiche "Tomar mediación" (Rol 2)
+            $(document).on('change', '.switch-tomar-mediacion', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const switchInput = $(this);
+                const disputaId = switchInput.data('disputa-id');
+                const trans = window.RedaAlojamientoJson || {};
+
+                if (!switchInput.is(':checked')) {
+                    return;
+                }
+
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                    window.RedaNotificaciones.esperar();
+                }
+
+                const respuesta = await asignarAgenteDisputa(disputaId);
+
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
+                }
+
+                if (respuesta.success) {
+                    const item = mediacionesCargadas.find(m => m.id == disputaId);
+                    if (item) {
+                        item.id_usuario_agente_asignado = respuesta.respuesta.agente_id;
+                        item.agente = {
+                            id: respuesta.respuesta.agente_id,
+                            nombre: respuesta.respuesta.agente_nombre,
+                            foto: respuesta.respuesta.agente_foto
+                        };
+                    }
+
+                    const nuevoBloqueHtml = generarBloqueAgenteAsignadoHtml(item, respuesta.respuesta.agente_nombre, respuesta.respuesta.agente_foto);
+                    $(`.bloque-agente-${disputaId}`).replaceWith(nuevoBloqueHtml);
+
+                    if (mediacionSeleccionadaId == disputaId && window.innerWidth >= 768) {
+                        renderizarResumenMediacion(item, '#disputas-info-extra-content');
+                    }
+
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        window.RedaNotificaciones.notificar(trans["¡Éxito!"] || "¡Éxito!", respuesta.mensaje_usuario, 'exito');
+                    }
+                } else {
+                    switchInput.prop('checked', false);
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        window.RedaNotificaciones.notificar(trans["Error"] || "Error", respuesta.mensaje_usuario, 'error');
+                    } else {
+                        alert(respuesta.mensaje_usuario);
+                    }
+                }
+            });
+
+            // Evento: Reasignar agente para Rol 1 (Botón lápiz)
+            $(document).on('click', '.btn-cambiar-agente-asignado', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const disputaId = $(this).data('disputa-id');
+                const item = mediacionesCargadas.find(m => m.id == disputaId);
+                const trans = window.RedaAlojamientoJson || {};
+                if (!item) return;
+
+                let opcionesAgentes = `<option value="">-- ${trans["Seleccionar agente..."] || "Seleccionar agente..."} --</option>`;
+                if (Array.isArray(agentesDisponibles) && agentesDisponibles.length > 0) {
+                    agentesDisponibles.forEach(ag => {
+                        const seleccionado = (item.id_usuario_agente_asignado == ag.id) ? 'selected' : '';
+                        const rolEtiqueta = ag.rol_nombre ? ` (${ag.rol_nombre})` : '';
+                        opcionesAgentes += `<option value="${ag.id}" ${seleccionado}>${ag.nombre}${rolEtiqueta}</option>`;
+                    });
+                }
+
+                const selectHtml = `
+                    <div class="mb-3 bloque-agente-${item.id}">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="text-muted text-10 leading-tight">${trans["Asignar agente:"] || "Asignar agente:"}</span>
+                            <button type="button" class="btn btn-link btn-sm text-danger p-0 btn-cancelar-cambio-agente text-10" data-disputa-id="${item.id}">
+                                ${trans["Cancelar"] || "Cancelar"}
+                            </button>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <select class="form-select form-select-sm select-asignar-agente-disputa text-11" data-disputa-id="${item.id}">
+                                ${opcionesAgentes}
+                            </select>
+                        </div>
+                    </div>
+                `;
+                $(`.bloque-agente-${disputaId}`).replaceWith(selectHtml);
+            });
+
+            // Evento: Cancelar cambio de agente para Rol 1
+            $(document).on('click', '.btn-cancelar-cambio-agente', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const disputaId = $(this).data('disputa-id');
+                const item = mediacionesCargadas.find(m => m.id == disputaId);
+                if (!item) return;
+
+                if (item.agente) {
+                    const bloqueHtml = generarBloqueAgenteAsignadoHtml(item, item.agente.nombre, item.agente.foto);
+                    $(`.bloque-agente-${disputaId}`).replaceWith(bloqueHtml);
+                } else {
+                    const bloqueHtml = generarSeccionAgenteHtml(item);
+                    $(`.bloque-agente-${disputaId}`).replaceWith(bloqueHtml);
                 }
             });
 

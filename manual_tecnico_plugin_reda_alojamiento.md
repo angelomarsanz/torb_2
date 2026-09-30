@@ -183,6 +183,18 @@
 
 ### Controladores (Administración)
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php**
-  Controlador para el panel de mediaciones en el backend. Se actualizó la verificación de privilegios directos en base de datos (`role_admin`) para que tanto el Rol 1 (Admin) como el Rol 2 (Atención al usuario) sean reconocidos con acceso completo a las mediaciones. Permite listar todos los casos paginados (`obtenerDisputasPaginadas`), obtener el conteo de mediaciones activas (`obtenerConteoDisputasActivas`) y consultar el modal con el detalle completo del caso (`getDetailModal`) sin restricciones indebidas ni respuestas 403 Forbidden.
+  Controlador para el panel de mediaciones en el backend. Gestiona la visualización y asignación de mediaciones según el rol del usuario conectado:
+  - **Rol 1 (Admin):** Visualiza todas las mediaciones en el panel. Consulta y expone la colección de agentes disponibles (usuarios de la tabla `admin` con roles 1 y 2 activos). Procesa la asignación directa de cualquier agente a una mediación.
+  - **Rol 2 (Atención al usuario / Agente):** Aplica un filtro estricto en `obtenerDisputasPaginadas`, `obtenerConteoDisputasActivas` y `getDetailModal` para mostrar únicamente las mediaciones que no han sido asignadas o tomadas (`id_usuario_agente_asignado IS NULL` o `0`) y aquellas asignadas a él mismo. Las mediaciones asignadas a otros agentes quedan completamente ocultas y protegidas ante accesos no autorizados.
+  - **Método `asignarAgente`:** Endpoint `POST /admin/reda/disputas/asignar-agente` que actualiza la columna `id_usuario_agente_asignado` en la tabla `disputas`. Permite a usuarios de Rol 1 asignar cualquier agente o a sí mismos, y a usuarios de Rol 2 tomar mediaciones disponibles asignándose a sí mismos, retornando la estructura estándar JSON de REDA con los datos de avatar y nombre del agente.
+
+### Vistas y Scripts de Administración
+- **packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php**
+  Vista principal del panel de mediaciones para el administrador. Expone las credenciales y perfil del usuario conectado en `window.RedaAdminAccess` (`roleId`, `adminId`, `isFullAdmin`).
+- **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js**
+  Controlador del dashboard administrativo de mediaciones. Implementa la lógica reactiva de asignación:
+  - Para Rol 1: Sustituye el texto del agente no asignado por un control `<select>` con los agentes disponibles y el propio admin. Al seleccionar, ejecuta la asignación vía AJAX con bloqueo de espera y renderiza la foto de perfil y nombre del agente asignado, con soporte para reasignación interactiva.
+  - Para Rol 2: Sustituye el texto por un suiche tipo toggle (`form-check form-switch`) con la etiqueta "Tomar mediación". Al activarlo, toma la mediación vía AJAX con animación de espera y actualiza la tarjeta mostrando la foto de perfil y el nombre del agente.
+  - Sincroniza dinámicamente la información del agente asignado en las tarjetas del listado, el panel lateral de detalles y el acordeón en dispositivos móviles.
 
 

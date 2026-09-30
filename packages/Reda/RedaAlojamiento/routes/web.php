@@ -81,6 +81,7 @@ Route::group(['prefix' => 'admin/reda', 'middleware' => ['web', 'guest:admin']],
             Route::get('get-listado', 'obtenerDisputasPaginadas')->name('paginadas');
             Route::get('count-activas', 'obtenerConteoDisputasActivas')->name('count_activas');
             Route::get('get-detail-modal/{id}', 'getDetailModal')->name('get_detail_modal');
+            Route::post('asignar-agente', 'asignarAgente')->name('asignar_agente');
         });
 
         // Subgrupo para Mensajes de Disputas (Admin)

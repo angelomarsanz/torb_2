@@ -4,6 +4,35 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [30 de Septiembre, 2026] - Asignación Dinámica de Agentes (Rol 1 Select, Rol 2 Suiche "Tomar Mediación") y Filtrado en Index de Disputas
+- **Tarea:** Mejorar la vista de mediaciones administrativas (`/admin/reda/disputas`) adaptándola según el rol del usuario administrador autenticado en `role_admin`:
+    1. Para Rol 1 (Admin): En cada tarjeta de la lista donde no haya agente asignado, sustituir el texto por un control interactivo `<select>` con la lista de agentes (obtenidos de `admin`, `roles` y `role_admin` con status 'Active'), incluyendo al propio usuario admin con Rol 1 por si desea atender la mediación él mismo. Al seleccionar un agente, se persiste vía AJAX en la columna `id_usuario_agente_asignado` de la tabla `disputas`, mostrando inmediatamente la foto de perfil y el nombre del agente, con opción de reasignar.
+    2. Para Rol 2 (Atención al usuario / Agente): En lugar de un `<select>`, mostrar un suiche tipo toggle (`form-check form-switch`) con la etiqueta "Tomar mediación". Al activarlo, se actualiza atómicamente la columna `id_usuario_agente_asignado` en `disputas` con el ID del usuario admin logueado, sustituyendo el suiche por la foto de perfil y nombre del agente asignado.
+    3. Filtrado estricto en el Index y Conteo para Rol 2: Los agentes con Rol 2 solo pueden visualizar en el listado y conteo las mediaciones no asignadas (`id_usuario_agente_asignado IS NULL` o `0`) y las que les fueron asignadas a ellos o tomaron ellos mismos. Las mediaciones asignadas a otros agentes quedan estrictamente ocultas y protegidas en el backend ante accesos directos al modal de detalle.
+- **Archivos Modificados/Creados:**
+    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Se registró la ruta `POST admin/reda/disputas/asignar-agente` (`reda.admin.disputas.asignar_agente`) gestionada por `AdminDisputaController@asignarAgente`.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php`:
+        - Implementado `obtenerRolAdmin($adminId)` para consultar de manera confiable el `role_id` del usuario conectado en `role_admin` y `roles`.
+        - Implementado `obtenerAgentesDisponibles()` para consultar los agentes activos con rol 1 y 2, retornando colección con ID, nombre, foto de perfil y nombre de rol.
+        - Actualizado `obtenerDisputasPaginadas`: para rol 2 aplica filtro `(id_usuario_agente_asignado IS NULL OR id_usuario_agente_asignado = 0 OR id_usuario_agente_asignado = $adminId)`; para rol 1 expone la lista de agentes disponibles; incluye en cada elemento `id_usuario_agente_asignado` y los datos del agente.
+        - Actualizado `obtenerConteoDisputasActivas` con el mismo filtro para rol 2.
+        - Actualizado `getDetailModal` denegando acceso (403) a rol 2 si la mediación pertenece a otro agente.
+        - Creado el método `asignarAgente(Request $request)` que valida permisos según rol, actualiza `disputas.id_usuario_agente_asignado` y retorna la estructura estándar JSON de REDA con los datos del agente asignado.
+    *   `packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php`: Se actualizaron las variables globales de acceso `window.RedaAdminAccess` para inyectar `roleId`, `adminId` y `isFullAdmin` (true únicamente para rol 1).
+    *   `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js`:
+        - Se incorporaron las variables de estado `agentesDisponibles`, `rolAdminActual` y `adminIdActual`.
+        - Implementado el método AJAX `asignarAgenteDisputa(disputaId, agenteId = null)`.
+        - Implementada la función generadora `generarSeccionAgenteHtml(item)`: si está asignado muestra foto de perfil y nombre; si es rol 1 renderiza el `<select>` con opciones de agentes; si es rol 2 renderiza el suiche toggle "Tomar mediación".
+        - Implementada la función `generarBloqueAgenteAsignadoHtml` para renderizar el agente con foto y nombre, e incluir el botón de reasignación para rol 1.
+        - Registrados los eventos `change` para `.select-asignar-agente-disputa` y `.switch-tomar-mediacion` con animación de espera (`window.RedaNotificaciones.esperar()`), actualización reactiva del DOM (lista y sidebar) y notificación de resultado.
+        - Registrados eventos para reasignar y cancelar cambio de agente en rol 1.
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Incorporadas las cadenas de traducción en español para "Tomar mediación", "Asignar agente:", "Seleccionar agente...", "Cambiar agente" y mensajes de confirmación y error.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Documentada la arquitectura del nuevo flujo y los archivos modificados.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto (`app/Models/Admin.php`, `app/Models/RoleAdmin.php`, `app/Models/Roles.php`, `routes/web.php` del núcleo, etc.) se mantienen 100% inalterados e intactos. Todas las modificaciones se realizaron dentro del paquete `packages/Reda/RedaAlojamiento`, respetando estrictamente las normas del archivo `GEMINI.md`. Siguiendo el protocolo mandatorio, los archivos fuente quedan listos en Cloud Shell y la compilación de `indexDisputas.min.js` se realizará en el servidor Vesta mediante `./compilar.sh`.
+- **Estado:** Completado y documentado.
+
+---
+
 ## [28 de Septiembre, 2026] - Acceso Completo del Rol "Atención al usuario" a la Opción y Gestión de Mediaciones en Panel Admin
 - **Tarea:** Permitir que los usuarios administradores con rol "Atención al usuario" (Rol ID 2 en la tabla `roles` y `role_admin`) tengan acceso pleno a la opción de menú "Mediaciones" y a toda la gestión del módulo de disputas/mediaciones en el panel administrativo (`/admin/reda/disputas`), del mismo modo que el rol 1 ("Admin").
 - **Archivos Modificados/Creados:**

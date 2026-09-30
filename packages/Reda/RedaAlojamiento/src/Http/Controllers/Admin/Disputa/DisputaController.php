@@ -47,34 +47,107 @@ class DisputaController extends Controller
             ->where('role_admin.admin_id', $adminId)
             ->where(function ($q) {
                 $q->whereIn('role_admin.role_id', [1, 2])
-                  ->orWhereIn(\DB::raw('LOWER(roles.name)'), ['admin', 'atención al usuario', 'atencion al usuario'])
-                  ->orWhereIn(\DB::raw('LOWER(roles.display_name)'), ['admin', 'atención al usuario', 'atencion al usuario']);
+                  ->orWhereIn(\DB::raw('LOWER(roles.name)'), ['admin', 'atención al usuario', 'atencion al usuario', 'atención a usuario', 'atencion a usuario'])
+                  ->orWhereIn(\DB::raw('LOWER(roles.display_name)'), ['admin', 'atención al usuario', 'atencion al usuario', 'atención a usuario', 'atencion a usuario']);
             })
             ->exists();
     }
 
     /**
+     * Obtiene los datos del rol del administrador conectado.
+     *
+     * @param int|null $adminId
+     * @return object|null Objeto con role_id, role_name, display_name
+     */
+    private function obtenerRolAdmin($adminId)
+    {
+        if (!$adminId) {
+            return null;
+        }
+
+        return \DB::table('role_admin')
+            ->leftJoin('roles', 'role_admin.role_id', '=', 'roles.id')
+            ->where('role_admin.admin_id', $adminId)
+            ->select('roles.id as role_id', 'roles.name as role_name', 'roles.display_name')
+            ->first();
+    }
+
+    /**
+     * Obtiene la lista de agentes elegibles para asignación (Rol 2 y Rol 1).
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    private function obtenerAgentesDisponibles()
+    {
+        return \DB::table('admin')
+            ->join('role_admin', 'admin.id', '=', 'role_admin.admin_id')
+            ->join('roles', 'role_admin.role_id', '=', 'roles.id')
+            ->where('admin.status', 'Active')
+            ->whereIn('role_admin.role_id', [1, 2])
+            ->select(
+                'admin.id',
+                'admin.username',
+                'admin.profile_image',
+                'role_admin.role_id',
+                'roles.display_name as rol_display_name',
+                'roles.name as rol_name'
+            )
+            ->orderBy('role_admin.role_id', 'desc') // Agentes (rol 2) primero, luego Admin (rol 1)
+            ->orderBy('admin.username', 'asc')
+            ->get()
+            ->map(function ($a) {
+                $adminModel = new \App\Models\Admin();
+                $adminModel->id = $a->id;
+                $adminModel->profile_image = $a->profile_image;
+
+                return [
+                    'id' => (int) $a->id,
+                    'nombre' => $a->username,
+                    'foto' => reda_get_profile_src($adminModel, 'admin'),
+                    'role_id' => (int) $a->role_id,
+                    'rol_nombre' => $a->rol_display_name ?: ($a->role_id == 1 ? __('Admin') : __('Atención al usuario'))
+                ];
+            });
+    }
+
+    /**
      * Obtiene el listado de mediaciones paginado para el administrador.
-     * Permite visualización completa a roles 1 (Admin) y 2 (Atención al usuario).
+     * Permite visualización completa a rol 1 (Admin) y filtrada para rol 2 (Atención al usuario).
      */
     public function obtenerDisputasPaginadas(Request $request)
     {
         $estatus = $request->get('status', 'todos');
         
-        // Obtenemos el ID del administrador activo
+        // Obtenemos el ID del administrador activo y su rol
         $adminId = auth()->guard('admin')->id();
-        
-        // Verificación directa en BD: Rol 1 (Admin) y Rol 2 (Atención al usuario) tienen acceso completo
-        $isFullAdmin = $this->tieneAccesoCompletoMediaciones($adminId);
+        $rolData = $this->obtenerRolAdmin($adminId);
+        $roleId = $rolData ? (int) $rolData->role_id : null;
+
+        $tieneAcceso = $this->tieneAccesoCompletoMediaciones($adminId);
+        if (!$tieneAcceso) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Acceso denegado'),
+                'mensaje_usuario' => __('No tiene permisos para acceder a las mediaciones.'),
+                'respuesta' => [
+                    'data' => [],
+                    'pagination' => ''
+                ],
+                'code' => 403
+            ], 403);
+        }
 
         $consulta = Disputa::query();
 
-        // Si no es Super Admin (ID de rol 1), aplicamos filtro estricto
-        if (!$isFullAdmin) {
-            // IMPORTANTE: Si adminId es null por error de sesión, evitamos mostrar
-            // las disputas que tengan id_usuario_agente_asignado en NULL (que suelen ser las nuevas).
-            // Al usar '=' forzamos la comparación de valor numérico.
-            $consulta->where('id_usuario_agente_asignado', '=', $adminId ?? -1);
+        // REQUERIMIENTO: Si es Rol 2 (Atención al usuario / Agente), solo puede ver
+        // las mediaciones no asignadas o tomadas, y las que le fueron asignadas a él.
+        // NO debe ver mediaciones asignadas a otro agente.
+        if ($roleId === 2) {
+            $consulta->where(function ($q) use ($adminId) {
+                $q->whereNull('id_usuario_agente_asignado')
+                  ->orWhere('id_usuario_agente_asignado', 0)
+                  ->orWhere('id_usuario_agente_asignado', $adminId);
+            });
         }
 
         if ($estatus !== 'todos') {
@@ -95,7 +168,6 @@ class DisputaController extends Controller
         $disputas = $consulta->with(['booking.properties.property_address', 'agente', 'turista', 'anfitrion'])->orderBy('updated_at', 'desc')->paginate(10);
 
         // Formatear los datos para el consumo del frontend via Javascript
-        $adminId = Auth::guard('admin')->id();
         $elementos = $disputas->getCollection()->map(function($d) use ($adminId) {
             
             // Lógica para contar mensajes no leídos (consistente con MensajeController)
@@ -196,7 +268,9 @@ class DisputaController extends Controller
                 'adjuntos_anfitrion' => $adjuntosAnfitrion,
                 'fecha_apertura' => $d->fecha_apertura ? $d->fecha_apertura->format('d/m/Y H:i') : '',
                 'actualizado_hace' => $d->updated_at->diffForHumans(),
+                'id_usuario_agente_asignado' => $d->id_usuario_agente_asignado ? (int) $d->id_usuario_agente_asignado : null,
                 'agente' => $d->agente ? [
+                    'id' => (int) $d->agente->id,
                     'nombre' => $d->agente->username,
                     'foto' => reda_get_profile_src($d->agente, 'admin')
                 ] : null,
@@ -213,17 +287,22 @@ class DisputaController extends Controller
             ];
         });
 
+        $agentesDisponibles = ($roleId === 1) ? $this->obtenerAgentesDisponibles() : [];
+
         $respuesta = [
             'success' => true,
             'message' => __('Listado de mediaciones (Admin)'),
             'debug' => [
                 'admin_id' => $adminId,
-                'is_full_admin' => $isFullAdmin
+                'role_id' => $roleId
             ],
             'mensaje_usuario' => __('Listado recuperado con éxito'),
             'respuesta' => [
                 'data' => $elementos,
-                'pagination' => (string) $disputas->appends(request()->except('page'))->links('reda-alojamiento::admin.general.paginacion')
+                'pagination' => (string) $disputas->appends(request()->except('page'))->links('reda-alojamiento::admin.general.paginacion'),
+                'rol_admin' => $roleId,
+                'admin_id' => $adminId,
+                'agentes' => $agentesDisponibles
             ],
             'code' => 200
         ];
@@ -234,21 +313,24 @@ class DisputaController extends Controller
     /**
      * Obtiene el conteo de mediaciones activas para el administrador.
      * Se consideran activas aquellas cuyo estado es diferente a 'Cerrado' o 'Cerrada'.
-     * Permite conteo completo a roles 1 (Admin) y 2 (Atención al usuario).
+     * Para rol 2, filtra solo las no asignadas y las asignadas a él.
      */
     public function obtenerConteoDisputasActivas()
     {
         try {
             $adminId = auth()->guard('admin')->id();
-            
-            // Verificación directa en BD: Rol 1 (Admin) y Rol 2 (Atención al usuario) tienen acceso completo
-            $isFullAdmin = $this->tieneAccesoCompletoMediaciones($adminId);
+            $rolData = $this->obtenerRolAdmin($adminId);
+            $roleId = $rolData ? (int) $rolData->role_id : null;
 
             $query = Disputa::query();
 
-            // Si no es Super Admin (ID de rol 1), aplicamos filtro estricto
-            if (!$isFullAdmin) {
-                $query->where('id_usuario_agente_asignado', '=', $adminId ?? -1);
+            // Para agentes (Rol 2), solo contar las no asignadas y las asignadas a él
+            if ($roleId === 2) {
+                $query->where(function ($q) use ($adminId) {
+                    $q->whereNull('id_usuario_agente_asignado')
+                      ->orWhere('id_usuario_agente_asignado', 0)
+                      ->orWhere('id_usuario_agente_asignado', $adminId);
+                });
             }
 
             // Filtramos por estados que NO sean 'Cerrado' o 'Cerrada' (y sus versiones traducidas)
@@ -288,16 +370,17 @@ class DisputaController extends Controller
     public function getDetailModal($id)
     {
         $adminId = auth()->guard('admin')->id();
-        $isFullAdmin = $this->tieneAccesoCompletoMediaciones($adminId);
+        $rolData = $this->obtenerRolAdmin($adminId);
+        $roleId = $rolData ? (int) $rolData->role_id : null;
 
         $disputa = Disputa::findOrFail($id);
 
-        // Seguridad: Si no es admin total y no es el agente asignado, no puede ver el detalle
-        if (!$isFullAdmin && $disputa->id_usuario_agente_asignado != $adminId) {
+        // Seguridad: Si es Rol 2 y la mediación ya está asignada a otro agente, denegar acceso
+        if ($roleId === 2 && $disputa->id_usuario_agente_asignado && $disputa->id_usuario_agente_asignado != $adminId) {
             return response()->json([
                 'success' => false,
                 'message' => __('Acceso denegado'),
-                'mensaje_usuario' => __('No tiene permisos para ver el detalle de esta mediación.'),
+                'mensaje_usuario' => __('No tiene permisos para ver el detalle de esta mediación porque está asignada a otro agente.'),
                 'code' => 403
             ], 403);
         }
@@ -314,6 +397,149 @@ class DisputaController extends Controller
         ];
 
         return response()->json($respuesta, $respuesta['code']);
+    }
+
+    /**
+     * Asigna o toma una mediación por parte de un administrador o agente.
+     * Si el usuario logueado tiene Rol 1, puede asignar a cualquier agente o a sí mismo.
+     * Si el usuario logueado tiene Rol 2, toma la mediación para sí mismo ("Tomar mediación").
+     * Actualiza la columna id_usuario_agente_asignado en la tabla disputas.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function asignarAgente(Request $request)
+    {
+        try {
+            $adminId = auth()->guard('admin')->id();
+            if (!$adminId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('No autenticado'),
+                    'mensaje_usuario' => __('La sesión ha expirado. Por favor, inicie sesión nuevamente.'),
+                    'respuesta' => '',
+                    'code' => 401
+                ], 401);
+            }
+
+            $rolData = $this->obtenerRolAdmin($adminId);
+            $roleId = $rolData ? (int) $rolData->role_id : null;
+
+            if (!in_array($roleId, [1, 2])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Acceso denegado'),
+                    'mensaje_usuario' => __('No tiene permisos para asignar mediaciones.'),
+                    'respuesta' => '',
+                    'code' => 403
+                ], 403);
+            }
+
+            $disputaId = $request->input('disputa_id');
+            if (!$disputaId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('ID de disputa no proporcionado'),
+                    'mensaje_usuario' => __('Debe especificar una mediación válida.'),
+                    'respuesta' => '',
+                    'code' => 400
+                ], 400);
+            }
+
+            $disputa = Disputa::find($disputaId);
+            if (!$disputa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Disputa no encontrada'),
+                    'mensaje_usuario' => __('La mediación indicada no existe.'),
+                    'respuesta' => '',
+                    'code' => 404
+                ], 404);
+            }
+
+            $agenteAsignarId = null;
+
+            if ($roleId === 1) {
+                // Rol 1 (Admin): Puede asignar a cualquier agente activo (Rol 2) o a sí mismo (Rol 1)
+                $agenteAsignarId = $request->input('agente_id');
+                if (!$agenteAsignarId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('Agente no especificado'),
+                        'mensaje_usuario' => __('Por favor seleccione un agente válido.'),
+                        'respuesta' => '',
+                        'code' => 400
+                    ], 400);
+                }
+
+                // Validar que el agente existe, esté activo y tenga rol 1 o 2
+                $agenteValido = \DB::table('admin')
+                    ->join('role_admin', 'admin.id', '=', 'role_admin.admin_id')
+                    ->where('admin.id', $agenteAsignarId)
+                    ->where('admin.status', 'Active')
+                    ->whereIn('role_admin.role_id', [1, 2])
+                    ->exists();
+
+                if (!$agenteValido) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('Agente inválido'),
+                        'mensaje_usuario' => __('El agente seleccionado no es válido o no está activo.'),
+                        'respuesta' => '',
+                        'code' => 422
+                    ], 422);
+                }
+            } else if ($roleId === 2) {
+                // Rol 2 (Atención al usuario): Toma la mediación para sí mismo
+                // Validar que no haya sido tomada previamente por otro agente
+                if ($disputa->id_usuario_agente_asignado && $disputa->id_usuario_agente_asignado != $adminId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('Mediación ya asignada'),
+                        'mensaje_usuario' => __('Esta mediación ya ha sido asignada a otro agente.'),
+                        'respuesta' => '',
+                        'code' => 409
+                    ], 409);
+                }
+
+                $agenteAsignarId = $adminId;
+            }
+
+            // Actualizar la columna id_usuario_agente_asignado en la tabla disputas
+            $disputa->id_usuario_agente_asignado = $agenteAsignarId;
+            $disputa->save();
+
+            // Cargar datos del agente asignado para devolverlos a la interfaz
+            $agenteAdmin = \App\Models\Admin::find($agenteAsignarId);
+            $agenteFoto = reda_get_profile_src($agenteAdmin, 'admin');
+
+            $mensajeAccion = ($roleId === 2 || $agenteAsignarId == $adminId)
+                ? __('Has tomado la mediación exitosamente.')
+                : __('La mediación ha sido asignada a :nombre exitosamente.', ['nombre' => $agenteAdmin->username]);
+
+            return response()->json([
+                'success' => true,
+                'message' => __('Mediación asignada'),
+                'mensaje_usuario' => $mensajeAccion,
+                'respuesta' => [
+                    'disputa_id' => $disputa->id,
+                    'agente_id' => (int) $agenteAsignarId,
+                    'agente_nombre' => $agenteAdmin->username,
+                    'agente_foto' => $agenteFoto
+                ],
+                'code' => 200
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error("Error al asignar agente a la disputa: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Ocurrió un error al asignar la mediación. Por favor, intente nuevamente.'),
+                'respuesta' => '',
+                'code' => 500
+            ], 500);
+        }
     }
 
 }
