@@ -39,7 +39,8 @@
         id: {{ $adminActual ? $adminActual->id : 'null' }},
         roleId: {{ $roleIdActual !== null ? $roleIdActual : 'null' }},
         roleName: {!! json_encode($roleNombreActual) !!},
-        tieneAccesoMediaciones: {{ $tieneAccesoMediaciones ? 'true' : 'false' }}
+        tieneAccesoMediaciones: {{ $tieneAccesoMediaciones ? 'true' : 'false' }},
+        esAdminTotal: {{ ($roleIdActual === 1 || in_array($roleNombreNorm, ['admin'])) ? 'true' : 'false' }}
     };
 </script>
 

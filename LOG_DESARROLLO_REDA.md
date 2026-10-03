@@ -4,6 +4,33 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [3 de Octubre, 2026] - Vista y Persistencia de "Cantidad de Mediaciones Permitidas" (Settings) y Restricción Exclusiva para Rol 1
+- **Tarea:** Implementar la configuración de umbrales máximos de mediaciones en el panel administrativo y perfeccionar la experiencia interactiva del submenú "Mediaciones" en el menú lateral:
+    1. **Contador en opción "Listado":** Actualizar el submenú de "Mediaciones" para que, al cargar y al hacer clic o tocar la opción padre "Mediaciones", la opción "Listado" muestre también el contador de mediaciones activas (`Listado (N)`), sincronizado con el conteo de la opción principal.
+    2. **Restricción estricta de "Configuración" a Rol 1:** La opción "Configuración" del submenú solo se renderiza y queda visible y disponible para usuarios administradores con Rol 1 (`role_id == 1` o nombre de rol `'admin'`). Para usuarios con Rol 2 ("Atención al usuario"), el elemento de configuración no se inyecta en el DOM.
+    3. **Protección Backend:** Los endpoints de configuración (`GET /admin/reda/disputas/configuracion` y `POST /admin/reda/disputas/configuracion/store`) validan el rol del usuario conectado en `role_admin` y devuelven 403 Forbidden ante cualquier acceso no autorizado.
+    4. **Nueva Vista de Configuración:** Al hacer clic en "Configuración", se presenta la vista Blade `@extends('admin.template')` con un panel/recuadro titulado "Cantidad de mediaciones permitidas", conteniendo dos campos numéricos:
+        - "Cantidad de mediaciones para primer aviso"
+        - "Cantidad de mediaciones para segundo aviso y suspensión de cuenta"
+    5. **Almacenamiento en `settings`:** Los valores se persisten mediante AJAX en la tabla `settings` con los nombres exactos:
+        - `name`: `'Cantidad mediaciones permitidas primer aviso'`, `value`: valor numérico, `type`: `'Mediaciones'`
+        - `name`: `'Cantidad mediaciones segundo aviso y suspensión'`, `value`: valor numérico, `type`: `'Mediaciones'`
+    6. **Experiencia de usuario con REDA:** Validación reactiva en cliente, animación de espera (`window.RedaNotificaciones.esperar()`), botón con spinner y modal de notificación (`window.RedaNotificaciones.notificar`) con el estándar JSON de REDA.
+- **Archivos Modificados/Creados:**
+    *   `packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php`: Se añadió la propiedad `esAdminTotal` calculada para Rol 1 al objeto `window.RedaAdminUser`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`: Se actualizó la lógica del submenú para condicionar la presencia de "Configuración" a Rol 1 (`esAdminRol1`), actualizar el texto del contador tanto en "Mediaciones" como en "Listado" (`Listado (N)`), sincronizar el contador al desplegar el acordeón e incorporar animación de espera al navegar a Configuración.
+    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Se registraron las rutas `admin/reda/disputas/configuracion` (GET) y `admin/reda/disputas/configuracion/store` (POST) asociadas a `AdminDisputaController`.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php`: Se implementaron los métodos `configuracion()` (autorización Rol 1 y lectura de `settings`) y `guardarConfiguracion(Request $request)` (validación, persistencia en `settings` con `type = 'Mediaciones'` y respuesta JSON estándar REDA).
+    *   `packages/Reda/RedaAlojamiento/resources/views/admin/disputa/configuracion.blade.php`: **NUEVO ARCHIVO**. Vista administrativa con panel estilizado, formulario, inputs para primer y segundo aviso/suspensión, y carga del script compilado `configuracionDisputas.min.js`.
+    *   `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js`: **NUEVO ARCHIVO**. Controlador JavaScript para validación, estado de carga, envío AJAX y feedback con `window.RedaNotificaciones`.
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Incorporadas todas las cadenas de traducción y mensajes de validación/notificación en español.
+    *   `webpack.mix.js`: Registrada la entrada de compilación para generar `configuracionDisputas.min.js`.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Documentada la arquitectura, nuevos endpoints, vistas y scripts.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto de Laravel vRent (`resources/views/admin/common/left_sidebar.blade.php`, `app/Models/Settings.php`, etc.) se mantienen 100% inalterados e intactos. La persistencia se realiza limpiamente en la tabla `settings` existente respetando los tipos y nombres especificados. Toda la funcionalidad reside en el paquete `packages/Reda/RedaAlojamiento`. Siguiendo el protocolo mandatorio del entorno, los archivos fuente quedan editados en Cloud Shell y la compilación de assets debe realizarse en el servidor Vesta mediante `./compilar.sh`.
+- **Estado:** Completado y documentado.
+
+---
+
 ## [30 de Septiembre, 2026] - Transformación de "Mediaciones" en Submenú Desplegable (Listado y Configuración) en Menú Lateral Admin
 - **Tarea:** En el menú lateral del panel administrativo (Backend), transformar la opción de enlace simple "Mediaciones" en un submenú desplegable interactivo tipo acordeón (`.treeview`) que contenga dos opciones:
     1. **Listado:** Conduce a la vista principal del listado de mediaciones (`/admin/reda/disputas`), activando la animación de espera al interactuar.

@@ -46,6 +46,9 @@ if (buildAlojamiento) {
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js',
         'public/js/reda/admin/vistas/disputa/indexDisputas.min.js');
 
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js',
+        'public/js/reda/admin/vistas/disputa/configuracionDisputas.min.js');
+
     // Js para uso general
     mix.js('packages/Reda/RedaAlojamiento/resources/js/general/main.js', 'public/js/reda/general/reda-general-main.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js', 'public/js/reda/general/notificaciones.min.js');

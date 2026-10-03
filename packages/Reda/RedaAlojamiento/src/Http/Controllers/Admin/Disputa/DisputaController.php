@@ -5,7 +5,9 @@
  * 
  * Gestiona el listado, filtrado, conteo y detalle de casos de mediación entre
  * turistas y anfitriones en el backend de Torbian. Permite acceso y gestión tanto
- * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario).
+ * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario),
+ * y proporciona la gestión de la configuración de límites de mediaciones
+ * (primer aviso y segundo aviso/suspensión) exclusivamente para Rol 1.
  * 
  * @package Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa
  */
@@ -536,6 +538,134 @@ class DisputaController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
                 'mensaje_usuario' => __('Ocurrió un error al asignar la mediación. Por favor, intente nuevamente.'),
+                'respuesta' => '',
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    /**
+     * Muestra la vista de configuración de mediaciones para administradores con Rol 1.
+     * Recupera de la tabla settings los umbrales de primer aviso y segundo aviso/suspensión.
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
+     */
+    public function configuracion()
+    {
+        $adminActual = Auth::guard('admin')->user();
+        $adminId = $adminActual ? $adminActual->id : null;
+        $rolData = $this->obtenerRolAdmin($adminId);
+        $esAdminRol1 = $rolData && ((int) $rolData->role_id === 1 || strtolower(trim($rolData->role_name ?? '')) === 'admin');
+
+        if (!$esAdminRol1) {
+            abort(403, __('No tienes permisos para acceder a la configuración de mediaciones.'));
+        }
+
+        // Recuperar configuraciones desde la tabla settings
+        $settingPrimerAviso = \DB::table('settings')
+            ->where('name', 'Cantidad mediaciones permitidas primer aviso')
+            ->first();
+
+        $settingSegundoAviso = \DB::table('settings')
+            ->where('name', 'Cantidad mediaciones segundo aviso y suspensión')
+            ->first();
+
+        $primerAviso = $settingPrimerAviso ? $settingPrimerAviso->value : '';
+        $segundoAviso = $settingSegundoAviso ? $settingSegundoAviso->value : '';
+
+        return view('reda-alojamiento::admin.disputa.configuracion', compact('primerAviso', 'segundoAviso'));
+    }
+
+    /**
+     * Guarda la configuración de mediaciones en la tabla settings.
+     * Valida y actualiza los registros 'Cantidad mediaciones permitidas primer aviso'
+     * y 'Cantidad mediaciones segundo aviso y suspensión' con type 'Mediaciones'.
+     * Exclusivo para administradores con Rol 1.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function guardarConfiguracion(Request $request)
+    {
+        try {
+            $adminActual = Auth::guard('admin')->user();
+            $adminId = $adminActual ? $adminActual->id : null;
+            $rolData = $this->obtenerRolAdmin($adminId);
+            $esAdminRol1 = $rolData && ((int) $rolData->role_id === 1 || strtolower(trim($rolData->role_name ?? '')) === 'admin');
+
+            if (!$esAdminRol1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Acceso no autorizado'),
+                    'mensaje_usuario' => __('No tienes permisos para modificar la configuración de mediaciones.'),
+                    'respuesta' => '',
+                    'code' => 403
+                ], 403);
+            }
+
+            // Validación de los campos
+            $request->validate([
+                'primer_aviso' => 'required|integer|min:0',
+                'segundo_aviso' => 'required|integer|min:0',
+            ], [
+                'primer_aviso.required' => __('La cantidad de mediaciones para primer aviso es obligatoria.'),
+                'primer_aviso.integer' => __('La cantidad de mediaciones para primer aviso debe ser un número entero.'),
+                'primer_aviso.min' => __('La cantidad de mediaciones para primer aviso no puede ser negativa.'),
+                'segundo_aviso.required' => __('La cantidad de mediaciones para segundo aviso y suspensión es obligatoria.'),
+                'segundo_aviso.integer' => __('La cantidad de mediaciones para segundo aviso y suspensión debe ser un número entero.'),
+                'segundo_aviso.min' => __('La cantidad de mediaciones para segundo aviso y suspensión no puede ser negativa.'),
+            ]);
+
+            // Guardar o actualizar en la tabla settings con name, value y type 'Mediaciones'
+            \DB::table('settings')->updateOrInsert(
+                ['name' => 'Cantidad mediaciones permitidas primer aviso'],
+                [
+                    'value' => (string) $request->primer_aviso,
+                    'type' => 'Mediaciones'
+                ]
+            );
+
+            \DB::table('settings')->updateOrInsert(
+                ['name' => 'Cantidad mediaciones segundo aviso y suspensión'],
+                [
+                    'value' => (string) $request->segundo_aviso,
+                    'type' => 'Mediaciones'
+                ]
+            );
+
+            // Limpiar caché de settings del core si existe
+            try {
+                \Illuminate\Support\Facades\Cache::forget(config('cache.prefix') . '.settings');
+            } catch (\Exception $cacheEx) {
+                // Silencioso si la clave o el driver de caché no aplican
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => __('Configuración de mediaciones guardada con éxito'),
+                'mensaje_usuario' => __('Configuración de mediaciones guardada con éxito.'),
+                'respuesta' => [
+                    'primer_aviso' => (int) $request->primer_aviso,
+                    'segundo_aviso' => (int) $request->segundo_aviso,
+                ],
+                'code' => 200
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            $primerError = collect($ve->errors())->flatten()->first();
+            return response()->json([
+                'success' => false,
+                'message' => $primerError,
+                'mensaje_usuario' => $primerError,
+                'respuesta' => $ve->errors(),
+                'code' => 422
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error("Error al guardar la configuración de mediaciones: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Ocurrió un error al guardar la configuración. Por favor, intente nuevamente.'),
                 'respuesta' => '',
                 'code' => 500
             ], 500);

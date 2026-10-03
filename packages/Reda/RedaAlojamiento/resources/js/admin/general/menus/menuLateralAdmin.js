@@ -1,8 +1,11 @@
 /**
  * Resumen: Gestión de menús adicionales en la barra lateral del panel administrativo (Backend).
  * Este archivo inyecta de forma reactiva y no invasiva las opciones de "Negocios", "Mediaciones"
- * (como submenú desplegable con "Listado" y "Configuración") y "Soporte Técnico" en el menú lateral AdminLTE del proyecto original.
- * Permite que los usuarios con rol 1 (Admin) y rol 2 (Atención al usuario) tengan acceso a "Mediaciones".
+ * (como submenú desplegable con "Listado" y condicionalmente "Configuración" exclusivo para Rol 1)
+ * y "Soporte Técnico" en el menú lateral AdminLTE del proyecto original.
+ * Permite que los usuarios con rol 1 (Admin) y rol 2 (Atención al usuario) tengan acceso a "Mediaciones",
+ * garantizando que "Configuración" solo esté visible y disponible para administradores con Rol 1.
+ * Actualiza dinámicamente el contador de mediaciones tanto en el encabezado padre como en "Listado".
  */
 import { mediacionSvg } from '../../../general/iconos';
 import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMediaciones.js';
@@ -87,37 +90,55 @@ export const menuLateralAdmin = () =>
                     const tienePermisoMediaciones = window.RedaAdminUser ? window.RedaAdminUser.tieneAccesoMediaciones : true;
 
                     if (tienePermisoMediaciones) {
+                        const esAdminRol1 = Boolean(
+                            window.RedaAdminUser && (
+                                window.RedaAdminUser.roleId === 1 || 
+                                window.RedaAdminUser.esAdminTotal === true || 
+                                (window.RedaAdminUser.roleName && window.RedaAdminUser.roleName.toLowerCase() === 'admin')
+                            )
+                        );
+
                         const linkMediaciones = `${baseUrl}/admin/reda/disputas`;
-                        const linkConfiguracion = '#';
+                        const linkConfiguracion = `${baseUrl}/admin/reda/disputas/configuracion`;
                         const labelMediaciones = window.RedaAlojamientoJson["Mediaciones"] || "Mediaciones";
                         const labelListado = window.RedaAlojamientoJson["Listado"] || "Listado";
                         const labelConfiguracion = window.RedaAlojamientoJson["Configuración"] || "Configuración";
-                        const esRutaActiva = window.location.href.includes('admin/reda/disputas');
+
+                        const esRutaConfigActiva = window.location.href.includes('admin/reda/disputas/configuracion');
+                        const esRutaListadoActiva = window.location.href.includes('admin/reda/disputas') && !esRutaConfigActiva;
+                        const esRutaSubmenuActiva = window.location.href.includes('admin/reda/disputas');
+
+                        let ultimoConteoMediaciones = null;
+
+                        // La opción "Configuración" solo es visible y disponible para usuarios admin con Rol 1
+                        const configuracionHtml = esAdminRol1 ? `
+                            <li class="nav-item">
+                                <a href="${linkConfiguracion}" class="nav-link btn-menu-mediacion-config ${esRutaConfigActiva ? 'active' : ''}">
+                                    <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
+                                    <span>${labelConfiguracion}</span>
+                                </a>
+                            </li>
+                        ` : '';
 
                         const mediacionMenuHtml = `
-                            <li class="nav-item treeview ${esRutaActiva ? 'active menu-open' : ''}" id="menu-mediaciones">
-                                <a href="#" class="nav-link mediaciones-toggle d-flex align-items-center justify-content-between ${esRutaActiva ? 'active' : ''}">
+                            <li class="nav-item treeview ${esRutaSubmenuActiva ? 'active menu-open' : ''}" id="menu-mediaciones">
+                                <a href="#" class="nav-link mediaciones-toggle d-flex align-items-center justify-content-between ${esRutaSubmenuActiva ? 'active' : ''}">
                                     <div class="d-flex align-items-center">
                                         <span class="reda-icon-svg-18 me-2">
                                             ${mediacionSvg}
                                         </span>
                                         <span class="reda-mediaciones-texto-admin">${labelMediaciones}</span>
                                     </div>
-                                    <i class="fa ${esRutaActiva ? 'fa-angle-down' : 'fa-angle-left'} pull-right ms-auto"></i>
+                                    <i class="fa ${esRutaSubmenuActiva ? 'fa-angle-down' : 'fa-angle-left'} pull-right ms-auto"></i>
                                 </a>
-                                <ul class="nav nav-treeview treeview-menu ${esRutaActiva ? '' : 'reda-admin-menu-hidden'}" style="${esRutaActiva ? 'display: block;' : ''}">
+                                <ul class="nav nav-treeview treeview-menu ${esRutaSubmenuActiva ? '' : 'reda-admin-menu-hidden'}" style="${esRutaSubmenuActiva ? 'display: block;' : ''}">
                                     <li class="nav-item">
-                                        <a href="${linkMediaciones}" class="nav-link btn-menu-mediacion-item ${esRutaActiva ? 'active' : ''}">
+                                        <a href="${linkMediaciones}" class="nav-link btn-menu-mediacion-item ${esRutaListadoActiva ? 'active' : ''}">
                                             <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
-                                            <span>${labelListado}</span>
+                                            <span class="reda-mediaciones-listado-texto-admin">${labelListado}</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
-                                        <a href="${linkConfiguracion}" class="nav-link btn-menu-mediacion-config">
-                                            <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
-                                            <span>${labelConfiguracion}</span>
-                                        </a>
-                                    </li>
+                                    ${configuracionHtml}
                                 </ul>
                             </li>
                         `;
@@ -145,6 +166,13 @@ export const menuLateralAdmin = () =>
 
                         console.log('Submenú "Mediaciones" inyectado para rol con acceso.');
 
+                        // Función para actualizar los contadores en el encabezado de Mediaciones y en la opción Listado
+                        const aplicarTextoContador = (conteo) => {
+                            ultimoConteoMediaciones = conteo;
+                            $('.reda-mediaciones-texto-admin').text(`${labelMediaciones} (${conteo})`);
+                            $('.reda-mediaciones-listado-texto-admin').text(`${labelListado} (${conteo})`);
+                        };
+
                         // Toggle para desplegar y replegar el submenú de Mediaciones
                         $('#menu-mediaciones > .mediaciones-toggle').on('click', function(e) {
                             e.preventDefault();
@@ -162,13 +190,20 @@ export const menuLateralAdmin = () =>
                                 $subMenu.slideDown('fast');
                                 $liPadre.addClass('active menu-open');
                                 $flecha.removeClass('fa-angle-left').addClass('fa-angle-down');
+
+                                // Al hacer clic o tocar "Mediaciones", asegurarse de que en "Listado" aparezca el contador
+                                if (ultimoConteoMediaciones !== null) {
+                                    $('.reda-mediaciones-listado-texto-admin').text(`${labelListado} (${ultimoConteoMediaciones})`);
+                                } else {
+                                    actualizarContadorAdmin();
+                                }
                             }
                         });
 
                         // Animación de espera al hacer clic en Listado de Mediaciones
                         $(document).on('click', '.btn-menu-mediacion-item', function(e) {
                             if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
-                                if (window.location.href.includes('admin/reda/disputas')) {
+                                if (window.location.pathname === '/admin/reda/disputas' || (window.location.href.includes('admin/reda/disputas') && !window.location.href.includes('configuracion'))) {
                                     e.preventDefault();
                                     return;
                                 }
@@ -178,18 +213,25 @@ export const menuLateralAdmin = () =>
                             }
                         });
 
-                        // Evento para Configuración de Mediaciones (Enlace con # temporal)
+                        // Animación de espera al hacer clic en Configuración de Mediaciones
                         $(document).on('click', '.btn-menu-mediacion-config', function(e) {
-                            e.preventDefault();
+                            if (this.href && !this.target && !e.ctrlKey && !e.metaKey && this.href !== '#') {
+                                if (window.location.href.includes('admin/reda/disputas/configuracion')) {
+                                    e.preventDefault();
+                                    return;
+                                }
+                                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                                    window.RedaNotificaciones.esperar();
+                                }
+                            }
                         });
 
-                        // Actualizar contador de mediaciones activas en el submenú
+                        // Actualizar contador de mediaciones activas en el submenú vía AJAX
                         const actualizarContadorAdmin = async () => {
                             const adminCountUrl = `${baseUrl}/admin/reda/disputas/count-activas`;
                             const respuesta = await obtenerConteoMediaciones(adminCountUrl);
                             if (respuesta.success) {
-                                const count = respuesta.respuesta;
-                                $('.reda-mediaciones-texto-admin').text(`${labelMediaciones} (${count})`);
+                                aplicarTextoContador(respuesta.respuesta);
                             }
                         };
                         actualizarContadorAdmin();
