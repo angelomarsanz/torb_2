@@ -1,7 +1,7 @@
 /**
  * Resumen: Gestión de menús adicionales en la barra lateral del panel administrativo (Backend).
  * Este archivo inyecta de forma reactiva y no invasiva las opciones de "Negocios", "Mediaciones"
- * y "Soporte Técnico" en el menú lateral AdminLTE del proyecto original.
+ * (como submenú desplegable con "Listado" y "Configuración") y "Soporte Técnico" en el menú lateral AdminLTE del proyecto original.
  * Permite que los usuarios con rol 1 (Admin) y rol 2 (Atención al usuario) tengan acceso a "Mediaciones".
  */
 import { mediacionSvg } from '../../../general/iconos';
@@ -80,7 +80,7 @@ export const menuLateralAdmin = () =>
                     });
                 }
 
-                // 2. Inyección de Opción "Mediaciones"
+                // 2. Inyección de Submenú "Mediaciones"
                 // Disponible para usuarios con Rol 1 (Admin) y Rol 2 (Atención al usuario)
                 if (!$('#menu-mediaciones').length) {
                     // Validar si window.RedaAdminUser indica permiso explícito de mediaciones
@@ -88,17 +88,37 @@ export const menuLateralAdmin = () =>
 
                     if (tienePermisoMediaciones) {
                         const linkMediaciones = `${baseUrl}/admin/reda/disputas`;
+                        const linkConfiguracion = '#';
                         const labelMediaciones = window.RedaAlojamientoJson["Mediaciones"] || "Mediaciones";
+                        const labelListado = window.RedaAlojamientoJson["Listado"] || "Listado";
+                        const labelConfiguracion = window.RedaAlojamientoJson["Configuración"] || "Configuración";
                         const esRutaActiva = window.location.href.includes('admin/reda/disputas');
 
                         const mediacionMenuHtml = `
-                            <li id="menu-mediaciones" class="nav-item">
-                                <a href="${linkMediaciones}" class="nav-link btn-menu-mediacion d-flex align-items-center ${esRutaActiva ? 'active' : ''}">
-                                    <span class="reda-icon-svg-18 me-2">
-                                        ${mediacionSvg}
-                                    </span>
-                                    <span class="reda-mediaciones-texto-admin">${labelMediaciones}</span>
+                            <li class="nav-item treeview ${esRutaActiva ? 'active menu-open' : ''}" id="menu-mediaciones">
+                                <a href="#" class="nav-link mediaciones-toggle d-flex align-items-center justify-content-between ${esRutaActiva ? 'active' : ''}">
+                                    <div class="d-flex align-items-center">
+                                        <span class="reda-icon-svg-18 me-2">
+                                            ${mediacionSvg}
+                                        </span>
+                                        <span class="reda-mediaciones-texto-admin">${labelMediaciones}</span>
+                                    </div>
+                                    <i class="fa ${esRutaActiva ? 'fa-angle-down' : 'fa-angle-left'} pull-right ms-auto"></i>
                                 </a>
+                                <ul class="nav nav-treeview treeview-menu ${esRutaActiva ? '' : 'reda-admin-menu-hidden'}" style="${esRutaActiva ? 'display: block;' : ''}">
+                                    <li class="nav-item">
+                                        <a href="${linkMediaciones}" class="nav-link btn-menu-mediacion-item ${esRutaActiva ? 'active' : ''}">
+                                            <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
+                                            <span>${labelListado}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="${linkConfiguracion}" class="nav-link btn-menu-mediacion-config">
+                                            <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
+                                            <span>${labelConfiguracion}</span>
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         `;
 
@@ -123,10 +143,30 @@ export const menuLateralAdmin = () =>
                             $('.sidebar-menu').append(mediacionMenuHtml);
                         }
 
-                        console.log('Opción "Mediaciones" inyectada para rol con acceso.');
+                        console.log('Submenú "Mediaciones" inyectado para rol con acceso.');
 
-                        // Animación de espera al hacer clic en Mediaciones
-                        $(document).on('click', '.btn-menu-mediacion', function(e) {
+                        // Toggle para desplegar y replegar el submenú de Mediaciones
+                        $('#menu-mediaciones > .mediaciones-toggle').on('click', function(e) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation(); 
+
+                            const $liPadre = $(this).closest('#menu-mediaciones');
+                            const $subMenu = $liPadre.find('.treeview-menu, .nav-treeview');
+                            const $flecha = $(this).find('.pull-right');
+
+                            if ($subMenu.is(':visible')) {
+                                $subMenu.slideUp('fast');
+                                $liPadre.removeClass('active menu-open');
+                                $flecha.removeClass('fa-angle-down').addClass('fa-angle-left');
+                            } else {
+                                $subMenu.slideDown('fast');
+                                $liPadre.addClass('active menu-open');
+                                $flecha.removeClass('fa-angle-left').addClass('fa-angle-down');
+                            }
+                        });
+
+                        // Animación de espera al hacer clic en Listado de Mediaciones
+                        $(document).on('click', '.btn-menu-mediacion-item', function(e) {
                             if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
                                 if (window.location.href.includes('admin/reda/disputas')) {
                                     e.preventDefault();
@@ -138,7 +178,12 @@ export const menuLateralAdmin = () =>
                             }
                         });
 
-                        // Actualizar contador de mediaciones activas
+                        // Evento para Configuración de Mediaciones (Enlace con # temporal)
+                        $(document).on('click', '.btn-menu-mediacion-config', function(e) {
+                            e.preventDefault();
+                        });
+
+                        // Actualizar contador de mediaciones activas en el submenú
                         const actualizarContadorAdmin = async () => {
                             const adminCountUrl = `${baseUrl}/admin/reda/disputas/count-activas`;
                             const respuesta = await obtenerConteoMediaciones(adminCountUrl);

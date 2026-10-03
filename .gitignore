@@ -36,7 +36,8 @@ public/front
 /storage/debugbar/*
 
 # Otros
-/documentacion/
+/Documentacion*/
+/documentacion*/
 *copy*
 *original*
 chat_gemini/

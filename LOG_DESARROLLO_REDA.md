@@ -4,6 +4,21 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [30 de Septiembre, 2026] - Transformación de "Mediaciones" en Submenú Desplegable (Listado y Configuración) en Menú Lateral Admin
+- **Tarea:** En el menú lateral del panel administrativo (Backend), transformar la opción de enlace simple "Mediaciones" en un submenú desplegable interactivo tipo acordeón (`.treeview`) que contenga dos opciones:
+    1. **Listado:** Conduce a la vista principal del listado de mediaciones (`/admin/reda/disputas`), activando la animación de espera al interactuar.
+    2. **Configuración:** Opción preliminar apuntando a `#` reservada para la futura configuración del módulo de mediaciones.
+    3. Comportamiento interactivo: Al hacer clic en el encabezado padre "Mediaciones", se despliega o repliega suavemente mediante animación slide (`slideUp`/`slideDown`), alternando el icono de la flecha (`fa-angle-left` / `fa-angle-down`). Si el usuario se encuentra navegando en la ruta de mediaciones (`admin/reda/disputas`), el submenú se renderiza abierto automáticamente (`menu-open active`) y la opción "Listado" se marca como activa.
+    4. El contador dinámico de mediaciones activas (`adminCountUrl`) se conserva y actualiza automáticamente en el encabezado del submenú (`Mediaciones (N)`).
+- **Archivos Modificados/Creados:**
+    *   `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`: Reestructurada la sección de inyección de "Mediaciones" para generar la estructura jerárquica con contenedor `li.nav-item.treeview`, enlace toggle con icono SVG, flecha animada y lista hija `ul.nav.nav-treeview.treeview-menu` con "Listado" y "Configuración". Implementados los manejadores de eventos para el despliegue animado, la animación de espera en "Listado" y la prevención por defecto en "Configuración".
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Incorporadas las claves de traducción `"Listado": "Listado"` y `"Configuración": "Configuración"`.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Actualizada la documentación técnica de `menuLateralAdmin.js` con las especificaciones del nuevo submenú desplegable.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto de Laravel vRent (`resources/views/admin/common/left_sidebar.blade.php`, etc.) se mantienen 100% intactos e inalterados. La solución se construyó exclusivamente en el JavaScript del plugin REDA respetando la estructura semántica de AdminLTE 4 / Bootstrap 5, manteniendo compatibilidad total tanto para roles 1 (Admin) como 2 (Atención al usuario). Siguiendo las directrices del proyecto, los archivos fuente quedan editados en Cloud Shell y la compilación a `reda-admin-general-main.min.js` debe realizarse en el servidor Vesta mediante `./compilar.sh`.
+- **Estado:** Completado y documentado.
+
+---
+
 ## [30 de Septiembre, 2026] - Asignación Dinámica de Agentes (Rol 1 Select, Rol 2 Suiche "Tomar Mediación") y Filtrado en Index de Disputas
 - **Tarea:** Mejorar la vista de mediaciones administrativas (`/admin/reda/disputas`) adaptándola según el rol del usuario administrador autenticado en `role_admin`:
     1. Para Rol 1 (Admin): En cada tarjeta de la lista donde no haya agente asignado, sustituir el texto por un control interactivo `<select>` con la lista de agentes (obtenidos de `admin`, `roles` y `role_admin` con status 'Active'), incluyendo al propio usuario admin con Rol 1 por si desea atender la mediación él mismo. Al seleccionar un agente, se persiste vía AJAX en la columna `id_usuario_agente_asignado` de la tabla `disputas`, mostrando inmediatamente la foto de perfil y el nombre del agente, con opción de reasignar.

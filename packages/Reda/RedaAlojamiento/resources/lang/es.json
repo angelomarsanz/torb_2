@@ -701,5 +701,7 @@
     "El agente seleccionado no es válido o no está activo.": "El agente seleccionado no es válido o no está activo.",
     "Ocurrió un error al asignar la mediación. Por favor, intente nuevamente.": "Ocurrió un error al asignar la mediación. Por favor, intente nuevamente.",
     "Mediación asignada": "Mediación asignada",
-    "Error al asignar la mediación.": "Error al asignar la mediación."
+    "Error al asignar la mediación.": "Error al asignar la mediación.",
+    "Listado": "Listado",
+    "Configuración": "Configuración"
 }

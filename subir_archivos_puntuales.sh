@@ -140,7 +140,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/admin/general/paginacion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/configuracion_planes.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/partials/tabla_planes.blade.php"
-    "packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/modal_detalle.blade.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (FRONTEND - CARPETAS FRONTEND) ---
@@ -190,12 +190,12 @@ ARCHIVOS_PHP_PUNTUALES=(
 
     # --- Archivos Javascript admin ---
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/notificaciones.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js"
+    "packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js"
 
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
-    "packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
 
     # --- Archivos Javascript en la carpeta frontend ---
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoProductosServicios.js"
@@ -242,7 +242,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     # --- PLUGIN REDA ALOJAMIENTO: CONTROLADORES admin ---
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Experiencia/ExperienciaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/General/SoporteTecnicoController.php"
-    "packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php"
+    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/MensajeController.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: CONTROLADORES ---
