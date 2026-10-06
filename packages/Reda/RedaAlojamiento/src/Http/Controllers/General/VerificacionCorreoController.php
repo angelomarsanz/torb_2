@@ -153,4 +153,113 @@ class VerificacionCorreoController extends Controller
             return response()->json($respuesta, 500);
         }
     }
+
+    /**
+     * Reenvía el correo de verificación a un usuario registrado cuya cuenta aún no
+     * ha sido confirmada, sin modificar su dirección de correo electrónico.
+     *
+     * @param  \Illuminate\Http\Request              $request
+     * @param  \App\Http\Controllers\EmailController $emailController
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reenviarCorreoVerificacion(Request $request, EmailController $emailController)
+    {
+        try {
+            $reglas = [
+                'email' => 'required|email|max:255',
+            ];
+
+            $mensajes = [
+                'email.required' => __('El correo electrónico es obligatorio.'),
+                'email.email'    => __('El correo electrónico no tiene un formato válido.'),
+            ];
+
+            $validador = Validator::make($request->all(), $reglas, $mensajes);
+
+            if ($validador->fails()) {
+                $respuesta = [
+                    'success' => false,
+                    'message' => __('Datos de validación inválidos'),
+                    'mensaje_usuario' => $validador->errors()->first(),
+                    'respuesta' => $validador->errors(),
+                    'code' => 422
+                ];
+                return response()->json($respuesta, 422);
+            }
+
+            $correo = trim($request->email);
+
+            // Buscar usuario por su correo
+            $usuario = User::where('email', $correo)->first();
+
+            if (!$usuario) {
+                $respuesta = [
+                    'success' => false,
+                    'message' => __('Usuario no registrado'),
+                    'mensaje_usuario' => __('No se encontró una cuenta registrada con este correo electrónico. Por favor haga clic en "Email correcto" para completar su registro.'),
+                    'respuesta' => [
+                        'registrado' => false
+                    ],
+                    'code' => 404
+                ];
+                return response()->json($respuesta, 404);
+            }
+
+            // Comprobar si el usuario ya está verificado en users_verification
+            $verificacion = UsersVerification::where('user_id', $usuario->id)->first();
+            if ($verificacion && strtolower($verificacion->email) === 'yes') {
+                $respuesta = [
+                    'success' => false,
+                    'message' => __('Usuario ya verificado'),
+                    'mensaje_usuario' => __('Esta cuenta de correo ya se encuentra confirmada. Por favor inicie sesión con sus credenciales.'),
+                    'respuesta' => [
+                        'verificado' => true
+                    ],
+                    'code' => 400
+                ];
+                return response()->json($respuesta, 400);
+            }
+
+            // Limpiar tokens anteriores en password_resets asociados a este correo
+            PasswordResets::where('email', $usuario->email)->delete();
+
+            // Reenviar correo de confirmación
+            try {
+                $emailController->welcome_email($usuario);
+                Log::info("Correo de verificación reenviado a {$usuario->email} para el usuario ID {$usuario->id}");
+            } catch (\Exception $e) {
+                Log::error("Fallo al reenviar correo de confirmación a {$usuario->email}: " . $e->getMessage());
+                $respuesta = [
+                    'success' => false,
+                    'message' => __('Error al enviar correo'),
+                    'mensaje_usuario' => __('No fue posible enviar el correo de verificación en este momento. Por favor intente nuevamente en unos instantes.'),
+                    'respuesta' => $e->getMessage(),
+                    'code' => 500
+                ];
+                return response()->json($respuesta, 500);
+            }
+
+            $respuesta = [
+                'success' => true,
+                'message' => __('Correo de verificación reenviado exitosamente'),
+                'mensaje_usuario' => __('El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de correo no deseado (spam).', ['email' => $usuario->email]),
+                'respuesta' => [
+                    'email' => $usuario->email
+                ],
+                'code' => 200
+            ];
+            return response()->json($respuesta, 200);
+
+        } catch (\Exception $ex) {
+            Log::error("Error general en VerificacionCorreoController@reenviarCorreoVerificacion: " . $ex->getMessage());
+            $respuesta = [
+                'success' => false,
+                'message' => __('Error interno del servidor'),
+                'mensaje_usuario' => __('Ocurrió un error inesperado al procesar su solicitud. Inténtelo nuevamente.'),
+                'respuesta' => $ex->getMessage(),
+                'code' => 500
+            ];
+            return response()->json($respuesta, 500);
+        }
+    }
 }

@@ -3,17 +3,19 @@
  *
  * Este script gestiona tres flujos esenciales:
  * 1. Intercepta el formulario de registro (Signup) para abrir un modal que permita
- *    al usuario revisar si su correo está bien escrito, confirmarlo o corregirlo
- *    con validación en tiempo real antes del envío.
+ *    al usuario revisar si su correo está bien escrito, confirmarlo, corregirlo
+ *    con validación en tiempo real antes del envío, o reenviar el correo de verificación
+ *    mediante el botón "Re-enviar" por si ya se había registrado previamente y no le llegó el mensaje.
  * 2. Detecta intentos de inicio de sesión con correo no verificado, abriendo un modal
- *    explicativo con la opción de corregir el email y reenviar la verificación vía AJAX.
+ *    explicativo con la opción de reenviar el enlace directamente ("Re-enviar") o corregir el email
+ *    y reenviar la verificación vía AJAX.
  * 3. Detecta la confirmación exitosa del correo (tras hacer clic en el enlace del email)
  *    y abre un modal amigable con un botón directo para iniciar sesión.
  *
  * @package    Reda\RedaAlojamiento
  * @subpackage resources/js/vistas/frontend
  * @author     REDA Tech Team
- * @version    1.0.0
+ * @version    1.1.0
  */
 
 (function($) {
@@ -99,11 +101,81 @@
                 $('#reda_signup_email_mostrado').text(emailActual);
                 $('#reda_signup_input_nuevo_email').val(emailActual);
                 $('#reda_signup_alerta_error').addClass('d-none');
+                $('#reda_signup_alerta_reenvio_exito').addClass('d-none');
+                $('#reda_signup_alerta_reenvio_error').addClass('d-none');
                 $('#reda_signup_paso_verificar').removeClass('d-none');
                 $('#reda_signup_paso_corregir').addClass('d-none');
 
                 $('#reda_modal_confirmar_email_signup').modal('show');
                 return false;
+            });
+
+            // Botón: "Re-enviar" en Signup (por si la cuenta ya fue registrada y no llegó el primer correo)
+            $(document).on('click', '#reda_btn_reenviar_email_signup', function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const emailActual = ($('#reda_signup_email_mostrado').text() || $('#email').val() || '').trim();
+
+                $('#reda_signup_alerta_reenvio_error').addClass('d-none');
+                $('#reda_signup_alerta_reenvio_exito').addClass('d-none');
+
+                if (!esCorreoValido(emailActual)) {
+                    $('#reda_signup_alerta_reenvio_error_texto').text(
+                        trans('Por favor ingrese una dirección de correo válida.', 'Por favor ingrese una dirección de correo válida.')
+                    );
+                    $('#reda_signup_alerta_reenvio_error').removeClass('d-none');
+                    return;
+                }
+
+                $btn.attr('disabled', true);
+                $btn.find('.btn-text').addClass('d-none');
+                $btn.find('.spinner').removeClass('d-none');
+
+                $.ajax({
+                    url: datosServidor.rutaReenviarCorreo,
+                    type: 'POST',
+                    data: {
+                        _token: datosServidor.csrfToken || $('meta[name="csrf-token"]').attr('content'),
+                        email: emailActual
+                    },
+                    dataType: 'json',
+                    success: function(respuesta) {
+                        $btn.attr('disabled', false);
+                        $btn.find('.btn-text').removeClass('d-none');
+                        $btn.find('.spinner').addClass('d-none');
+
+                        if (respuesta && respuesta.success) {
+                            $('#reda_signup_alerta_reenvio_exito_texto').text(
+                                respuesta.mensaje_usuario || trans('El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de spam.', 'El correo de verificación ha sido reenviado exitosamente a su correo. Por favor revise su bandeja de entrada o carpeta de spam.').replace(':email', emailActual)
+                            );
+                            $('#reda_signup_alerta_reenvio_exito').removeClass('d-none');
+                        } else {
+                            const mensajeError = respuesta.mensaje_usuario || trans('No se pudo reenviar el correo de verificación.', 'No se pudo reenviar el correo de verificación.');
+                            $('#reda_signup_alerta_reenvio_error_texto').text(mensajeError);
+                            $('#reda_signup_alerta_reenvio_error').removeClass('d-none');
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.attr('disabled', false);
+                        $btn.find('.btn-text').removeClass('d-none');
+                        $btn.find('.spinner').addClass('d-none');
+
+                        let mensajeServidor = trans('Error en el servidor al intentar reenviar el correo de verificación.', 'Error en el servidor al intentar reenviar el correo de verificación.');
+                        try {
+                            const errorJson = JSON.parse(xhr.responseText);
+                            if (errorJson.mensaje_usuario) {
+                                mensajeServidor = errorJson.mensaje_usuario;
+                            } else if (errorJson.message) {
+                                mensajeServidor = errorJson.message;
+                            }
+                        } catch (e) {
+                            // Error parseo
+                        }
+
+                        $('#reda_signup_alerta_reenvio_error_texto').text(mensajeServidor);
+                        $('#reda_signup_alerta_reenvio_error').removeClass('d-none');
+                    }
+                });
             });
 
             // Botón: "Email correcto" -> Procede al envío del formulario
@@ -122,6 +194,8 @@
             $(document).on('click', '#reda_btn_corregir_email_signup', function(e) {
                 e.preventDefault();
                 $('#reda_signup_alerta_error').addClass('d-none');
+                $('#reda_signup_alerta_reenvio_exito').addClass('d-none');
+                $('#reda_signup_alerta_reenvio_error').addClass('d-none');
                 $('#reda_signup_paso_verificar').addClass('d-none');
                 $('#reda_signup_paso_corregir').removeClass('d-none');
                 $('#reda_signup_input_nuevo_email').focus();
@@ -167,9 +241,9 @@
         // ----------------------------------------------------------------------
         // 2. FLUJO DE LOGIN: CORREO NO VERIFICADO
         // ----------------------------------------------------------------------
-        if (datosServidor.correoNoVerificado) {
-            const correoPendiente = datosServidor.correoNoVerificado;
+        const correoPendiente = datosServidor.correoNoVerificado || datosServidor.correoRegistradoPendiente;
 
+        if (correoPendiente) {
             $('#reda_login_email_no_verificado_texto').text(correoPendiente);
             $('#reda_login_email_no_verificado_subtexto').text(correoPendiente);
             $('#reda_login_input_nuevo_correo').val(correoPendiente);
@@ -187,9 +261,79 @@
             });
         }
 
+        // Botón: "Re-enviar" correo en Login (cuando el correo sí está correcto pero no llegó el mensaje)
+        $(document).on('click', '#reda_btn_reenviar_correo_login', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const correoActual = ($('#reda_login_email_no_verificado_texto').text() || '').trim();
+
+            $('#reda_login_aviso_alerta_error').addClass('d-none');
+            $('#reda_login_aviso_alerta_exito').addClass('d-none');
+
+            if (!esCorreoValido(correoActual)) {
+                $('#reda_login_aviso_alerta_error_texto').text(
+                    trans('Por favor ingrese una dirección de correo válida.', 'Por favor ingrese una dirección de correo válida.')
+                );
+                $('#reda_login_aviso_alerta_error').removeClass('d-none');
+                return;
+            }
+
+            $btn.attr('disabled', true);
+            $btn.find('.btn-text').addClass('d-none');
+            $btn.find('.spinner').removeClass('d-none');
+
+            $.ajax({
+                url: datosServidor.rutaReenviarCorreo,
+                type: 'POST',
+                data: {
+                    _token: datosServidor.csrfToken || $('meta[name="csrf-token"]').attr('content'),
+                    email: correoActual
+                },
+                dataType: 'json',
+                success: function(respuesta) {
+                    $btn.attr('disabled', false);
+                    $btn.find('.btn-text').removeClass('d-none');
+                    $btn.find('.spinner').addClass('d-none');
+
+                    if (respuesta && respuesta.success) {
+                        $('#reda_login_aviso_alerta_exito_texto').text(
+                            respuesta.mensaje_usuario || trans('El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de spam.', 'El correo de verificación ha sido reenviado exitosamente a su correo. Por favor revise su bandeja de entrada o carpeta de spam.').replace(':email', correoActual)
+                        );
+                        $('#reda_login_aviso_alerta_exito').removeClass('d-none');
+                    } else {
+                        const mensajeError = respuesta.mensaje_usuario || trans('Ocurrió un error al procesar la solicitud.', 'Ocurrió un error al procesar la solicitud.');
+                        $('#reda_login_aviso_alerta_error_texto').text(mensajeError);
+                        $('#reda_login_aviso_alerta_error').removeClass('d-none');
+                    }
+                },
+                error: function(xhr) {
+                    $btn.attr('disabled', false);
+                    $btn.find('.btn-text').removeClass('d-none');
+                    $btn.find('.spinner').addClass('d-none');
+
+                    let mensajeServidor = trans('Error en el servidor al intentar reenviar el correo de verificación.', 'Error en el servidor al intentar reenviar el correo de verificación.');
+                    try {
+                        const errorJson = JSON.parse(xhr.responseText);
+                        if (errorJson.mensaje_usuario) {
+                            mensajeServidor = errorJson.mensaje_usuario;
+                        } else if (errorJson.message) {
+                            mensajeServidor = errorJson.message;
+                        }
+                    } catch (e) {
+                        // Error de parseo
+                    }
+
+                    $('#reda_login_aviso_alerta_error_texto').text(mensajeServidor);
+                    $('#reda_login_aviso_alerta_error').removeClass('d-none');
+                }
+            });
+        });
+
         // Botón: "Corregir correo" en el modal de Login
         $(document).on('click', '#reda_btn_abrir_corregir_correo_login', function(e) {
             e.preventDefault();
+            $('#reda_login_aviso_alerta_error').addClass('d-none');
+            $('#reda_login_aviso_alerta_exito').addClass('d-none');
             $('#reda_login_alerta_error').addClass('d-none');
             $('#reda_login_alerta_exito').addClass('d-none');
             $('#reda_login_paso_aviso').addClass('d-none');
@@ -200,6 +344,8 @@
         // Botón: "Cancelar" corrección en Login
         $(document).on('click', '#reda_btn_cancelar_corregir_login', function(e) {
             e.preventDefault();
+            $('#reda_login_aviso_alerta_error').addClass('d-none');
+            $('#reda_login_aviso_alerta_exito').addClass('d-none');
             $('#reda_login_alerta_error').addClass('d-none');
             $('#reda_login_alerta_exito').addClass('d-none');
             $('#reda_login_paso_formulario').addClass('d-none');

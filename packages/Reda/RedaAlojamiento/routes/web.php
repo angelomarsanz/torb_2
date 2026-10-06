@@ -194,6 +194,9 @@ Route::prefix('reda')->middleware(['web', 'locale'])->group(function () {
     // Ruta para actualizar correo no verificado y reenviar confirmación
     Route::post('usuarios/actualizar-correo-verificacion', [VerificacionCorreoController::class, 'actualizarCorreoYReenviar'])->name('reda.usuarios.actualizar_correo_verificacion');
 
+    // Ruta para reenviar correo de verificación sin modificar la dirección
+    Route::post('usuarios/reenviar-correo-verificacion', [VerificacionCorreoController::class, 'reenviarCorreoVerificacion'])->name('reda.usuarios.reenviar_correo_verificacion');
+
 
     // ----------------------------------------------------------------------
     // 2. Rutas de Negocios Sin Login Requerido

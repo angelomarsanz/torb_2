@@ -1,4 +1,13 @@
 {
+    "Re-enviar": "Re-enviar",
+    "Reenviar": "Reenviar",
+    "Usuario no registrado": "Usuario no registrado",
+    "Correo de verificación reenviado exitosamente": "Correo de verificación reenviado exitosamente",
+    "El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de correo no deseado (spam).": "El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de correo no deseado (spam).",
+    "El correo de verificación ha sido reenviado exitosamente a su correo. Por favor revise su bandeja de entrada o carpeta de spam.": "El correo de verificación ha sido reenviado exitosamente a su correo. Por favor revise su bandeja de entrada o carpeta de spam.",
+    "No se encontró una cuenta registrada con este correo electrónico. Por favor haga clic en \"Email correcto\" para completar su registro.": "No se encontró una cuenta registrada con este correo electrónico. Por favor haga clic en \"Email correcto\" para completar su registro.",
+    "Error en el servidor al intentar reenviar el correo de verificación.": "Error en el servidor al intentar reenviar el correo de verificación.",
+    "No se pudo reenviar el correo de verificación.": "No se pudo reenviar el correo de verificación.",
     "Verifique su correo electrónico": "Verifique su correo electrónico",
     "Por favor verifique si la dirección de su correo es correcta": "Por favor verifique si la dirección de su correo es correcta",
     "Por favor verifique si la dirección de su correo es correcta:": "Por favor verifique si la dirección de su correo es correcta:",

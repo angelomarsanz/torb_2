@@ -152,18 +152,27 @@
   Controlador que extiende de `App\Http\Controllers\LoginController` para proteger el acceso al sistema. Sobrescribe `authenticate` para comprobar las credenciales del usuario; si la contraseña es correcta pero `users_verification.email` no es 'yes', bloquea el inicio de sesión y redirige a la vista de login con la variable flash `correo_no_verificado` para desplegar el modal interactivo de aviso y corrección de correo.
 
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php**
-  Controlador encargado de la actualización y reenvío del correo de confirmación. Ofrece el método `actualizarCorreoYReenviar` que valida que la cuenta exista, que aún no esté verificada en `users_verification` (`email != 'yes'`), que el nuevo correo no esté registrado por otro usuario, actualiza el registro en la tabla `users`, limpia tokens previos y reenvía el correo de confirmación invocando `EmailController@welcome_email`.
+  Controlador encargado de la verificación, actualización y reenvío del correo de confirmación de cuenta:
+  - `actualizarCorreoYReenviar(Request $request, EmailController $emailController)`: Valida la cuenta existente y no verificada (`users_verification.email != 'yes'`), comprueba la disponibilidad del nuevo correo, actualiza `users.email`, purga tokens previos en `password_resets` y reenvía el correo de confirmación con `welcome_email`.
+  - `reenviarCorreoVerificacion(Request $request, EmailController $emailController)`: Endpoint `POST reda/usuarios/reenviar-correo-verificacion` que permite reenviar el correo de verificación sin modificar la dirección registrada. Valida el formato del correo, busca la cuenta en la tabla `users` (devolviendo 404 pedagógico si no existe aún), confirma que la cuenta no esté validada previamente (400 si ya está activa), renueva el token en `password_resets` y reenvía el correo de confirmación invocando `EmailController@welcome_email`, retornando la estructura estándar JSON de REDA.
 
 ### Vistas
 - **packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php**
-  Estructura de modales Bootstrap 4.5 e inyección de datos de sesión a JavaScript (`window.RedaVerificacionData`). Contiene:
-  1. `#reda_modal_confirmar_email_signup`: Muestra el email ingresado en el registro y pregunta "¿Por favor verifique si la dirección de su correo es correcta?", con botones "Email correcto" y "Corregir email" (con formulario y validación).
-  2. `#reda_modal_correo_no_verificado_login`: Alerta en login cuando el usuario tiene credenciales válidas pero su correo no ha sido verificado, con opción para corregir el email y reenviar el enlace vía AJAX.
+  Estructura de modales Bootstrap 4.5 e inyección de datos de sesión a JavaScript (`window.RedaVerificacionData` con `rutaActualizarCorreo`, `rutaReenviarCorreo`, `correoNoVerificado`, `correoRegistradoPendiente` y `csrfToken`). Contiene:
+  1. `#reda_modal_confirmar_email_signup`: Muestra el email ingresado en el registro y pregunta "¿Por favor verifique si la dirección de su correo es correcta?", disponiendo de 3 botones interactivos:
+     - "Corregir email": despliega el input para editar la dirección antes de enviar.
+     - "Re-enviar": botón con spinner que envía una petición asíncrona a `rutaReenviarCorreo` por si el usuario ya se había registrado previamente pero no le llegó el primer correo, mostrando alertas de éxito o aviso si aún no existe la cuenta.
+     - "Email correcto": procede con el envío regular del formulario de registro.
+  2. `#reda_modal_correo_no_verificado_login`: Alerta en login cuando el usuario tiene credenciales válidas o acaba de registrarse pero su correo no ha sido verificado, con botón "Re-enviar" directo y botón "Corregir correo" con formulario interactivo y reenvío asíncrono.
   3. `#reda_modal_correo_confirmado_exito`: Mensaje de confirmación exitosa con botón para "Iniciar sesión" tras hacer clic en el enlace del correo.
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js**
-  Controlador JavaScript del flujo de verificación y corrección de correo. Intercepta el formulario `#signup_form` previa validación con jQuery Validate y `ageValidate()`, abre el modal de confirmación antes del envío y actualiza el campo si se corrige. Detecta si la sesión contiene `correo_no_verificado` para desplegar el modal en login con la petición AJAX de actualización. Detecta `correo_confirmado_exitoso` para desplegar el modal de bienvenida y enfocar el login.
+  Controlador JavaScript del flujo de verificación, reenvío y corrección de correo:
+  - Intercepta el formulario `#signup_form` previa validación con jQuery Validate y `ageValidate()`, abre el modal de confirmación antes del envío y ofrece la opción de enviar, corregir o reenviar.
+  - Gestiona el botón `#reda_btn_reenviar_email_signup` para reenviar el correo de confirmación vía AJAX hacia `rutaReenviarCorreo` con bloqueo del botón, animación de spinner y mensajes reactivos de éxito o error.
+  - Detecta si la sesión contiene `correo_no_verificado` o `correo_registrado_pendiente` para desplegar el modal en login, permitiendo el reenvío inmediato con `#reda_btn_reenviar_correo_login` o la corrección de correo.
+  - Detecta `correo_confirmado_exitoso` para desplegar el modal de bienvenida y enfocar el campo de login.
 
 ## Flujo de Pago y Confirmación de Reservas
 
@@ -284,6 +293,14 @@
   - **Protocolo de Lectura:** Al inicio de cada sesión o antes de iniciar modificaciones, la IA lo lee obligatoriamente para verificar si existió una interrupción previa y en qué punto exacto quedaron los cambios.
   - **Reinicio Limpio:** Tras refrescar la memoria, se limpia e inicializa con la nueva tarea activa para evitar basura acumulada de sesiones anteriores.
   - **Registro Progresivo:** Durante tareas extensas o con múltiples archivos, la IA registra progresivamente cada archivo modificado o creado a medida que avanza, salvaguardando el progreso antes de continuar al siguiente paso.
+
+### Modalidad de Trabajo Autónomo y Reporte Final
+- **Directrices en GEMINI.md y REDA_PAUTAS_DESARROLLO.md:**
+  Define el modelo operativo de trabajo autónomo de la IA ante solicitudes de desarrollo y mantenimiento en el proyecto:
+  - **Ejecución Directa y Continua:** La IA aplica todas las modificaciones y creaciones de código fuente de forma directa y autónoma, sin realizar pausas intermedias ni requerir aceptación/rechazo manual paso a paso por parte del usuario.
+  - **Salvaguarda Progresiva:** Mantiene actualizado en tiempo real el archivo `previo_cambios_realizados.md` durante el proceso de desarrollo.
+  - **Documentación Completa y Reporte Exhaustivo:** Al culminar todas las modificaciones, la IA actualiza obligatoriamente `LOG_DESARROLLO_REDA.md`, este manual técnico y las cabeceras correspondientes, entregando al usuario un informe final claro, pedagógico y detallado con los archivos intervenidos, las soluciones implementadas y las instrucciones pertinentes para el servidor Vesta de desarrollo.
+
 
 
 

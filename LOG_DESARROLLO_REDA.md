@@ -4,6 +4,56 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [6 de Octubre, 2026] - Botón "Re-enviar" Correo de Verificación en Modales de Registro (Signup) e Inicio de Sesión (Login)
+- **Tarea:** Enriquecer el flujo de verificación de correo electrónico añadiendo un tercer botón interactivo **"Re-enviar"** en el modal previo al registro (`#reda_modal_confirmar_email_signup`) y en el modal de cuenta no verificada en inicio de sesión (`#reda_modal_correo_no_verificado_login`):
+    1. **Auditoría e Identificación de Componentes:** Se revisó la memoria técnica en `LOG_DESARROLLO_REDA.md` y `manual_tecnico_plugin_reda_alojamiento.md` identificando que los archivos responsables del modal son `packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php`, `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js`, `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php` y `packages/Reda/RedaAlojamiento/routes/web.php`.
+    2. **Nuevo Endpoint Backend (`VerificacionCorreoController@reenviarCorreoVerificacion`):**
+        - Se creó el endpoint `POST reda/usuarios/reenviar-correo-verificacion`.
+        - Valida el formato de correo electrónico.
+        - Si el usuario no existe en la tabla `users`, devuelve un código HTTP 404 con mensaje pedagógico ("No se encontró una cuenta registrada con este correo electrónico. Por favor haga clic en 'Email correcto' para completar su registro").
+        - Si el usuario existe pero ya está verificado (`users_verification.email == 'yes'`), responde con HTTP 400 informando que la cuenta ya fue confirmada.
+        - Si el usuario existe y no está verificado, limpia tokens previos en `password_resets`, invoca `EmailController@welcome_email($usuario)` y retorna respuesta JSON estándar de REDA con confirmación de éxito.
+    3. **Tercer Botón "Re-enviar" en Modal de Registro (Signup):**
+        - En `#reda_modal_confirmar_email_signup` se integró el botón `#reda_btn_reenviar_email_signup` entre "Corregir email" y "Email correcto".
+        - Incluye icono `fa-paper-plane`, spinner de carga y contenedores para alertas de éxito o aviso de no registro.
+        - Si el usuario ya se había registrado previamente pero no le llegó el primer correo, al hacer clic en "Re-enviar" se reenvía el correo de verificación vía AJAX sin provocar errores de duplicidad (`unique:users`).
+    4. **Botón "Re-enviar" Directo en Modal de Inicio de Sesión (Login):**
+        - En `#reda_modal_correo_no_verificado_login` se incorporó el botón `#reda_btn_reenviar_correo_login` junto a "Corregir correo" y "Cerrar".
+        - Permite al usuario que intenta iniciar sesión y sabe que su correo es correcto reenviar el enlace con un solo clic sin necesidad de volver a tipear la dirección.
+        - Se añadió soporte para que tras registrarse (`correo_registrado_pendiente`) el modal esté disponible de inmediato en la vista de login.
+    5. **Traducciones en Español (`es.json`):**
+        - Registro de todas las cadenas de texto, mensajes de validación y retroalimentación en español.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php`: Incorporación del método `reenviarCorreoVerificacion`.
+    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Registro de la ruta POST `reda/usuarios/reenviar-correo-verificacion`.
+    *   `packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php`: Inyección de `rutaReenviarCorreo`, nuevo botón "Re-enviar" y contenedores de alertas en modales de Signup y Login.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js`: Manejadores de eventos AJAX para los botones de reenvío con spinners y retroalimentación reactiva.
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Incorporación de cadenas de traducción en español.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Actualización de la documentación técnica del controlador, rutas, vistas y scripts.
+    *   `previo_cambios_realizados.md`: Actualizado con el registro de progreso y punto de control en tiempo real.
+    *   `LOG_DESARROLLO_REDA.md`: Registro de la sesión del 6 de Octubre, 2026.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto de Laravel vRent se mantienen 100% inalterados e intactos. Toda la solución reside en el paquete `packages/Reda/RedaAlojamiento`. Siguiendo el protocolo mandatorio del entorno, los archivos fuente quedan editados en Cloud Shell y la compilación de assets a `verificacionCorreo.min.js` debe realizarse en el servidor Vesta de desarrollo mediante `./compilar.sh`.
+- **Estado:** Completado, validado y documentado.
+
+---
+
+## [6 de Octubre, 2026] - Actualización de Directrices de Desarrollo: Modalidad de Trabajo Autónomo de la IA sin Pausas Intermedias
+- **Tarea:** Configurar y asentar en las directrices de `GEMINI.md` (.github/copilot-instructions.md) y `REDA_PAUTAS_DESARROLLO.md` el cambio de preferencia operativa solicitado por el usuario:
+    1. **Eliminación de Pausas para Aceptación Intermedia de Código:** Se reemplazó la directriz anterior (que exigía mostrar pantallas divididas de diferencias y esperar aprobación o rechazo manual paso a paso) por la **modalidad de trabajo autónomo**. La IA ahora implementa los cambios, correcciones o nuevas funcionalidades directamente en los archivos correspondientes sin interrumpir el flujo.
+    2. **Punto de Control Progresivo (`previo_cambios_realizados.md`):** Se mantiene como regla mandatoria el registro progresivo en tiempo real de cada archivo modificado o creado durante el proceso de desarrollo, salvaguardando el progreso ante cortes de energía o caídas de internet.
+    3. **Documentación Completa Obligatoria:** Al finalizar las modificaciones, la IA actualiza obligatoriamente `LOG_DESARROLLO_REDA.md`, `manual_tecnico_plugin_reda_alojamiento.md` y las cabeceras/funciones de los archivos creados o editados.
+    4. **Reporte Final Detallado y Pedagógico:** Al concluir todo el proceso y la documentación, la IA entrega al usuario un informe exhaustivo, claro y estructurado que detalla los archivos modificados/creados, la explicación técnica de las soluciones implementadas y los pasos a seguir por el usuario en el servidor Vesta de desarrollo (subida vía FTP con `subir.sh` o `subir_archivos_puntuales.sh`, comandos de compilación y migraciones según apliquen).
+- **Archivos Modificados:**
+    *   `GEMINI.md` (.github/copilot-instructions.md): Se actualizó la sección *"Interacción con la IA y Modo de Trabajo Autónomo"*, eliminando la directriz de pausas/pantalla dividida y estableciendo la ejecución directa y reporte final detallado.
+    *   `REDA_PAUTAS_DESARROLLO.md`: Se incorporó la sección *"7. Modalidad de Trabajo Autónomo de la IA y Reporte Final"*.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Se documentó en el sistema de puntos de control y memoria operativa la nueva modalidad de trabajo autónomo y reporte final.
+    *   `previo_cambios_realizados.md`: Reinicializado y actualizado como punto de control en tiempo real.
+    *   `LOG_DESARROLLO_REDA.md`: Registro de la sesión del 6 de Octubre, 2026.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto de Laravel vRent se mantienen 100% inalterados e intactos. La modificación responde a una actualización organizativa y metodológica de las pautas del proyecto.
+- **Estado:** Completado, validado y documentado.
+
+---
+
 ## [5 de Octubre, 2026] - Sistema Integral de Alertas y Suspensión por Límites de Mediaciones, Notificaciones por Correo y Buzón, y Submenú "Mensajes y Alertas" en Panel Admin
 - **Tarea:** Revisar, validar, perfeccionar y documentar la arquitectura completa del sistema de avisos preventivos, suspensión de cuentas y alertas administrativas por límites de mediaciones:
     1. **Validación de Estatus de Suspensión:** Se auditó el esquema nativo de la tabla `users` y los controladores de autenticación (`LoginController`, `CustomerController`). Se constató que el valor nativo para cuentas deshabilitadas/suspendidas es `'Inactive'` (el cual bloquea de inmediato el inicio de sesión del usuario en el core y marca su cuenta como inactiva), por lo que se utiliza de forma estándar en el plugin REDA.

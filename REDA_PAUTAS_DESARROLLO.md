@@ -78,4 +78,13 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
   - Siempre debe sugerir por escrito el comando que el usuario debe ejecutar en el servidor (ej: *"Por favor ejecute en el servidor Vesta: `sudo -u appvac php8.2 artisan migrate`"* o *"Por favor ejecute `./compilar.sh`"*).
   - La IA debe **DETENER su respuesta** en ese punto y esperar a que el usuario confirme la ejecución para reactivar y proseguir con el siguiente paso.
 
+---
+
+## 7. Modalidad de Trabajo Autónomo de la IA y Reporte Final
+
+- **Ejecución Directa y Continua:** La IA debe realizar los cambios, ajustes y creaciones de código fuente en los archivos del proyecto de forma autónoma e independiente, **sin hacer pausas intermedias** ni requerir la aceptación o rechazo manual del usuario paso a paso.
+- **Punto de Control Progresivo:** Como medida de salvaguarda ante interrupciones imprevistas (fallas eléctricas o de internet), la IA registrará progresivamente en tiempo real el avance y los archivos intervenidos en `previo_cambios_realizados.md`.
+- **Documentación Completa y Reporte Final:** Al culminar todas las modificaciones solicitadas, la IA cumplirá obligatoriamente con la documentación en `LOG_DESARROLLO_REDA.md`, `manual_tecnico_plugin_reda_alojamiento.md` y cabeceras de código, y presentará al usuario un informe final completo, claro y pedagógico con el detalle técnico de todo lo realizado y las indicaciones pertinentes para el servidor Vesta de desarrollo.
+
+
 

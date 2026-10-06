@@ -15,6 +15,7 @@
         emailConfirmado: @json(Session::get('email_confirmado') ?? null),
         correoRegistradoPendiente: @json(Session::get('correo_registrado_pendiente') ?? null),
         rutaActualizarCorreo: @json(url('reda/usuarios/actualizar-correo-verificacion')),
+        rutaReenviarCorreo: @json(url('reda/usuarios/reenviar-correo-verificacion')),
         urlLogin: @json(url('login')),
         csrfToken: @json(csrf_token())
     };
@@ -41,11 +42,24 @@
                     <div class="p-3 mb-3 bg-light rounded text-center border" style="border-color: #e2e8f0 !important;">
                         <span id="reda_signup_email_mostrado" class="font-weight-bold text-dark text-16" style="word-break: break-all;"></span>
                     </div>
-                    <div class="d-flex justify-content-end align-items-center mt-4">
-                        <button type="button" id="reda_btn_corregir_email_signup" class="btn btn-outline-secondary px-3 mr-2" style="border-radius: 20px; font-weight: 600;">
+
+                    {{-- Alertas para retroalimentación al reenviar --}}
+                    <div id="reda_signup_alerta_reenvio_exito" class="alert alert-success py-2 px-3 text-13 d-none mb-3" role="alert">
+                        <i class="fa fa-check-circle mr-1"></i><span id="reda_signup_alerta_reenvio_exito_texto"></span>
+                    </div>
+                    <div id="reda_signup_alerta_reenvio_error" class="alert alert-danger py-2 px-3 text-13 d-none mb-3" role="alert">
+                        <i class="fa fa-exclamation-circle mr-1"></i><span id="reda_signup_alerta_reenvio_error_texto"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-end align-items-center mt-4">
+                        <button type="button" id="reda_btn_corregir_email_signup" class="btn btn-outline-secondary px-3 mr-2 mb-2" style="border-radius: 20px; font-weight: 600;">
                             <i class="fa fa-pencil mr-1"></i>{{ __('Corregir email') }}
                         </button>
-                        <button type="button" id="reda_btn_email_correcto_signup" class="btn vbtn-success px-4" style="border-radius: 20px; font-weight: 600;">
+                        <button type="button" id="reda_btn_reenviar_email_signup" class="btn btn-outline-primary px-3 mr-2 mb-2" style="border-radius: 20px; font-weight: 600;">
+                            <span class="btn-text"><i class="fa fa-paper-plane mr-1"></i>{{ __('Re-enviar') }}</span>
+                            <i class="spinner fa fa-spinner fa-spin d-none ml-1"></i>
+                        </button>
+                        <button type="button" id="reda_btn_email_correcto_signup" class="btn vbtn-success px-4 mb-2" style="border-radius: 20px; font-weight: 600;">
                             <i class="fa fa-check mr-1"></i>{{ __('Email correcto') }}
                         </button>
                     </div>
@@ -97,11 +111,24 @@
                     <p class="text-muted text-14 mt-3 mb-4">
                         {{ __('En caso que la dirección de correo') }} <span id="reda_login_email_no_verificado_subtexto" class="font-weight-600 text-dark"></span> {{ __('sea incorrecta haga clic en "Corregir correo".') }}
                     </p>
-                    <div class="d-flex justify-content-end align-items-center">
-                        <button type="button" class="btn btn-light px-3 mr-2" style="border-radius: 20px;" data-dismiss="modal">
+
+                    {{-- Alertas para retroalimentación al reenviar desde Login --}}
+                    <div id="reda_login_aviso_alerta_exito" class="alert alert-success py-2 px-3 text-13 d-none mb-3" role="alert">
+                        <i class="fa fa-check-circle mr-1"></i><span id="reda_login_aviso_alerta_exito_texto"></span>
+                    </div>
+                    <div id="reda_login_aviso_alerta_error" class="alert alert-danger py-2 px-3 text-13 d-none mb-3" role="alert">
+                        <i class="fa fa-exclamation-circle mr-1"></i><span id="reda_login_aviso_alerta_error_texto"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-end align-items-center">
+                        <button type="button" class="btn btn-light px-3 mr-2 mb-2" style="border-radius: 20px;" data-dismiss="modal">
                             {{ __('Cerrar') }}
                         </button>
-                        <button type="button" id="reda_btn_abrir_corregir_correo_login" class="btn vbtn-success px-4" style="border-radius: 20px; font-weight: 600;">
+                        <button type="button" id="reda_btn_reenviar_correo_login" class="btn btn-outline-primary px-3 mr-2 mb-2" style="border-radius: 20px; font-weight: 600;">
+                            <span class="btn-text"><i class="fa fa-paper-plane mr-1"></i>{{ __('Re-enviar') }}</span>
+                            <i class="spinner fa fa-spinner fa-spin d-none ml-1"></i>
+                        </button>
+                        <button type="button" id="reda_btn_abrir_corregir_correo_login" class="btn vbtn-success px-4 mb-2" style="border-radius: 20px; font-weight: 600;">
                             <i class="fa fa-pencil mr-1"></i>{{ __('Corregir correo') }}
                         </button>
                     </div>

@@ -257,11 +257,17 @@ Hacerlo de esta manera:
     Para string o cualquier otro valor:
         Log::error("...");
 
-## Interacción con la IA
-Por favor explicar de manera pedagógica cualquier cambio realizado en el plugin o cualquier código nuevo agregado. Cuando sean cambios particionar la pantalla, en el lado izquierdo mostrar el archivo original completo y en el lado derecho el archivo modificado completo. Resaltando con color las líneas modificadas, eliminadas o agregadas y mostrar la opción de aceptar o rechazar el cambio
-
-## Autorización de codigo nuevo o modificado
-Cuando se terminen de agregar código nuevo en un archivo o se haya modificado el existente, siempre se debe hacer una pausa y mostrar los cambios en una pantalla dividida en dos: En el lado izquierdo el archivo original y en el derecho el archivo con las sugerencias de código nuevo o modificado, con un botón de aceptar o rechazar y siempre se debe esperar que yo ACEPTE O RECHACE el código por favor
+## Interacción con la IA y Modo de Trabajo Autónomo
+- **Ejecución Autónoma y Directa de Cambios:** Cuando el usuario solicite realizar cualquier cambio, ajuste o nueva funcionalidad, la IA debe trabajar de forma autónoma e independiente, aplicando las modificaciones y creando el código necesario de manera automática y directa en los archivos del proyecto, **SIN hacer pausas intermedias** ni detenerse a pedir que el usuario acepte o rechace el código paso a paso.
+- **Punto de Control Progresivo:** Durante el desarrollo, la IA registrará en tiempo real el avance y los archivos modificados en `previo_cambios_realizados.md` como salvaguarda ante cortes imprevistos de energía o internet.
+- **Documentación Completa Obligatoria:** Al finalizar todos los cambios de la solicitud, la IA debe cumplir obligatoriamente con la documentación en:
+  1. Cabeceras y funciones de los archivos creados o modificados en el plugin.
+  2. `manual_tecnico_plugin_reda_alojamiento.md` (resumen técnico de cada archivo y función).
+  3. `LOG_DESARROLLO_REDA.md` (registro de la sesión con fecha, archivos intervenidos y detalles técnicos).
+- **Reporte Final Detallado y Pedagógico:** Una vez aplicados todos los cambios y completada la documentación, la IA debe entregar al usuario un informe final claro, pedagógico y exhaustivo que incluya:
+  1. Rutas exactas de todos los archivos creados o modificados.
+  2. Resumen técnico y pedagógico detallado de las soluciones implementadas y del código nuevo/modificado.
+  3. Instrucciones precisas de los pasos siguientes a realizar por el usuario en el servidor Vesta de desarrollo (subida vía FTP con `subir.sh` o `subir_archivos_puntuales.sh`, comandos de compilación `./compilar.sh` o migraciones con `sudo -u appvac php8.2 artisan migrate` si aplican).
 
 ## Manipulación de imágenes
 Para la manipulación de imágenes en las vistas se usará el script:
