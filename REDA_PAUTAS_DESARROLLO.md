@@ -48,12 +48,16 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 
 ---
 
-## 5. Documentación Obligatoria
+## 5. Documentación Obligatoria y Puntos de Control en Tiempo Real
 
 - Cada nueva función o archivo debe registrarse en:
     1.  `manual_tecnico_plugin_reda_alojamiento.md` (Descripción funcional/técnica).
     2.  `LOG_DESARROLLO_REDA.md` (Resumen del avance diario).
     3.  Este archivo (`REDA_PAUTAS_DESARROLLO.md`) si introduce una nueva regla de consistencia o precaución técnica.
+- **Punto de Control Previo en Tiempo Real (`previo_cambios_realizados.md`):**
+    - **Antes de modificar:** Leer obligatoriamente `previo_cambios_realizados.md` para comprobar si hubo interrupciones imprevistas (caídas de internet o electricidad) y refrescar la memoria sobre el estado del trabajo.
+    - **Reinicio limpio:** Tras refrescar la memoria, vaciar/reiniciar el archivo con la nueva tarea activa para evitar basura acumulada.
+    - **Registro en progreso:** Durante procesos extensos o cambios de múltiples archivos, registrar progresivamente en `previo_cambios_realizados.md` cada archivo modificado o creado con un breve resumen en tiempo real como salvaguarda.
 
 ---
 

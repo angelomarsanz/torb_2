@@ -128,6 +128,8 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/database/migrations/2026_07_29_100000_create_reda_mensajes_metadata_table.php"
     #"packages/Reda/RedaAlojamiento/database/migrations/2026_07_29_110000_add_disputas_message_type.php"
     #"packages/Reda/RedaAlojamiento/database/migrations/2026_09_25_000000_crear_tabla_reserva_huespedes.php"
+    "packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000000_crear_tabla_alertas_admin.php"
+    "packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000001_crear_tabla_usuarios_avisos_mediaciones.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (ADMIN) ---
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php"
@@ -142,6 +144,12 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/partials/tabla_planes.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/modal_detalle.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/configuracion.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php"
+
+    # --- PLANTILLAS EMAIL ADMIN --
+    "packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/emails/suspension_admin.blade.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (FRONTEND - CARPETAS FRONTEND) ---
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/calificacion_experiencia_frontend.blade.php"
@@ -188,14 +196,19 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php"
 
+    # --- PLANTILLAS EMAIL USUARIO ---
+    "packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/emails/suspension_usuario.blade.php"
+
     # --- Archivos Javascript admin ---
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/notificaciones.js"
     "packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js"
-
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js"
+    "packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js"
 
     # --- Archivos Javascript en la carpeta frontend ---
     #"packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoProductosServicios.js"

@@ -151,6 +151,17 @@ Route::group(['prefix' => 'admin/reda', 'middleware' => ['web', 'guest:admin']],
             ->name('soporte_tecnico.eliminar_calificacion');
     });
 
+    // Subgrupo para Alertas del Sistema y Mediaciones (Admin)
+    Route::prefix('alertas')->as('reda.admin.alertas.')->group(function () {
+        Route::controller(\Reda\RedaAlojamiento\Http\Controllers\Admin\Alerta\AlertaController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('get-listado', 'obtenerAlertasPaginadas')->name('paginadas');
+            Route::get('count-no-leidas', 'obtenerConteoNoLeidas')->name('count_no_leidas');
+            Route::post('{id}/marcar-leida', 'marcarLeida')->name('marcar_leida');
+            Route::post('marcar-todas-leidas', 'marcarTodasLeidas')->name('marcar_todas_leidas');
+        });
+    });
+
 });
 
 Route::prefix('reda')->middleware(['web', 'locale'])->group(function () {

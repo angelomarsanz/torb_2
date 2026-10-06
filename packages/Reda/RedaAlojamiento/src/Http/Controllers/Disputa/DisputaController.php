@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Reda\RedaAlojamiento\Services\MediacionAlertaService;
 
 class DisputaController extends Controller
 {
@@ -452,6 +453,9 @@ class DisputaController extends Controller
                 }
                 $disputa->save(); // Actualizar con las rutas de documentos
             }
+
+            // Evaluar los límites de mediaciones configurados para disparar primer aviso o suspensión y alertas admin
+            MediacionAlertaService::verificarLimites($disputa);
 
             return response()->json([
                 'success' => true,

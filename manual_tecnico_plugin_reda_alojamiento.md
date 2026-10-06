@@ -176,6 +176,12 @@
 ### JavaScript (Administración General)
 - **packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js**
   Orquesta la inyección reactiva y no invasiva de las opciones del plugin REDA en el menú lateral de AdminLTE: "Negocios", el submenú "Mediaciones" (con opciones desplegables de "Listado" y condicionalmente "Configuración" exclusivo para Rol 1) y "Soporte Técnico". Incorpora lógica adaptativa para la inyección de "Mediaciones": si el usuario conectado no posee el elemento `Bookings` en su menú lateral (como ocurre con el Rol 2 "Atención al usuario"), el script busca puntos de anclaje jerárquicos alternativos (`#menu-negocios`, `Properties`, `Customers`, `Dashboard` o el final del contenedor `.sidebar-menu`). Transforma "Mediaciones" en un elemento acordeón interactivo (`.treeview`) que despliega "Listado" (apunta al index de mediaciones con animación de espera) y "Configuración" (enlace que conduce a `/admin/reda/disputas/configuracion` con animación de espera, visible y disponible únicamente para usuarios con Rol 1). Al hacer clic o tocar en "Mediaciones", asegura que en la opción "Listado" también aparezca el contador dinámico de mediaciones activas (`Listado (N)`), sincronizado con el encabezado padre. Mantiene abierto el submenú y resalta la opción activa cuando la ruta coincide con `/admin/reda/disputas` o `/admin/reda/disputas/configuracion`, y actualiza en tiempo real los contadores vía AJAX.
+  **Campanita de Alertas en Header y Submenú "Mensajes y Alertas":**
+  1. **Campanita en Header:** Inyecta en el navbar superior del panel administrativo (`.navbar-nav.ms-auto`) la campanita `#reda-admin-header-bell` con su badge `#reda-admin-bell-badge`, la cual enlaza a `/admin/reda/alertas` y refleja en tiempo real el número de alertas no leídas.
+  2. **Transformación de "Messages":** Reemplaza la opción de enlace simple "Messages" del core por el submenú interactivo "Mensajes y Alertas" (`#menu-mensajes`), que agrupa:
+     - "Mensajes": Conduce a la vista original de histórico de mensajes (`/admin/messages`).
+     - "Alertas": Conduce a la vista de alertas administrativas (`/admin/reda/alertas`), mostrando la insignia y contador de alertas no leídas (`Alertas (N)`).
+  3. **Sincronización Reactiva:** Escucha el evento global `reda:actualizar-contador-alertas` y realiza sondeo periódico cada 60 segundos hacia `/admin/reda/alertas/count-no-leidas`, actualizando dinámicamente tanto la campanita superior como las insignias del menú lateral sin requerir recarga de página.
 
 ### Vistas (Administración General)
 - **packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php**
@@ -201,5 +207,84 @@
   Vista Blade administrativa para la configuración de mediaciones permitidas, reservada para administradores con Rol 1. Renderiza un panel/recuadro titulado "Cantidad de mediaciones permitidas" que contiene dos campos de entrada numéricos: "Cantidad de mediaciones para primer aviso" y "Cantidad de mediaciones para segundo aviso y suspensión de cuenta". Integra validación y envío asíncrono con animación de espera hacia `route('reda.admin.disputas.configuracion.store')`.
 - **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js**
   Controlador JavaScript del formulario de configuración de mediaciones permitidas. Intercepta el evento submit, valida en el cliente que los valores sean números enteros no negativos y que el segundo aviso no sea menor que el primero, activa la animación de espera global (`window.RedaNotificaciones.esperar()`), envía los datos vía AJAX con token CSRF y presenta notificaciones reactivas de confirmación o error basadas en el formato estándar JSON de REDA.
+
+## Sistema de Alertas y Suspensiones por Límites de Mediaciones
+
+### Base de Datos y Migraciones
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000000_crear_tabla_alertas_admin.php**
+  Migración que crea la tabla auxiliar `alertas_admin` para almacenar las notificaciones del sistema dirigidas a los administradores:
+  - Campos: `id`, `admin_id` (nullable, relación con tabla `admin`), `titulo`, `mensaje`, `tipo` ('primer_aviso', 'suspension', 'general'), `disputa_id` (nullable), `user_id` (nullable, relación con `users`), `leido` (booleano con valor predeterminado 0), `fecha_lectura` (timestamp nullable) y marcas de tiempo (`created_at`, `updated_at`).
+  - Cumple estrictamente con las directrices de nomenclatura en español y soporte nullable para todas las columnas excepto la clave primaria.
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000001_crear_tabla_usuarios_avisos_mediaciones.php**
+  Migración que crea la tabla auxiliar `usuarios_avisos_mediaciones` como registro de auditoría y control de umbrales para prevenir envíos duplicados de correos o suspensiones reiteradas:
+  - Campos: `id`, `user_id` (relación foránea con `users`), `conteo_mediaciones`, `primer_aviso_enviado` (booleano), `fecha_primer_aviso` (timestamp nullable), `segundo_aviso_enviado` (booleano), `fecha_segundo_aviso` (timestamp nullable), `cuenta_suspendida` (booleano), `fecha_suspension` (timestamp nullable), `motivo` (texto descriptivo) y marcas de tiempo.
+
+### Modelos Eloquent
+- **packages/Reda/RedaAlojamiento/src/Models/Alerta/AlertaAdmin.php**
+  Modelo Eloquent para la tabla `alertas_admin`. Define los campos asignables en `$fillable`, casteo booleano para `leido` y timestamp para `fecha_lectura`. Establece las relaciones `admin()` (`App\Models\Admin`), `usuario()` (`App\Models\User`) y `disputa()` (`Reda\RedaAlojamiento\Models\Disputa\Disputa`).
+- **packages/Reda/RedaAlojamiento/src/Models/Disputa/UsuarioAvisoMediacion.php**
+  Modelo Eloquent para la tabla `usuarios_avisos_mediaciones`. Gestiona el estado de control de avisos y suspensión por usuario, con conversiones de tipo para banderas booleanas y fechas, y relación `usuario()` con `App\Models\User`.
+
+### Servicios y Lógica de Negocio
+- **packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php**
+  Servicio centralizado que orquesta la verificación automática de umbrales cada vez que se registra una nueva mediación (`DisputaController@store`).
+  - **Recuperación de Configuración:** Consulta en la tabla `settings` los parámetros `Cantidad mediaciones permitidas primer aviso` y `Cantidad mediaciones segundo aviso y suspensión`.
+  - **Evaluación de Partes Involucradas:** Determina la contraparte y el iniciador de la mediación y calcula el conteo total acumulado de mediaciones para cada uno.
+  - **Disparo de Primer Aviso:** Si el conteo alcanza o supera el umbral de primer aviso y no ha sido notificado previamente:
+    1. Registra la emisión del aviso en `usuarios_avisos_mediaciones` con fecha y hora actual.
+    2. Envía correo preventivo al usuario (`emails.primer_aviso_usuario`).
+    3. Envía un mensaje formal al buzón `/inbox` del usuario utilizando `App\Models\Messages` con metadato `sender_type = 'admin'` (`MensajeMetadata`).
+    4. Envía correo informativo a todos los administradores activos (`emails.primer_aviso_admin`).
+    5. Genera un registro en `alertas_admin` para cada administrador activo (`tipo = 'primer_aviso'`).
+  - **Disparo de Suspensión (Segundo Aviso):** Si el conteo alcanza o supera el umbral máximo de suspensión:
+    1. Actualiza el estatus nativo del usuario a `'Inactive'` en la tabla `users` (bloqueando de inmediato su inicio de sesión en el sistema core).
+    2. Registra la suspensión y motivo en `usuarios_avisos_mediaciones`.
+    3. Envía correo de notificación de suspensión al usuario (`emails.suspension_usuario`).
+    4. Envía mensaje explicativo de suspensión al buzón `/inbox` del usuario.
+    5. Envía correo de alerta crítica a todos los administradores activos (`emails.suspension_admin`).
+    6. Genera un registro en `alertas_admin` para cada administrador (`tipo = 'suspension'`).
+
+### Controladores
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Alerta/AlertaController.php**
+  Controlador del panel administrativo para la gestión de alertas del sistema.
+  - `index()`: Renderiza la vista principal `reda-alojamiento::admin.alerta.index`.
+  - `obtenerAlertasPaginadas(Request $request)`: Retorna las alertas en bloques de 10 en 10 (`paginate(10)`) vía AJAX con filtros por estado ('todos', 'no_leidas', 'leidas'), incluyendo el HTML de la barra de paginación renderizado con `admin.general.paginacion` y el conteo de no leídas.
+  - `obtenerConteoNoLeidas()`: Retorna el conteo actual de alertas no leídas del administrador conectado para alimentar la campanita del header y la insignia del menú lateral.
+  - `marcarLeida($id)`: Marca una alerta individual como leída (`leido = 1`, `fecha_lectura = now()`) y devuelve el conteo actualizado.
+  - `marcarTodasLeidas()`: Marca de forma masiva todas las alertas no leídas del administrador actual como leídas y reinicia el contador a 0.
+
+### Vistas y Plantillas
+- **packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php**
+  Vista administrativa que presenta el panel de Alertas del Sistema. Incorpora botones de filtrado rápido ("Todas", "No leídas" con badge dinámico, "Leídas"), botón de acción masiva "Marcar todas como leídas" con spinner de carga, contenedor asíncrono para las tarjetas de alertas y contenedor inferior para la paginación de 10 en 10.
+- **packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php**
+  Plantilla de correo electrónico en español dirigida al usuario, advirtiendo de manera clara y cordial que ha acumulado mediaciones y que se encuentra próximo al límite de suspensión. Incluye botón directo a su buzón de mensajes.
+- **packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php**
+  Plantilla de correo dirigida al equipo de administradores, resumiendo los datos del usuario, el número de mediaciones acumuladas y un enlace directo a la mediación en el panel administrativo.
+- **packages/Reda/RedaAlojamiento/resources/views/emails/suspension_usuario.blade.php**
+  Plantilla de correo notificando la suspensión inmediata de la cuenta por haber alcanzado el límite máximo de mediaciones estipulado, detallando los efectos de la sanción y proporcionando enlace de contacto a soporte.
+- **packages/Reda/RedaAlojamiento/resources/views/emails/suspension_admin.blade.php**
+  Plantilla de correo para administradores con carácter de prioridad crítica, notificando la suspensión automática de la cuenta de usuario, con ficha técnica completa y enlace al visor de alertas del panel.
+
+### JavaScript (Vistas y Clientes)
+- **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js**
+  Controlador JavaScript del panel de alertas:
+  - Carga asíncrona con animación de espera (`window.RedaNotificaciones.esperar()`).
+  - Renderizado dinámico de tarjetas con código de colores según tipo (advertencia para primer aviso, peligro para suspensión).
+  - Paginación interactiva de 10 en 10 sin recargar página.
+  - Filtrado en cliente por estado (Todas / No leídas / Leídas).
+  - Marcado reactivo de alertas como leídas tanto al pulsar el botón "Marcar como leída", como al hacer clic directamente en cualquier parte de una tarjeta no leída o al pulsar el botón "Ver mediación".
+  - Marcado masivo interactivo con spinner mediante `#btn-marcar-todas-leidas`.
+  - Disparo del evento global `reda:actualizar-contador-alertas` que sincroniza de inmediato la campanita superior y el submenú lateral.
+
+## Sistema de Puntos de Control y Memoria Operativa
+
+### Archivos de Control en Tiempo Real
+- **previo_cambios_realizados.md**
+  Archivo ubicado en la raíz del proyecto que actúa como punto de control en tiempo real durante procesos de desarrollo en curso. Su propósito es prevenir la pérdida de contexto o avances inacabados ante eventualidades como cortes de suministro eléctrico o pérdidas de conectividad a Internet.
+  - **Protocolo de Lectura:** Al inicio de cada sesión o antes de iniciar modificaciones, la IA lo lee obligatoriamente para verificar si existió una interrupción previa y en qué punto exacto quedaron los cambios.
+  - **Reinicio Limpio:** Tras refrescar la memoria, se limpia e inicializa con la nueva tarea activa para evitar basura acumulada de sesiones anteriores.
+  - **Registro Progresivo:** Durante tareas extensas o con múltiples archivos, la IA registra progresivamente cada archivo modificado o creado a medida que avanza, salvaguardando el progreso antes de continuar al siguiente paso.
+
+
 
 

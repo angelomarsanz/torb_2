@@ -238,10 +238,134 @@ export const menuLateralAdmin = () =>
                     }
                 }
 
-                // 3. Inyección de Opción "Soporte Técnico" (Después de Messages)
+                // 3. Campanita de Notificaciones / Alertas en el Header del Panel Administrativo
+                const labelAlertas = window.RedaAlojamientoJson["Alertas"] || "Alertas";
+                const labelMensajes = window.RedaAlojamientoJson["Mensajes"] || "Mensajes";
+                const linkAlertas = `${baseUrl}/admin/reda/alertas`;
+                const linkMensajes = `${baseUrl}/admin/messages`;
+
+                const $headerRightNav = $('.app-header .navbar-nav.ms-auto, .navbar-nav.ms-auto');
+                if ($headerRightNav.length && !$('#reda-admin-header-bell').length) {
+                    const headerBellHtml = `
+                        <li class="nav-item me-2 d-flex align-items-center" id="reda-admin-header-bell">
+                            <a href="${linkAlertas}" class="nav-link position-relative btn-menu-alertas-header px-2 py-1" title="${labelAlertas}">
+                                <i class="fa fa-bell text-secondary f-18"></i>
+                                <span id="reda-admin-bell-badge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle d-none f-10">0</span>
+                            </a>
+                        </li>
+                    `;
+                    $headerRightNav.prepend(headerBellHtml);
+                    console.log('Campanita de Alertas inyectada en el header del admin.');
+
+                    // Animación de espera al hacer clic en la campanita
+                    $(document).on('click', '.btn-menu-alertas-header', function(e) {
+                        if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
+                            if (window.location.pathname === '/admin/reda/alertas') {
+                                e.preventDefault();
+                                return;
+                            }
+                            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                                window.RedaNotificaciones.esperar();
+                            }
+                        }
+                    });
+                }
+
+                // 4. Transformación de la opción "Messages" en Submenú "Mensajes y Alertas"
                 const $messagesMenuItem = $('.sidebar-menu a[href*="admin/messages"]').closest('li');
 
-                if ($messagesMenuItem.length && !$('#menu-soporte').length) {
+                if ($messagesMenuItem.length && !$('#menu-mensajes').length) {
+                    const labelMensajesYAlertas = window.RedaAlojamientoJson["Mensajes y Alertas"] || "Mensajes y Alertas";
+                    const esRutaAlertas = window.location.href.includes('admin/reda/alertas');
+                    const esRutaMessages = (window.location.href.includes('admin/messages') || window.location.href.includes('admin/messaging')) && !esRutaAlertas;
+                    const esSubmenuMensajesAbierto = esRutaAlertas || esRutaMessages;
+
+                    const mensajesMenuHtml = `
+                        <li class="nav-item treeview ${esSubmenuMensajesAbierto ? 'active menu-open' : ''}" id="menu-mensajes">
+                            <a href="#" class="nav-link mensajes-toggle d-flex align-items-center justify-content-between ${esSubmenuMensajesAbierto ? 'active' : ''}">
+                                <div class="d-flex align-items-center">
+                                    <i class="nav-icon fa fa-comments me-2"></i>
+                                    <span class="reda-mensajes-padre-texto">${labelMensajesYAlertas}</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span id="reda-admin-alertas-badge" class="badge bg-danger rounded-pill me-2 d-none">0</span>
+                                    <i class="fa ${esSubmenuMensajesAbierto ? 'fa-angle-down' : 'fa-angle-left'} pull-right ms-auto"></i>
+                                </div>
+                            </a>
+                            <ul class="nav nav-treeview treeview-menu ${esSubmenuMensajesAbierto ? '' : 'reda-admin-menu-hidden'}" style="${esSubmenuMensajesAbierto ? 'display: block;' : ''}">
+                                <li class="nav-item">
+                                    <a href="${linkMensajes}" class="nav-link btn-menu-mensajes-item ${esRutaMessages ? 'active' : ''}">
+                                        <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
+                                        <span>${labelMensajes}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="${linkAlertas}" class="nav-link btn-menu-alertas-item d-flex align-items-center justify-content-between ${esRutaAlertas ? 'active' : ''}">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa fa-bell nav-icon me-2" style="font-size: 0.75rem;"></i>
+                                            <span class="reda-alertas-texto-admin">${labelAlertas}</span>
+                                        </div>
+                                        <span id="reda-admin-sub-alertas-badge" class="badge bg-danger rounded-pill ms-auto d-none">0</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    `;
+
+                    $messagesMenuItem.replaceWith(mensajesMenuHtml);
+                    console.log('Submenú "Mensajes y Alertas" inyectado en lugar de Messages.');
+
+                    // Toggle interactivo para desplegar y replegar submenú de Mensajes
+                    $('#menu-mensajes > .mensajes-toggle').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+
+                        const $liPadre = $(this).closest('#menu-mensajes');
+                        const $subMenu = $liPadre.find('.treeview-menu, .nav-treeview');
+                        const $flecha = $(this).find('.pull-right');
+
+                        if ($subMenu.is(':visible')) {
+                            $subMenu.slideUp('fast');
+                            $liPadre.removeClass('active menu-open');
+                            $flecha.removeClass('fa-angle-down').addClass('fa-angle-left');
+                        } else {
+                            $subMenu.slideDown('fast');
+                            $liPadre.addClass('active menu-open');
+                            $flecha.removeClass('fa-angle-left').addClass('fa-angle-down');
+                        }
+                    });
+
+                    // Animación de espera al hacer clic en Mensajes
+                    $(document).on('click', '.btn-menu-mensajes-item', function(e) {
+                        if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
+                            if (window.location.pathname === '/admin/messages') {
+                                e.preventDefault();
+                                return;
+                            }
+                            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                                window.RedaNotificaciones.esperar();
+                            }
+                        }
+                    });
+
+                    // Animación de espera al hacer clic en Alertas
+                    $(document).on('click', '.btn-menu-alertas-item', function(e) {
+                        if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
+                            if (window.location.pathname === '/admin/reda/alertas') {
+                                e.preventDefault();
+                                return;
+                            }
+                            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                                window.RedaNotificaciones.esperar();
+                            }
+                        }
+                    });
+                }
+
+                // 5. Inyección de Opción "Soporte Técnico" (Después de Mensajes)
+                const $anchorSoporte = $('#menu-mensajes').length ? $('#menu-mensajes') : $('.sidebar-menu a[href*="admin/messages"]').closest('li');
+
+                if ($anchorSoporte.length && !$('#menu-soporte').length) {
                     const linkSoporte = `${baseUrl}/admin/reda/general/soporte-tecnico`;
                     const labelSoporte = window.RedaAlojamientoJson["Soporte técnico"] || "Soporte técnico";
 
@@ -252,7 +376,7 @@ export const menuLateralAdmin = () =>
                             </a>
                         </li>
                     `;
-                    $messagesMenuItem.after(soporteMenuHtml);
+                    $anchorSoporte.after(soporteMenuHtml);
                     console.log('Opción "Soporte Técnico" inyectada.');
 
                     // Animación de espera al hacer clic en Soporte Técnico
@@ -264,6 +388,54 @@ export const menuLateralAdmin = () =>
                         }
                     });
                 }
+
+                // 6. Función y eventos para sincronización reactiva de contadores de Alertas
+                const aplicarConteoAlertas = (count) => {
+                    const $bellBadge = $('#reda-admin-bell-badge');
+                    const $parentBadge = $('#reda-admin-alertas-badge');
+                    const $subBadge = $('#reda-admin-sub-alertas-badge');
+
+                    if (count > 0) {
+                        $bellBadge.text(count).removeClass('d-none');
+                        $parentBadge.text(count).removeClass('d-none');
+                        $subBadge.text(count).removeClass('d-none');
+                        $('.reda-alertas-texto-admin').text(`${labelAlertas} (${count})`);
+                    } else {
+                        $bellBadge.addClass('d-none');
+                        $parentBadge.addClass('d-none');
+                        $subBadge.addClass('d-none');
+                        $('.reda-alertas-texto-admin').text(labelAlertas);
+                    }
+                };
+
+                const actualizarContadorAlertasAdmin = async () => {
+                    try {
+                        const urlAlertasCount = `${baseUrl}/admin/reda/alertas/count-no-leidas`;
+                        const res = await $.ajax({
+                            url: urlAlertasCount,
+                            type: 'GET',
+                            dataType: 'json'
+                        });
+
+                        if (res.success && res.respuesta) {
+                            const count = res.respuesta.count || 0;
+                            aplicarConteoAlertas(count);
+                        }
+                    } catch (e) {
+                        // Silencioso
+                    }
+                };
+
+                // Escuchar evento personalizado emitido desde indexAlertas.js
+                $(document).on('reda:actualizar-contador-alertas', function(e, data) {
+                    if (data && typeof data.conteo !== 'undefined') {
+                        aplicarConteoAlertas(data.conteo);
+                    }
+                });
+
+                // Carga inicial y sondeo periódico de alertas cada 60 segundos
+                actualizarContadorAlertasAdmin();
+                setInterval(actualizarContadorAlertasAdmin, 60000);
 
                 // 4. Corrección de compatibilidad FontAwesome (FA4 a FA5/6) para iconos del sistema original
                 $('.sidebar-menu i.fa-paypal').removeClass('fa').addClass('fab me-2');

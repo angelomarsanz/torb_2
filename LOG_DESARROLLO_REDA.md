@@ -4,6 +4,51 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [5 de Octubre, 2026] - Sistema Integral de Alertas y Suspensión por Límites de Mediaciones, Notificaciones por Correo y Buzón, y Submenú "Mensajes y Alertas" en Panel Admin
+- **Tarea:** Revisar, validar, perfeccionar y documentar la arquitectura completa del sistema de avisos preventivos, suspensión de cuentas y alertas administrativas por límites de mediaciones:
+    1. **Validación de Estatus de Suspensión:** Se auditó el esquema nativo de la tabla `users` y los controladores de autenticación (`LoginController`, `CustomerController`). Se constató que el valor nativo para cuentas deshabilitadas/suspendidas es `'Inactive'` (el cual bloquea de inmediato el inicio de sesión del usuario en el core y marca su cuenta como inactiva), por lo que se utiliza de forma estándar en el plugin REDA.
+    2. **Avisos Preventivos y Suspensión Automática (`MediacionAlertaService`):**
+        - Al registrarse una nueva mediación (`DisputaController@store`), se evalúan los umbrales configurados en `settings` (`Cantidad mediaciones permitidas primer aviso` y `Cantidad mediaciones segundo aviso y suspensión`).
+        - **Primer Aviso Preventivo:** Si el usuario alcanza el primer umbral, se envía un correo informativo (`emails.primer_aviso_usuario`), un mensaje enriquecido a su buzón `/inbox` (usando `App\Models\Messages` con metadato `sender_type = 'admin'` en `reda_mensajes_metadata`), un correo a todos los administradores activos (`emails.primer_aviso_admin`) y un registro en `alertas_admin` para cada administrador.
+        - **Segundo Aviso y Suspensión:** Si alcanza el límite máximo, la cuenta se actualiza a `status = 'Inactive'`, se registra la suspensión en `usuarios_avisos_mediaciones` con fecha y motivo, se envía correo de suspensión (`emails.suspension_usuario`), mensaje formal a su buzón `/inbox`, correo crítico a administradores (`emails.suspension_admin`) y alertas tipo `'suspension'` en `alertas_admin`.
+    3. **Campanita de Alertas en Header y Submenú en Menú Lateral Admin (`menuLateralAdmin.js`):**
+        - Inyección de campanita con contador dinámico en el navbar superior (`#reda-admin-header-bell`), enlazando directamente al listado de alertas (`/admin/reda/alertas`).
+        - Transformación de la opción simple "Messages" del core en el submenú desplegable **"Mensajes y Alertas"**, conteniendo:
+            * "Mensajes": enlace al histórico original de mensajes entre huéspedes y anfitriones (`/admin/messages`).
+            * "Alertas": enlace al nuevo listado de alertas administrativas (`/admin/reda/alertas`), con badge reactivo y contador dinámico de no leídas (`Alertas (N)`).
+        - Sincronización en tiempo real vía AJAX y evento personalizado `reda:actualizar-contador-alertas` tanto para la campanita como para los badges del menú lateral.
+    4. **Listado y Gestión Interactiva de Alertas Admin (`index.blade.php` y `indexAlertas.js`):**
+        - Vista administrativa con diseño de tarjetas modernas, paginación estándar de 10 en 10 (`admin.general.paginacion`), filtros rápidos ("Todas", "No leídas" con badge, "Leídas") y botón masivo "Marcar todas como leídas".
+        - Interacción optimizada: marcar como leída individualmente mediante el botón, haciendo clic en cualquier parte de la tarjeta no leída (con cursor pointer), o automáticamente en segundo plano al pulsar "Ver mediación".
+    5. **Registro de Assets y Traducciones:**
+        - Incorporación de `indexAlertas.js` en `webpack.mix.js` para compilar a `public/js/reda/admin/vistas/alerta/indexAlertas.min.js`.
+        - Registro de todas las traducciones en español requeridas en `packages/Reda/RedaAlojamiento/resources/lang/es.json`.
+- **Archivos Revisados, Modificados y Creados:**
+    *   `packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000000_crear_tabla_alertas_admin.php`: Migración para la tabla `alertas_admin`.
+    *   `packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000001_crear_tabla_usuarios_avisos_mediaciones.php`: Migración para la tabla `usuarios_avisos_mediaciones`.
+    *   `packages/Reda/RedaAlojamiento/src/Models/Alerta/AlertaAdmin.php`: Modelo Eloquent para `alertas_admin` con relaciones a `admin`, `user` y `disputa`.
+    *   `packages/Reda/RedaAlojamiento/src/Models/Disputa/UsuarioAvisoMediacion.php`: Modelo Eloquent para control de auditoría de avisos y suspensión.
+    *   `packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php`: Servicio orquestador de límites, envío de correos, buzón y suspensión de usuarios.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Alerta/AlertaController.php`: Controlador del panel administrativo para paginación 10 en 10, conteo no leídas y marcado individual/masivo.
+    *   `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php`: Integración de la llamada a `MediacionAlertaService::verificarLimites($disputa)` al crear mediaciones.
+    *   `packages/Reda/RedaAlojamiento/routes/web.php`: Rutas del prefijo `admin/reda/alertas`.
+    *   `packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php`: Vista Blade del panel de alertas del sistema.
+    *   `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js`: Controlador JavaScript del panel de alertas con filtros, paginación y marcado reactivo.
+    *   `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`: Inyección de la campanita en header, submenú "Mensajes y Alertas" y sincronización reactiva de badges.
+    *   `packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php`: Plantilla de correo para el usuario por primer aviso.
+    *   `packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php`: Plantilla de correo para administradores por primer aviso.
+    *   `packages/Reda/RedaAlojamiento/resources/views/emails/suspension_usuario.blade.php`: Plantilla de correo para el usuario por suspensión.
+    *   `packages/Reda/RedaAlojamiento/resources/views/emails/suspension_admin.blade.php`: Plantilla de correo para administradores por suspensión.
+    *   `webpack.mix.js`: Registro de entrada de compilación para `indexAlertas.js`.
+    *   `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Incorporadas todas las cadenas de traducción en español para el módulo de alertas.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Documentada exhaustivamente la arquitectura del módulo de alertas, migraciones, modelos, servicio, controlador, vistas y scripts.
+    *   `previo_cambios_realizados.md`: **NUEVO ARCHIVO**. Creado en la raíz del proyecto como punto de control en tiempo real para salvaguardar el estado de modificaciones ante fallas eléctricas o de internet.
+    *   `GEMINI.md` (.github/copilot-instructions.md) y `REDA_PAUTAS_DESARROLLO.md`: Incorporado el protocolo mandatorio de lectura previa, reinicio limpio y registro progresivo en `previo_cambios_realizados.md`.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto de Laravel vRent (`app/Models/User.php`, `app/Models/Messages.php`, `app/Models/Notifications.php`, `resources/views/admin/common/left_sidebar.blade.php`, etc.) se mantienen 100% inalterados e intactos. El buzón del usuario aprovecha el modelo de mensajería enriquecido mediante la tabla auxiliar `reda_mensajes_metadata`, mientras que las alertas de administradores operan en su propia tabla desacoplada `alertas_admin` para no contaminar el historial de chat entre usuarios. Siguiendo las directrices mandatorias del entorno, los archivos fuente quedan editados en Cloud Shell y la compilación y migración se sugieren para ser ejecutadas en el servidor Vesta de desarrollo.
+- **Estado:** Completado, validado y documentado.
+
+---
+
 ## [3 de Octubre, 2026] - Vista y Persistencia de "Cantidad de Mediaciones Permitidas" (Settings) y Restricción Exclusiva para Rol 1
 - **Tarea:** Implementar la configuración de umbrales máximos de mediaciones en el panel administrativo y perfeccionar la experiencia interactiva del submenú "Mediaciones" en el menú lateral:
     1. **Contador en opción "Listado":** Actualizar el submenú de "Mediaciones" para que, al cargar y al hacer clic o tocar la opción padre "Mediaciones", la opción "Listado" muestre también el contador de mediaciones activas (`Listado (N)`), sincronizado con el conteo de la opción principal.
