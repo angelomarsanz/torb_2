@@ -132,11 +132,17 @@
 
 ### Vistas
 - **packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php**
-  Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Incluye modales de seguridad: `modalAdvertenciaMensajeReda` (al detectar datos sensibles en el envío) y `modalAdvertenciaPrivacidadReda` (aviso preventivo al cargar la vista).
+  Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Incluye modales de seguridad desacoplados del flujo de contenido principal para prevenir rupturas del contexto de apilamiento (stacking context): `modalAdvertenciaMensajeReda` (al detectar datos sensibles en el envío) y `modalAdvertenciaPrivacidadReda` (aviso preventivo al cargar la vista con control de persistencia en `sessionStorage`), además del overlay para ampliación de fotos (`reda-chat-zoom-overlay`).
 
-### JavaScript (Vistas)
+### JavaScript (Vistas y General)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js**
-  Controlador Javascript para la vista de Inbox personalizada. Gestiona la carga de conversaciones, envío de mensajes por AJAX, navegación estilo WhatsApp en móviles, neutralización de conflictos y manejo dinámico de contadores de mensajes no leídos al interactuar con el chat. Implementa un sistema de aviso preventivo al cargar la página (`modalAdvertenciaPrivacidadReda`) y un sistema de interceptación de mensajes mediante expresiones regulares para detectar y advertir sobre el envío de números de teléfono, correos electrónicos y secuencias de 4 o más números (tanto en dígitos como escritos en letras en español), reforzando la seguridad del usuario y evitando el intercambio de datos de contacto externos.
+  Controlador Javascript para la vista de Inbox personalizada. Gestiona la sincronización inmediata de la conversación activa detectando el parámetro `?id=...` en la URL para evitar retardos o llamadas artificiales a clics, carga dinámica de conversaciones mediante AJAX, envío de mensajes, navegación estilo WhatsApp en móviles, neutralización de conflictos y manejo dinámico de contadores de mensajes no leídos. Reubica dinámicamente los modales de seguridad como hijos directos de `body` (`.appendTo('body')`) para asegurar que el `modal-backdrop` de Bootstrap 4 nunca los eclipse, e implementa limpieza forzada de backdrops residuales en eventos `hidden.bs.modal`.
+- **packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js**
+  Script de integración para mediaciones y mensajería. Gestiona la caja de mediación en `#booking`, modales de disputas y desplazamiento suave (`scrollIntoView`) en el sidebar sin interferir con la renderización inicial del servidor ni generar colisiones de modales de carga.
+- **packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js**
+  Módulo de notificaciones globales y animaciones de espera (`RedaNotificaciones`). Incorpora protección en `ocultar()` ante transiciones activas de apertura (`_isTransitioning`), garantizando que la ocultación se complete y se purguen backdrops huérfanos sin afectar modales interactivos abiertos en la vista.
+- **packages/Reda/RedaAlojamiento/resources/js/chat-injection.js**
+  Script encargado de la reubicación de la sección del anfitrión debajo del mapa en la vista de propiedad (`property.single`) e inyección del botón interactivo "Enviar mensaje". Inicia la conversación con `iniciarChat`, gestiona el estado de espera y redirige limpiamente al Inbox unificado (`/inbox?id=...`), excluyendo observadores de mutación innecesarios en la ruta de Inbox.
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**

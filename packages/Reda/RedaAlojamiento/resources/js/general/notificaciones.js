@@ -94,12 +94,18 @@ window.RedaNotificaciones = {
             const $modal = $('#modal-notificacion');
             if (!$modal.length) return;
 
-            // Intentamos ocultar de forma normal
-            $modal.modal('hide');
+            // Manejo de transiciones activas en Bootstrap 4 para evitar que se ignore el hide()
+            const modalData = $modal.data('bs.modal');
+            if (modalData && modalData._isTransitioning) {
+                $modal.one('shown.bs.modal', function() {
+                    $modal.modal('hide');
+                });
+            } else {
+                $modal.modal('hide');
+            }
 
-            // Refuerzo: Si después de un breve momento el modal sigue visible o el backdrop existe, forzamos limpieza.
-            setTimeout(() => {
-                // Si el modal de notificación específicamente es el que no cerró
+            // Limpieza reforzada en dos intervalos para cubrir transiciones CSS
+            const limpiar = () => {
                 if ($modal.hasClass('show')) {
                     $modal.removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
                     if ($modal.data('bs.modal')) {
@@ -108,18 +114,20 @@ window.RedaNotificaciones = {
                     }
                 }
 
-                const modalesVisibles = $('.modal.show').length;
-                const totalBackdrops = $('.modal-backdrop').length;
-
-                // Si no hay ningún modal abierto, eliminamos todos los backdrops y restauramos scroll
+                const modalesVisibles = $('.modal.show').not('#modal-notificacion').length;
                 if (modalesVisibles === 0) {
                     $('.modal-backdrop').remove();
                     $('body').removeClass('modal-open').css({'overflow': '', 'padding-right': ''});
-                } else if (totalBackdrops > modalesVisibles) {
-                    // Si hay backdrops huérfanos sobrantes (más backdrops que modales visibles), removemos los sobrantes
-                    $('.modal-backdrop').slice(modalesVisibles).remove();
+                } else {
+                    const totalBackdrops = $('.modal-backdrop').length;
+                    if (totalBackdrops > modalesVisibles) {
+                        $('.modal-backdrop').slice(modalesVisibles).remove();
+                    }
                 }
-            }, 300);
+            };
+
+            setTimeout(limpiar, 250);
+            setTimeout(limpiar, 450);
         })(jQuery);
     }
 };

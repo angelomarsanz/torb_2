@@ -1,14 +1,18 @@
+/**
+ * Resumen: Script para la reubicación de la sección del anfitrión e inyección del botón 'Enviar mensaje'
+ * en la vista individual de propiedades (property.single).
+ * Gestiona el inicio de conversaciones con anfitriones, redirección hacia el Inbox unificado y 
+ * control de estados de carga con retroalimentación para el usuario.
+ */
 import { iniciarChat } from './general/iniciarChat.js';
 
 (function( $ ) {
     'use strict';
 
-    console.log('REDA Chat Injection: Relocating to Property Single View');
+    console.log('REDA Chat Injection: Reubicación en Vista Individual de Propiedad');
 
     /**
-     * Relocates "About the Host" sections below the map and injects the message button.
-     * This fulfills the requirement of moving the "Enviar mensaje" button to the property single view
-     * and placing both the host section and the button below the map.
+     * Reubica la sección 'Sobre el anfitrión' debajo del mapa e inyecta el botón 'Enviar mensaje'.
      */
     function relocateHostSectionAndAddButton() {
         if (!window.location.pathname.includes('/properties/')) return;
@@ -103,14 +107,17 @@ import { iniciarChat } from './general/iniciarChat.js';
     }
 
     function init() {
+        // En la vista de Inbox no ejecutamos la reubicación ni mutaciones de host
+        if (window.location.pathname.includes('/inbox')) {
+            return;
+        }
+
         // Execute relocation logic
         relocateHostSectionAndAddButton();
-        highlightActiveChat();
 
         // Observe changes to handle dynamic loading or re-renders
         const observer = new MutationObserver(() => {
             relocateHostSectionAndAddButton();
-            highlightActiveChat();
         });
         observer.observe(document.body, { childList: true, subtree: true });
 
@@ -135,8 +142,12 @@ import { iniciarChat } from './general/iniciarChat.js';
                 // capture la intención y después del login nos traiga de vuelta aquí
                 window.location.href = APP_URL + '/reda/pago/iniciar-chat/' + id;
             } else {
-                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.error === 'function') {
-                    window.RedaNotificaciones.error(respuesta.mensaje_usuario);
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
+                }
+                const tituloError = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Error"]) || "Error";
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                    window.RedaNotificaciones.notificar(tituloError, respuesta.mensaje_usuario, 'error');
                 } else {
                     alert(respuesta.mensaje_usuario);
                 }

@@ -102,6 +102,8 @@
 
     /**
      * Inicializa el procesamiento de la lista de conversaciones y vincula los eventos iniciales.
+     * Prioriza la conversación indicada en la URL (?id=...) para sincronizar el estado activo
+     * de inmediato sin depender de eventos de clic artificiales o temporizadores.
      * @returns {void}
      */
     function process() {
@@ -109,23 +111,43 @@
         list = document.querySelectorAll(".list");
         open = document.querySelector(".open a");
 
-        // Neutralización Directa
+        // Neutralización Directa de scripts antiguos
         $('.conversassion').off('click');
         $('.chat').off('click');
         $('.cht_msg').off('keyup');
 
-        if (ls != null && list[ls]) {
-            selected = true;
-            // No activar vista de chat automáticamente en móvil al cargar (isManual = false)
-            click(list[ls], ls, false);
+        // Detectar si la URL trae un booking_id específico (?id=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlBookingId = urlParams.get('id');
+
+        let targetIndex = -1;
+        if (urlBookingId) {
+            list.forEach((l, i) => {
+                if (String($(l).data('id')) === String(urlBookingId)) {
+                    targetIndex = i;
+                }
+            });
         }
-        if (!selected && list[0]) {
+
+        if (targetIndex !== -1) {
+            selected = true;
+            // Si viene con ID específico, en móvil mostramos la conversación directamente
+            const activarEnMovil = window.innerWidth < 768;
+            click(list[targetIndex], targetIndex, activarEnMovil);
+            try {
+                list[targetIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (e) {}
+        } else if (ls != null && list[ls]) {
+            selected = true;
+            // No activar vista de chat automáticamente en móvil al cargar si no viene de acción directa
+            click(list[ls], ls, false);
+        } else if (!selected && list[0]) {
             click(list[0], 0, false);
         }
 
         list.forEach((l, i) => {
             $(l).on("click", function() {
-                // Al hacer clic manualmente, sí activamos la vista de chat (isManual = true)
+                // Al hacer clic manualmente, activamos la vista de chat
                 click(l, i, true);
             });
         });
@@ -178,6 +200,9 @@
         const currentBookingInDom = activeSendBtn.attr('data-booking') || activeSendBtn.data('booking');
         if (String(currentBookingInDom) === String(id) && $(this).hasClass('active') && $('#messages .message-wrap-reda').length) {
             console.log('REDA Inbox: La conversación ID ' + id + ' ya está activa en pantalla.');
+            if (window.innerWidth < 768) {
+                $('.reda-inbox-wrapper').addClass('chat-active');
+            }
             return;
         }
 
@@ -398,33 +423,45 @@
     }
 
     // Control explícito de cierre para el modal de advertencia de privacidad
-    $(document).on('click', '.btn-entendido-privacidad-reda, #modalAdvertenciaPrivacidadReda .close', function() {
+    $(document).on('click', '.btn-entendido-privacidad-reda, #modalAdvertenciaPrivacidadReda [data-dismiss="modal"], #modalAdvertenciaPrivacidadReda [data-bs-dismiss="modal"], #modalAdvertenciaPrivacidadReda .close', function(e) {
+        e.preventDefault();
         sessionStorage.setItem('reda_aviso_privacidad_inbox_visto', 'true');
         $('#modalAdvertenciaPrivacidadReda').modal('hide');
         setTimeout(limpiarBackdropsResiduales, 250);
     });
 
     // Control explícito de cierre para el modal de datos sensibles
-    $(document).on('click', '.btn-cerrar-modal-sensible, #modalAdvertenciaMensajeReda .close', function() {
+    $(document).on('click', '.btn-cerrar-modal-sensible, #modalAdvertenciaMensajeReda [data-dismiss="modal"], #modalAdvertenciaMensajeReda [data-bs-dismiss="modal"], #modalAdvertenciaMensajeReda .close', function(e) {
+        e.preventDefault();
         $('#modalAdvertenciaMensajeReda').modal('hide');
         setTimeout(limpiarBackdropsResiduales, 250);
     });
 
     // Asegurar limpieza de scroll y backdrops al ocultarse los modales
-    $('#modalAdvertenciaPrivacidadReda, #modalAdvertenciaMensajeReda').on('hidden.bs.modal', function () {
-        limpiarBackdropsResiduales();
+    $(document).on('hidden.bs.modal', '#modalAdvertenciaPrivacidadReda, #modalAdvertenciaMensajeReda, #modal-notificacion', function () {
+        setTimeout(limpiarBackdropsResiduales, 100);
     });
 
     $(document).ready(function() {
+        // 1. Reubicar modales y overlay directamente en <body> para evitar rupturas de stacking context en Bootstrap
+        $('#modalAdvertenciaPrivacidadReda, #modalAdvertenciaMensajeReda, #reda-chat-zoom-overlay').appendTo('body');
+
+        // 2. Procesar lista de conversaciones
         process();
 
-        // 1. Limpieza preventiva inicial de posibles backdrops residuales
+        // 3. Limpieza preventiva inicial de posibles backdrops residuales
         limpiarBackdropsResiduales();
 
-        // 2. Mostrar modal de advertencia de privacidad si no se ha mostrado en la sesión actual
+        // 4. Mostrar modal de advertencia de privacidad si no se ha mostrado en la sesión actual
         const advertenciaVista = sessionStorage.getItem('reda_aviso_privacidad_inbox_visto');
         if ($('#modalAdvertenciaPrivacidadReda').length && !advertenciaVista) {
-            $('#modalAdvertenciaPrivacidadReda').modal('show');
+            setTimeout(() => {
+                $('#modalAdvertenciaPrivacidadReda').modal({
+                    backdrop: true,
+                    keyboard: true,
+                    show: true
+                });
+            }, 300);
         }
     });
 

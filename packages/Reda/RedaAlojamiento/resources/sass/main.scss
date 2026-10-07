@@ -4290,6 +4290,17 @@
 #modalAdvertenciaPrivacidadReda,
 #modalAdvertenciaMensajeReda {
     z-index: 1060 !important;
+
+    .modal-dialog {
+        z-index: 1061 !important;
+        position: relative;
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
 }
+
 
 

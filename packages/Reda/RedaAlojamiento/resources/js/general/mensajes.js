@@ -571,50 +571,18 @@ const getModalMediacionHtml = () => {
             const bookingId = urlParams.get('id');
             
             if (bookingId) {
-                // Pequeño delay para asegurar que el DOM y los eventos de inbox.js estén listos
+                // Asegurar que el elemento quede centrado en el sidebar visualmente sin disparar clics artificiales
                 setTimeout(() => {
                     const targetConversation = $(`.conversassion[data-id="${bookingId}"]`);
                     if (targetConversation.length) {
-                        // 1. Resaltar visualmente (clase active)
                         $('.conversassion').removeClass('active');
                         targetConversation.addClass('active');
-                        
-                        // 2. Desplazar el scroll del sidebar hacia el elemento
-                        targetConversation[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                        // 3. Solo si el DOM no tiene cargada esta conversación, disparamos la carga
-                        const currentDomBooking = $('.send-btn').attr('data-booking') || $('.send-btn').data('booking');
-                        if (String(currentDomBooking) !== String(bookingId)) {
-                            targetConversation.click();
-                        }
+                        try {
+                            targetConversation[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        } catch (e) {}
                     }
-                }, 500);
+                }, 300);
             }
-
-            // Lógica para enriquecer el inbox original
-            $(document).on('click', '.conversassion', function() {
-                const bookingId = $(this).attr('data-id');
-                // Esperar un momento para que el script original termine su carga inicial
-                setTimeout(() => inyectarMensajesEnriquecidosReda(bookingId), 150);
-            });
-
-            // Si hay un booking inicial cargado en la vista blade
-            const initialBookingId = $('.send-btn').attr('data-booking');
-            if (initialBookingId) {
-                setTimeout(() => inyectarMensajesEnriquecidosReda(initialBookingId), 600);
-            }
-            
-            // También necesitamos interceptar el envío de mensajes para refrescar la vista enriquecida
-            $(document).off('click', '.send-btn').on('click', '.send-btn', function() {
-                const bookingId = $(this).attr('data-booking') || $(this).data('booking');
-                if (!bookingId) return;
-                
-                // Refrescar después de un breve delay para que el mensaje se guarde en BD
-                // Solo si estamos en la vista de inbox
-                if (window.location.pathname.endsWith('/inbox')) {
-                    setTimeout(() => inyectarMensajesEnriquecidosReda(bookingId), 1500);
-                }
-            });
         }
 
         if ($('#messages').length && $('#booking').length) {

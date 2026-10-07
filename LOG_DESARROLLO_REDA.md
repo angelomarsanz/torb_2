@@ -4,6 +4,43 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [7 de Octubre, 2026] - Solución Integral al Bloqueo y Sombreado en Inbox al Enviar Mensaje
+- **Tarea:** Resolver de forma definitiva la incidencia donde la vista de Inbox (`users/inbox.blade.php`) quedaba sombreada y bloqueada tras hacer clic en el botón "Enviar mensaje" desde la vista individual de la propiedad (`property.single`):
+    1. **Diagnóstico de Causa Raíz:**
+        - **Stacking Context de Bootstrap 4:** Los modales de seguridad (`modalAdvertenciaPrivacidadReda`, `modalAdvertenciaMensajeReda`) y el overlay de imagen estaban anidados dentro de `<div class="margin-top-85">` en Blade. Al abrirse el modal, Bootstrap 4 insertaba el elemento `.modal-backdrop` como hijo directo de `<body>` con `z-index: 1040`. Debido a que `.margin-top-85` creaba un contexto de apilamiento local con z-index base, el backdrop de `<body>` se dibujaba visualmente por encima del modal y de toda la interfaz, sombreando la pantalla y bloqueando los clics (impidiendo interactuar con el botón "Entendido" o escribir mensajes).
+        - **Colisión de Modales y Doble Backdrop:** Al ingresar con parámetro `?id=...`, `inbox.js` abría el modal de privacidad mientras que un `setTimeout` en `mensajes.js` forzaba un `.click()` artificial en la conversación, disparando `window.RedaNotificaciones.esperar()` (con backdrop estático). La colisión de dos modales simultáneos en Bootstrap 4 provocaba bucles de foco y backdrops huérfanos residuales.
+        - **Llamadas AJAX Redundantes:** El controlador `RedaInboxController@index` ya entrega la vista HTML con el booking y los mensajes del parámetro `?id=...` completamente renderizados en el servidor. La llamada a `.click()` y a `inyectarMensajesEnriquecidosReda` duplicaba consultas a base de datos y generaba parpadeos y retrasos.
+    2. **Aislamiento Estructural en Blade (`users/inbox.blade.php`):**
+        - Se cerró el contenedor `.margin-top-85` antes de los modales y el overlay de imagen, dejándolos desacoplados del flujo de contenido principal dentro de `@section('main')`.
+    3. **Sincronización Inmediata y Reubicación al Body (`inbox.js`):**
+        - En `$(document).ready`, se ejecuta `$('#modalAdvertenciaPrivacidadReda, #modalAdvertenciaMensajeReda, #reda-chat-zoom-overlay').appendTo('body')`, garantizando que en el DOM vivan como hijos directos de `<body>` y que su `z-index: 1060` supere siempre el `1040` del backdrop.
+        - En `process()`, se detecta prioritariamente el parámetro `?id=...` de la URL para activar inmediatamente la conversación correcta en el sidebar y centrar el scroll, activando también la vista móvil estilo WhatsApp (`.chat-active`) de forma transparente sin retardos ni clics artificiales.
+        - En el clic de `.conversassion`, se evita recarga AJAX si la conversación ya es la activa en pantalla.
+        - Se agregaron escuchadores en `hidden.bs.modal` y selectores duales (`data-dismiss` y `data-bs-dismiss`) para asegurar la purga de cualquier backdrop residual y la remoción de `modal-open` en `body`.
+    4. **Limpieza de Disparadores Artificiales (`mensajes.js`):**
+        - Se eliminó el `setTimeout` que forzaba el `targetConversation.click()` en la carga inicial de `/inbox`, preservando únicamente el desplazamiento visual suave (`scrollIntoView`).
+    5. **Protección ante Transiciones Activas (`notificaciones.js`):**
+        - Se actualizó `ocultar()` en `RedaNotificaciones` para comprobar si el modal está en transición de apertura (`_isTransitioning`). En tal caso, aguarda al evento `shown.bs.modal` antes de ejecutar `modal('hide')`, y aplica una doble verificación de limpieza para eliminar cualquier backdrop huérfano si no hay modales visibles.
+    6. **Optimización de Alcance (`chat-injection.js`):**
+        - Se condicionó `init()` para no ejecutar observadores de mutación innecesarios ni duplicar lógica en la ruta `/inbox`.
+        - Se corrigió el manejo de errores en el clic de inicio de chat para cerrar el spinner de espera y notificar con `RedaNotificaciones.notificar`.
+    7. **Refuerzo de Estilos SCSS (`main.scss`):**
+        - Se definieron reglas de `z-index: 1060 !important` para los contenedores y `z-index: 1061 !important` para los `.modal-dialog` de `#modalAdvertenciaPrivacidadReda` y `#modalAdvertenciaMensajeReda`.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: Cierre de `.margin-top-85` antes de los modales y overlay.
+    *   `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`: Reubicación al body, sincronización instantánea de `urlBookingId` y limpieza garantizada de backdrops.
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js`: Supresión de clics artificiales y recargas redundantes en carga inicial.
+    *   `packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js`: Refuerzo en `ocultar()` con soporte para `_isTransitioning` y limpieza de backdrops.
+    *   `packages/Reda/RedaAlojamiento/resources/js/chat-injection.js`: Exclusión de observadores en `/inbox` y corrección de feedback de errores.
+    *   `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: Reglas de z-index prioritario para modales de seguridad de Inbox.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Documentada la arquitectura técnica actualizada.
+    *   `previo_cambios_realizados.md`: Actualizado con el registro progresivo y final de la tarea.
+    *   `LOG_DESARROLLO_REDA.md`: Registro de la sesión del 7 de Octubre, 2026.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto de Laravel vRent se mantienen 100% inalterados e intactos. La solución opera íntegramente dentro del plugin `packages/Reda/RedaAlojamiento`. Siguiendo el protocolo mandatorio del entorno, los archivos fuente quedan editados en Cloud Shell y la compilación de assets a minificados debe realizarse en el servidor Vesta de desarrollo mediante `./compilar.sh`.
+- **Estado:** Completado, validado y documentado.
+
+---
+
 ## [6 de Octubre, 2026] - Botón "Re-enviar" Correo de Verificación en Modales de Registro (Signup) e Inicio de Sesión (Login)
 - **Tarea:** Enriquecer el flujo de verificación de correo electrónico añadiendo un tercer botón interactivo **"Re-enviar"** en el modal previo al registro (`#reda_modal_confirmar_email_signup`) y en el modal de cuenta no verificada en inicio de sesión (`#reda_modal_correo_no_verificado_login`):
     1. **Auditoría e Identificación de Componentes:** Se revisó la memoria técnica en `LOG_DESARROLLO_REDA.md` y `manual_tecnico_plugin_reda_alojamiento.md` identificando que los archivos responsables del modal son `packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php`, `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js`, `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php` y `packages/Reda/RedaAlojamiento/routes/web.php`.
