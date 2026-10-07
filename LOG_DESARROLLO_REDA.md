@@ -4,6 +4,32 @@ Este archivo sirve como memoria técnica para que Gemini pueda recordar los avan
 
 ---
 
+## [7 de Octubre, 2026] - Alineación Simétrica y Centrado del Botón de Enviar Mensaje en Inbox
+- **Tarea:** Corregir el desfase visual en el pie de entrada de mensajes (`.message-footer`) de la vista de Inbox (`users/inbox.blade.php` y `users/messages.blade.php`), donde el botón con el ícono de avioncito de papel (`.send-btn`) se encontraba posicionado demasiado elevado respecto a la línea media del campo de texto (`.cht_msg`):
+    1. **Diagnóstico Técnico del Desfase:**
+        - El contenedor `.message-footer` carecía de `align-items: center` estricto en su definición flex.
+        - La clase base `a.send-btn` del core de vRent en `public/css/style.css` aplicaba propiedades heredadas desalineantes: `float: right; margin: 0px 0 0 -50px; width: 50px;`, las cuales desfasaban el elemento en el eje vertical y horizontal, provocando que el ícono flotara por encima del centro del input.
+        - El glifo FontAwesome `fa-paper-plane` posee una inclinación geométrica intrínseca orientada hacia arriba a la derecha, requiriendo un balance óptico exacto.
+    2. **Alineación Flexbox y Simetría Geométrica (`main.scss`):**
+        - Se configuró `.message-footer` con `display: flex !important`, `align-items: center !important`, altura fija de `62px !important` y separación `gap: 10px !important`.
+        - Se unificó la altura de los componentes a **42px**:
+            *   Input `.cht_msg`: `height: 42px !important; border-radius: 21px !important; line-height: 42px !important; padding: 0 18px !important; margin: 0 !important;`
+            *   Botón `.send-btn`: `width: 42px !important; height: 42px !important; min-width: 42px !important; border-radius: 50% !important; padding: 0 !important; margin: 0 !important; float: none !important;` formando una circunferencia perfecta.
+        - Se centró el ícono en el centro geométrico con `display: inline-flex !important; align-items: center !important; justify-content: center !important;` y se aplicó un ajuste milimétrico de compensación óptica `transform: translate(-1px, 1px) !important;` para posicionar la masa visual del avioncito en perfecta concordancia con el texto del input.
+        - Se añadieron microinteracciones visuales fluidas (`hover` con escala `1.08` y tinte verde suave `rgba(29, 191, 115, 0.08)`, y `active` con escala `0.95`).
+    3. **Mejora en la Vista Blade (`users/messages.blade.php`):**
+        - Se asignó la clase utilitaria `d-flex align-items-center` directamente al contenedor `.message-footer` y se incorporó el atributo de accesibilidad `title="{{ __('Enviar mensaje') }}"` en el enlace `.send-btn`.
+- **Archivos Modificados:**
+    *   `packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php`: Inyección de clases flex de centrado y atributo title.
+    *   `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: Definición de alturas unificadas de 42px, centrado flexbox, neutralización de reglas de vRent y ajuste óptico del glifo.
+    *   `manual_tecnico_plugin_reda_alojamiento.md`: Documentada la subvista y la anatomía simétrica del footer de chat.
+    *   `previo_cambios_realizados.md`: Actualizado con el registro del avance.
+    *   `LOG_DESARROLLO_REDA.md`: Registro de la sesión.
+- **Detalle Técnico e Integridad del Core:** Los archivos originales del proyecto permanecen completamente intactos. La solución se implementó dentro del plugin `packages/Reda/RedaAlojamiento`. Los archivos fuente están editados en Cloud Shell y listos para su compilación en el servidor Vesta de desarrollo con `./compilar.sh`.
+- **Estado:** Completado, validado y documentado.
+
+---
+
 ## [7 de Octubre, 2026] - Solución Integral al Bloqueo y Sombreado en Inbox al Enviar Mensaje
 - **Tarea:** Resolver de forma definitiva la incidencia donde la vista de Inbox (`users/inbox.blade.php`) quedaba sombreada y bloqueada tras hacer clic en el botón "Enviar mensaje" desde la vista individual de la propiedad (`property.single`):
     1. **Diagnóstico de Causa Raíz:**

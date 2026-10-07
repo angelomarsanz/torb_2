@@ -133,6 +133,8 @@
 ### Vistas
 - **packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php**
   Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Incluye modales de seguridad desacoplados del flujo de contenido principal para prevenir rupturas del contexto de apilamiento (stacking context): `modalAdvertenciaMensajeReda` (al detectar datos sensibles en el envío) y `modalAdvertenciaPrivacidadReda` (aviso preventivo al cargar la vista con control de persistencia en `sessionStorage`), además del overlay para ampliación de fotos (`reda-chat-zoom-overlay`).
+- **packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php**
+  Subvista Blade que estructura la conversación activa y el pie de entrada de mensajes (`.message-footer`). Presenta las burbujas enriquecidas con roles, nombres y horas, y un pie interactivo simétrico compuesto por el campo de texto `.cht_msg` y el botón circular `.send-btn` con ícono de avioncito de papel (`fa-paper-plane`), perfectamente centrados verticalmente y alineados mediante Flexbox.
 
 ### JavaScript (Vistas y General)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js**

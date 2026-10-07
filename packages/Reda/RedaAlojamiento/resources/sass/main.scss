@@ -3714,15 +3714,30 @@
 
         .message-footer {
             background: #f0f2f5 !important;
-            padding: 10px 15px !important;
+            padding: 10px 16px !important;
             border-top: 1px solid #d1d7db !important;
+            display: flex !important;
+            align-items: center !important;
+            height: 62px !important;
+            gap: 10px !important;
 
             .cht_msg {
-                border-radius: 20px !important;
-                border: none !important;
-                padding: 9px 12px !important;
+                flex: 1 !important;
+                height: 42px !important;
+                border-radius: 21px !important;
+                border: 1px solid #e2e8f0 !important;
+                padding: 0 18px !important;
                 font-size: 14px !important;
                 background: #fff !important;
+                box-sizing: border-box !important;
+                line-height: 42px !important;
+                outline: none !important;
+                margin: 0 !important;
+
+                &:focus {
+                    border-color: #1dbf73 !important;
+                    box-shadow: 0 0 0 2px rgba(29, 191, 115, 0.15) !important;
+                }
             }
 
             .send-btn {
@@ -3730,9 +3745,40 @@
                 color: #54656f !important;
                 border: none !important;
                 box-shadow: none !important;
-                font-size: 20px !important;
-                padding: 0 10px !important;
-                &:hover { color: #1dbf73 !important; }
+                font-size: 19px !important;
+                width: 42px !important;
+                height: 42px !important;
+                min-width: 42px !important;
+                border-radius: 50% !important;
+                padding: 0 !important;
+                margin: 0 !important; /* Neutraliza el margin negativo de vRent (margin: 0 0 0 -50px) */
+                float: none !important; /* Neutraliza float: right de vRent */
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease !important;
+
+                i.fa-paper-plane {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    line-height: 1 !important;
+                    transform: translate(-1px, 1px) !important; /* Ajuste milimétrico para balance óptico del glifo */
+                }
+
+                &:hover {
+                    color: #1dbf73 !important;
+                    background-color: rgba(29, 191, 115, 0.08) !important;
+                    transform: scale(1.08) !important;
+                }
+
+                &:active {
+                    transform: scale(0.95) !important;
+                }
             }
         }
     }

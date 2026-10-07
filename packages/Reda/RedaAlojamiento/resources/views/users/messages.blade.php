@@ -77,9 +77,9 @@
 		</div>	
 	</div>
 
-	<div class="message-footer">
+	<div class="message-footer d-flex align-items-center">
 		<input type="text" class="cht_msg" data-placeholder="{{ __('Escribe un mensaje...') }}" />
-		<a href="javascript:void(0)" class="btn btn-success chat text-18 send-btn" data-booking="{{ $booking->id }}" data-receiver="{{ $booking->$users->id }}" data-property="{{ $booking->property_id }}"><i class="fa fa-paper-plane" aria-hidden="true"></i></a>
+		<a href="javascript:void(0)" class="btn btn-success chat text-18 send-btn" data-booking="{{ $booking->id }}" data-receiver="{{ $booking->$users->id }}" data-property="{{ $booking->property_id }}" title="{{ __('Enviar mensaje') }}"><i class="fa fa-paper-plane" aria-hidden="true"></i></a>
 	</div>
 
     <script>
