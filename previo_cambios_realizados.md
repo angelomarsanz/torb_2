@@ -13,15 +13,14 @@ Permite reanudar el trabajo sin perder el hilo en caso de cortes de energía el�
 
 ## Estado Actual / Último Punto de Control:
 - **Fecha:** 6 de Octubre, 2026
-- **Tarea en Curso:** Agregar un botón "Re-enviar" en el flujo de verificación de correo para permitir reenviar el correo de confirmación sin necesidad de modificar la dirección si ya está correcta pero no llegó el primer correo.
-- **Punto Alcanzado:** Tarea completada, validada y documentada en su totalidad en `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
-- **Archivos Modificados en esta sesión:**
-  1. `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php`: Incorporado el método `reenviarCorreoVerificacion(Request $request, EmailController $emailController)`.
-  2. `packages/Reda/RedaAlojamiento/routes/web.php`: Registrada la ruta POST `reda/usuarios/reenviar-correo-verificacion` (`reda.usuarios.reenviar_correo_verificacion`).
-  3. `packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php`: Inyectada la variable `rutaReenviarCorreo`, agregado el botón "Re-enviar" con icono y spinner, y contenedores de alertas de éxito y error en los modales de verificación (Signup y Login).
-  4. `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js`: Programados los eventos `click` para `#reda_btn_reenviar_email_signup` y `#reda_btn_reenviar_correo_login`, soporte para activación automática tras registro (`correoRegistradoPendiente`), manejo de estado de carga y renderizado reactivo de alertas.
-  5. `packages/Reda/RedaAlojamiento/resources/lang/es.json`: Incorporadas las cadenas de traducción y mensajes de validación/notificación en español para el botón "Re-enviar" y respuestas del servidor.
-  6. `manual_tecnico_plugin_reda_alojamiento.md`: Documentada la arquitectura del nuevo endpoint, vista y comportamiento JavaScript.
-  7. `LOG_DESARROLLO_REDA.md`: Registro de la sesión del 6 de Octubre, 2026.
-  8. `previo_cambios_realizados.md`: Actualizado como punto de control en tiempo real.
-
+- **Tarea en Curso:** Solucionar bloqueo y sombreado en la vista de Inbox (`users/inbox.blade.php`).
+- **Diagnóstico Confirmado:**
+  1. Los modales de seguridad (`modalAdvertenciaPrivacidadReda`, `modalAdvertenciaMensajeReda`) y el overlay de imagen estaban ubicados después de `@endsection` y `@push('scripts')`, provocando que Blade los renderice fuera de `<body>`, rompiendo el contexto de apilamiento (stacking context) con respecto a los backdrops de Bootstrap.
+  2. Al ingresar al Inbox con parámetro `?id=...`, `mensajes.js` realizaba un `click()` automático sobre la conversación que abría `#modal-notificacion` (spinner de espera) mientras `inbox.js` abría `modalAdvertenciaPrivacidadReda`, provocando colisión de múltiples backdrops de Bootstrap y dejando un backdrop huérfano estático que sombreaba y bloqueaba la pantalla.
+  3. Ausencia de control de sesión en `modalAdvertenciaPrivacidadReda` y falta de limpieza forzada de backdrops residuales al cerrar modales.
+- **Archivos en Modificación:**
+  1. `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php` (reubicación de modales dentro de `@section('main')`, atributos duales BS4/BS5).
+  2. `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js` (control con sessionStorage, limpieza de backdrops, evitar llamadas AJAX redundantes).
+  3. `packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js` (evitar `click()` forzado redundante si la conversación ya está activa).
+  4. `packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js` (limpieza reforzada de backdrops huérfanos cuando hay múltiples modales).
+  5. `packages/Reda/RedaAlojamiento/resources/sass/main.scss` (asegurar niveles de z-index de los modales de advertencia).

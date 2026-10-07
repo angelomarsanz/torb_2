@@ -93,6 +93,60 @@ enriquecidos y detalles de la reserva.
 			</div>
 		</div>
 	</div>
+
+	{{-- Overlay para ampliar fotos de chat --}}
+	<div class="reda-image-zoom-overlay" id="reda-chat-zoom-overlay">
+	    <div class="zoom-content-wrapper">
+	        <span class="btn-close-zoom" id="btn-close-reda-zoom">&times;</span>
+	        <img class="zoom-property-bg" id="zoom-prop-img" src="" alt="property" />
+	        <div class="zoom-user-avatars">
+	            <img class="zoom-user-avatar guest" id="zoom-guest-img" src="" />
+	            <img class="zoom-user-avatar host" id="zoom-host-img" src="" />
+	        </div>
+	    </div>
+	</div>
+
+	{{-- Modal de advertencia de información sensible --}}
+	<div class="modal fade" id="modalAdvertenciaMensajeReda" tabindex="-1" role="dialog" aria-labelledby="modalAdvertenciaMensajeRedaLabel" aria-hidden="true" style="z-index: 1060;">
+	    <div class="modal-dialog modal-dialog-centered" role="document">
+	        <div class="modal-content">
+	            <div class="modal-header border-0">
+	                <h5 class="modal-title font-weight-700" id="modalAdvertenciaMensajeRedaLabel">{{ __('Advertencia de seguridad') }}</h5>
+	                <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+	                    <span aria-hidden="true">&times;</span>
+	                </button>
+	            </div>
+	            <div class="modal-body text-center p-4">
+	                <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+	                <p class="text-16">{{ __('Estimado usuario hemos detectado que intenta enviar mensajes con números de teléfono y/o correos, le recomendamos no compartir ese tipo de información para prevenir estafas') }}</p>
+	            </div>
+	            <div class="modal-footer border-0 d-flex justify-content-center">
+	                <button type="button" class="btn btn-secondary shadow-none border-0 btn-cerrar-modal-sensible" data-dismiss="modal" data-bs-dismiss="modal">{{ __('Cerrar') }}</button>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	{{-- Modal de advertencia de privacidad al cargar --}}
+	<div class="modal fade" id="modalAdvertenciaPrivacidadReda" tabindex="-1" role="dialog" aria-labelledby="modalAdvertenciaPrivacidadRedaLabel" aria-hidden="true" style="z-index: 1060;">
+	    <div class="modal-dialog modal-dialog-centered" role="document">
+	        <div class="modal-content">
+	            <div class="modal-header border-0">
+	                <h5 class="modal-title font-weight-700" id="modalAdvertenciaPrivacidadRedaLabel">{{ __('Aviso de seguridad') }}</h5>
+	                <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+	                    <span aria-hidden="true">&times;</span>
+	                </button>
+	            </div>
+	            <div class="modal-body text-center p-4">
+	                <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 3rem;"></i>
+	                <p class="text-16">{{ __('Estimado usuario, no compartas datos personales o de contacto para prevenir estafas o la suspensión de tu cuenta.') }}</p>
+	            </div>
+	            <div class="modal-footer border-0 d-flex justify-content-center">
+	                <button type="button" class="btn btn-outline-success shadow-none btn-entendido-privacidad-reda" data-dismiss="modal" data-bs-dismiss="modal">{{ __('Entendido') }}</button>
+	            </div>
+	        </div>
+	    </div>
+	</div>
 </div>
 @endsection
 
@@ -104,57 +158,3 @@ enriquecidos y detalles de la reserva.
 	</script>
 	<script src="{{ asset('public/js/reda/vistas/inbox/inbox.min.js') }}?v={{ time() }}"></script>
 @endpush
-
-{{-- Overlay para ampliar fotos de chat --}}
-<div class="reda-image-zoom-overlay" id="reda-chat-zoom-overlay">
-    <div class="zoom-content-wrapper">
-        <span class="btn-close-zoom" id="btn-close-reda-zoom">&times;</span>
-        <img class="zoom-property-bg" id="zoom-prop-img" src="" alt="property" />
-        <div class="zoom-user-avatars">
-            <img class="zoom-user-avatar guest" id="zoom-guest-img" src="" />
-            <img class="zoom-user-avatar host" id="zoom-host-img" src="" />
-        </div>
-    </div>
-</div>
-
-{{-- Modal de advertencia de información sensible --}}
-<div class="modal fade" id="modalAdvertenciaMensajeReda" tabindex="-1" role="dialog" aria-labelledby="modalAdvertenciaMensajeRedaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title font-weight-700" id="modalAdvertenciaMensajeRedaLabel">{{ __('Advertencia de seguridad') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center p-4">
-                <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
-                <p class="text-16">{{ __('Estimado usuario hemos detectado que intenta enviar mensajes con números de teléfono y/o correos, le recomendamos no compartir ese tipo de información para prevenir estafas') }}</p>
-            </div>
-            <div class="modal-footer border-0 d-flex justify-content-center">
-                <button type="button" class="btn btn-secondary shadow-none border-0" data-dismiss="modal">{{ __('Cerrar') }}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Modal de advertencia de privacidad al cargar --}}
-<div class="modal fade" id="modalAdvertenciaPrivacidadReda" tabindex="-1" role="dialog" aria-labelledby="modalAdvertenciaPrivacidadRedaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title font-weight-700" id="modalAdvertenciaPrivacidadRedaLabel">{{ __('Aviso de seguridad') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center p-4">
-                <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 3rem;"></i>
-                <p class="text-16">{{ __('Estimado usuario, no compartas datos personales o de contacto para prevenir estafas o la suspensión de tu cuenta.') }}</p>
-            </div>
-            <div class="modal-footer border-0 d-flex justify-content-center">
-                <button type="button" class="btn btn-outline-success shadow-none" data-dismiss="modal">{{ __('Entendido') }}</button>
-            </div>
-        </div>
-    </div>
-</div>

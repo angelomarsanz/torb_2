@@ -173,6 +173,14 @@
         var id = $(this).data('id');
         console.log('REDA Inbox: Cargando conversation ID:', id);
 
+        // Evitar recarga redundante si la conversación ya es la activa y coincide en el DOM
+        const activeSendBtn = $('.send-btn');
+        const currentBookingInDom = activeSendBtn.attr('data-booking') || activeSendBtn.data('booking');
+        if (String(currentBookingInDom) === String(id) && $(this).hasClass('active') && $('#messages .message-wrap-reda').length) {
+            console.log('REDA Inbox: La conversación ID ' + id + ' ya está activa en pantalla.');
+            return;
+        }
+
         if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
             window.RedaNotificaciones.esperar();
         }
@@ -374,10 +382,48 @@
         return string.replace(regex, (match) => (symbols[match]));
     }
 
+    /**
+     * Limpia de forma forzada cualquier backdrop huérfano o bloqueo de scroll residual
+     * si no hay ningún modal interactivo visible en la pantalla.
+     */
+    function limpiarBackdropsResiduales() {
+        const modalesAbiertos = $('.modal.show').not('#modal-notificacion');
+        if (modalesAbiertos.length === 0) {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css({
+                'overflow': '',
+                'padding-right': ''
+            });
+        }
+    }
+
+    // Control explícito de cierre para el modal de advertencia de privacidad
+    $(document).on('click', '.btn-entendido-privacidad-reda, #modalAdvertenciaPrivacidadReda .close', function() {
+        sessionStorage.setItem('reda_aviso_privacidad_inbox_visto', 'true');
+        $('#modalAdvertenciaPrivacidadReda').modal('hide');
+        setTimeout(limpiarBackdropsResiduales, 250);
+    });
+
+    // Control explícito de cierre para el modal de datos sensibles
+    $(document).on('click', '.btn-cerrar-modal-sensible, #modalAdvertenciaMensajeReda .close', function() {
+        $('#modalAdvertenciaMensajeReda').modal('hide');
+        setTimeout(limpiarBackdropsResiduales, 250);
+    });
+
+    // Asegurar limpieza de scroll y backdrops al ocultarse los modales
+    $('#modalAdvertenciaPrivacidadReda, #modalAdvertenciaMensajeReda').on('hidden.bs.modal', function () {
+        limpiarBackdropsResiduales();
+    });
+
     $(document).ready(function() {
         process();
-        // Mostrar modal de advertencia de privacidad al cargar la vista
-        if ($('#modalAdvertenciaPrivacidadReda').length) {
+
+        // 1. Limpieza preventiva inicial de posibles backdrops residuales
+        limpiarBackdropsResiduales();
+
+        // 2. Mostrar modal de advertencia de privacidad si no se ha mostrado en la sesión actual
+        const advertenciaVista = sessionStorage.getItem('reda_aviso_privacidad_inbox_visto');
+        if ($('#modalAdvertenciaPrivacidadReda').length && !advertenciaVista) {
             $('#modalAdvertenciaPrivacidadReda').modal('show');
         }
     });

@@ -575,15 +575,18 @@ const getModalMediacionHtml = () => {
                 setTimeout(() => {
                     const targetConversation = $(`.conversassion[data-id="${bookingId}"]`);
                     if (targetConversation.length) {
-                        // 1. Disparar el click para que la lógica original cargue los mensajes vía AJAX
-                        targetConversation.click();
-                        
-                        // 2. Resaltar visualmente (clase active)
+                        // 1. Resaltar visualmente (clase active)
                         $('.conversassion').removeClass('active');
                         targetConversation.addClass('active');
                         
-                        // 3. Desplazar el scroll del sidebar hacia el elemento
+                        // 2. Desplazar el scroll del sidebar hacia el elemento
                         targetConversation[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // 3. Solo si el DOM no tiene cargada esta conversación, disparamos la carga
+                        const currentDomBooking = $('.send-btn').attr('data-booking') || $('.send-btn').data('booking');
+                        if (String(currentDomBooking) !== String(bookingId)) {
+                            targetConversation.click();
+                        }
                     }
                 }, 500);
             }
