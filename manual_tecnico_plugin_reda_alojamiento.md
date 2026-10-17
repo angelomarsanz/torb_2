@@ -121,6 +121,9 @@
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php**
   Controlador para la gestión de mediaciones (disputas). Maneja la lógica de negocio para crear, verificar y listar mediaciones. Incluye validaciones de estado de reserva para permitir mediaciones solo en reservaciones formales y no en simples consultas.
 
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php**
+  Controlador de mensajería de mediaciones. `getMessages($booking_id)` carga el historial compartido y filtra los mensajes de administrador con destinatario individual para que solo los reciba ese usuario; los mensajes grupales (`receiver_id = 0`) siguen visibles para ambos participantes. La actualización de lectura aplica el mismo filtro. `store(Request $request)` valida y almacena mensajes de los participantes.
+
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php**
   Controlador para gestiones relacionadas con las reservaciones dentro del ecosistema REDA. Proporciona métodos para verificar el estado de las reservas de un usuario, como la obtención de IDs de inmuebles con reservas activas y la recuperación de detalles completos (foto, ubicación, fechas, costos) para su visualización en componentes interactivos del frontend.
 
@@ -148,7 +151,7 @@
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**
-  Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, marca de mensajes leídos, procesamiento de respuestas con virtualización de datos y obtención del conteo de mensajes no leídos. Implementa una lógica de ordenamiento por prioridad para destacar conversaciones con mensajes pendientes.
+  Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, procesamiento de respuestas con virtualización de datos y obtención del conteo de mensajes no leídos. Filtra los mensajes administrativos privados por `receiver_id` al construir la lista del Inbox y el historial, y aplica el mismo criterio antes de marcar mensajes como leídos; mantiene visibles los mensajes grupales (`receiver_id = 0`).
 
 ## Verificación de Correo (Signup y Login)
 
@@ -246,18 +249,18 @@
 - **packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php**
   Servicio centralizado que orquesta la verificación automática de umbrales cada vez que se registra una nueva mediación (`DisputaController@store`).
   - **Recuperación de Configuración:** Consulta en la tabla `settings` los parámetros `Cantidad mediaciones permitidas primer aviso` y `Cantidad mediaciones segundo aviso y suspensión`.
-  - **Evaluación de Partes Involucradas:** Determina la contraparte y el iniciador de la mediación y calcula el conteo total acumulado de mediaciones para cada uno.
+  - **Evaluación de Partes Involucradas:** Calcula individualmente el conteo de mediaciones del turista y del anfitrión, sin depender de cuál inició la disputa y asumió el rol de demandante.
   - **Disparo de Primer Aviso:** Si el conteo alcanza o supera el umbral de primer aviso y no ha sido notificado previamente:
     1. Registra la emisión del aviso en `usuarios_avisos_mediaciones` con fecha y hora actual.
-    2. Envía correo preventivo al usuario (`emails.primer_aviso_usuario`).
-    3. Envía un mensaje formal al buzón `/inbox` del usuario utilizando `App\Models\Messages` con metadato `sender_type = 'admin'` (`MensajeMetadata`).
+    2. Envía correo preventivo al usuario evaluado (`emails.primer_aviso_usuario`).
+    3. Envía un mensaje privado al buzón `/inbox` del usuario evaluado usando `receiver_id` con su propio ID y metadato `sender_type = 'admin'` (`MensajeMetadata`).
     4. Envía correo informativo a todos los administradores activos (`emails.primer_aviso_admin`).
     5. Genera un registro en `alertas_admin` para cada administrador activo (`tipo = 'primer_aviso'`).
   - **Disparo de Suspensión (Segundo Aviso):** Si el conteo alcanza o supera el umbral máximo de suspensión:
     1. Actualiza el estatus nativo del usuario a `'Inactive'` en la tabla `users` (bloqueando de inmediato su inicio de sesión en el sistema core).
     2. Registra la suspensión y motivo en `usuarios_avisos_mediaciones`.
     3. Envía correo de notificación de suspensión al usuario (`emails.suspension_usuario`).
-    4. Envía mensaje explicativo de suspensión al buzón `/inbox` del usuario.
+    4. Envía mensaje privado de suspensión al buzón `/inbox` del usuario cuyo conteo alcanzó el límite.
     5. Envía correo de alerta crítica a todos los administradores activos (`emails.suspension_admin`).
     6. Genera un registro en `alertas_admin` para cada administrador (`tipo = 'suspension'`).
 
@@ -308,8 +311,6 @@
   - **Ejecución Directa y Continua:** La IA aplica todas las modificaciones y creaciones de código fuente de forma directa y autónoma, sin realizar pausas intermedias ni requerir aceptación/rechazo manual paso a paso por parte del usuario.
   - **Salvaguarda Progresiva:** Mantiene actualizado en tiempo real el archivo `previo_cambios_realizados.md` durante el proceso de desarrollo.
   - **Documentación Completa y Reporte Exhaustivo:** Al culminar todas las modificaciones, la IA actualiza obligatoriamente `LOG_DESARROLLO_REDA.md`, este manual técnico y las cabeceras correspondientes, entregando al usuario un informe final claro, pedagógico y detallado con los archivos intervenidos, las soluciones implementadas y las instrucciones pertinentes para el servidor Vesta de desarrollo.
-
-
 
 
 

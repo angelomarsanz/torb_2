@@ -2,6 +2,22 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [17 de Octubre, 2026] - Privacidad de Avisos por Límites de Mediaciones
+- **Tarea:** Garantizar que el usuario que alcanza el primer aviso o el límite de suspensión sea el único participante que vea el mensaje privado, aunque la disputa haya sido iniciada por la contraparte.
+- **Diagnóstico:** El servicio ya evaluaba por separado al demandante y al demandado y guardaba cada aviso con `receiver_id` del usuario evaluado. Sin embargo, los historiales del Inbox y del chat de mediación devolvían todos los mensajes vinculados a las reservas compartidas, incluyendo avisos privados enviados al otro participante; algunas actualizaciones de lectura también afectaban esos mensajes ajenos.
+- **Cambios realizados:**
+  - Se garantizó que `MediacionAlertaService` evalúe directamente al turista y al anfitrión, con independencia de quién haya iniciado la disputa, y que cada aviso privado se dirija al usuario evaluado.
+  - Se filtraron los mensajes administrativos privados por `receiver_id` en la lista, historial y operaciones de lectura del Inbox y del chat de mediación.
+  - Se conservaron accesibles para ambas partes los mensajes grupales con `receiver_id = 0`.
+  - Se documentó el comportamiento actualizado en el manual técnico.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php`: evaluación individual directa del turista y anfitrión; garantía documentada de que el aviso privado se guarda para el usuario cuyo conteo alcanzó el umbral.
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: exclusión de avisos administrativos dirigidos al otro participante en la bandeja, historial y marcado de lectura.
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php`: privacidad de avisos y aislamiento de marcado de lectura en el historial de mediación; cabecera y documentación de métodos.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: actualización de las responsabilidades y comportamiento privado de estos componentes.
+  - `previo_cambios_realizados.md`: actualización del punto de control de la tarea.
+- **Validación:** diagnósticos estáticos sin errores en los tres archivos PHP modificados; `git diff --check` pasó. No se encontraron pruebas automatizadas específicas. La comprobación funcional final debe hacerse en Vesta después de subir los cambios.
+
 ---
 
 ## [7 de Octubre, 2026] - Alineación Simétrica y Centrado del Botón de Enviar Mensaje en Inbox

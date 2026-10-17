@@ -12,16 +12,18 @@ Permite reanudar el trabajo sin perder el hilo en caso de cortes de energía el�
 ---
 
 ## Estado Actual / Último Punto de Control:
-- **Fecha:** 7 de Octubre, 2026
-- **Tarea en Curso:** Ajustar la alineación vertical y simetría del botón con ícono de avioncito de papel (`.send-btn`) respecto al campo de entrada de texto (`.cht_msg`) en el footer de mensajes de Inbox (`users/inbox.blade.php` / `users/messages.blade.php`).
-- **Diagnóstico:**
-  - El botón con el ícono de avioncito (`fa-paper-plane`) en `.message-footer` se encuentra posicionado demasiado alto con respecto a la altura y línea central del input `.cht_msg`.
-  - Revisar el marcado en `packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php` y los estilos en `packages/Reda/RedaAlojamiento/resources/sass/main.scss` (específicamente `.container-inbox .message-footer`, `.send-btn`, etc.) para aplicar flexbox centrado (`align-items: center`), alturas iguales o márgenes corregidos.
+- **Fecha:** 17 de octubre, 2026
+- **Tarea en Curso:** Asegurar que los mensajes privados de primer aviso y suspensión automática por exceso de mediaciones solo sean visibles para el usuario cuyo conteo rebasó el umbral, sea demandante o demandado.
+- **Diagnóstico:** `MediacionAlertaService` evalúa individualmente al iniciador y a su contraparte, y envía los mensajes al ID del usuario evaluado. Sin embargo, las consultas de historial del Inbox y de mediaciones recuperan mensajes de toda la reserva compartida, lo que puede mostrar el mensaje privado al otro participante y marcarlo como leído.
 - **Archivos a Intervenir:**
-  1. `packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php`: **COMPLETADO**. Se añadieron clases `d-flex align-items-center` en `.message-footer` y tooltip descriptivo `title="{{ __('Enviar mensaje') }}"` en `.send-btn`.
-  2. `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: **COMPLETADO**.
-     - Configurado `.message-footer` con `display: flex !important`, `align-items: center !important`, `height: 62px !important` y separación `gap: 10px !important`.
-     - Definida altura fija de 42px tanto para el input `.cht_msg` (`border-radius: 21px`, `line-height: 42px`) como para el botón `.send-btn` (`width: 42px`, `height: 42px`, `border-radius: 50%`).
-     - Neutralizadas las reglas heredadas de vRent (`margin: 0 0 0 -50px` y `float: right`) para garantizar alineación simétrica en el flujo flex.
-     - Centrado del ícono `i.fa-paper-plane` con `display: flex`, `align-items: center`, `justify-content: center` y ajuste milimétrico de balance óptico `transform: translate(-1px, 1px)`.
-- **Estado:** Tarea completada con éxito. Listo para traslado a documentación definitiva (`LOG_DESARROLLO_REDA.md` y `manual_tecnico_plugin_reda_alojamiento.md`).
+  1. `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: filtrar mensajes de administrador dirigidos a otro usuario en lista, historial y actualizaciones de lectura.
+  2. `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php`: filtrar avisos privados de otro participante y limitar las actualizaciones de lectura al usuario o a mensajes grupales.
+  3. `packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php`: aclarar y verificar que la evaluación y la entrega de cada aviso se atan al mismo ID de usuario.
+  4. `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: documentar la corrección.
+- **Avance:**
+  - `packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php`: completada la evaluación directa e individual del turista y anfitrión, independientemente de quién inició la disputa; el aviso privado permanece dirigido al usuario evaluado.
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: añadidos filtros para que el usuario solo reciba avisos administrativos privados dirigidos a su ID; protegidos los historiales, el Inbox y las actualizaciones de lectura. Se mantienen visibles los mensajes grupales con `receiver_id = 0`.
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php`: aplicado el mismo filtro al chat de mediaciones y a sus operaciones de lectura; añadida documentación de archivo y métodos.
+  - `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: actualizados con el diagnóstico y el comportamiento corregido.
+- **Validación:** Diagnósticos estáticos sin errores en los tres archivos PHP modificados; `git diff --check` pasó sin errores. No se encontraron pruebas automatizadas específicas para mediaciones, Inbox o mensajes.
+- **Estado:** Tarea completada y documentada. No se ejecutaron compilaciones, migraciones ni comandos Artisan.

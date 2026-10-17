@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Resumen: Controlador de mensajes asociados a las mediaciones del plugin Reda.
+ * Recupera el historial compartido de una disputa y aplica la privacidad por destinatario
+ * a los avisos administrativos, sin ocultar los mensajes de grupo; también guarda mensajes
+ * enviados por los participantes desde el chat de mediación.
+ */
+
 namespace Reda\RedaAlojamiento\Http\Controllers\Disputa;
 
 use App\Http\Controllers\Controller;
@@ -18,7 +25,11 @@ use Illuminate\Support\Facades\DB;
 class MensajeController extends Controller
 {
     /**
-     * Obtiene los mensajes de una mediación basada en el booking_id.
+     * Obtiene el historial de una mediación, mostrando los avisos administrativos
+     * privados únicamente a su destinatario y conservando los mensajes grupales.
+     *
+     * @param int|string $booking_id Identificador de la reserva vinculada a la mediación.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function getMessages($booking_id)
     {
@@ -34,6 +45,7 @@ class MensajeController extends Controller
         $usuarioA = $booking->user_id;
         $usuarioB = $booking->host_id;
         $propertyId = $booking->property_id;
+        $userId = Auth::id();
 
         // 1. Identificar todas las reservaciones/contextos compartidos estrictamente entre estos dos usuarios PARA ESTA PROPIEDAD.
         $sharedBookingIds = Bookings::where('property_id', $propertyId)
@@ -64,11 +76,18 @@ class MensajeController extends Controller
                 // CRITERIO B: Intervenciones de Administradores (Agentes) en contextos comunes
                 ->orWhereIn('booking_id', $sharedBookingIds);
             })
+            ->where(function ($query) use ($userId) {
+                $query->whereNotExists(function ($consulta) {
+                    $consulta->select(DB::raw(1))
+                        ->from('reda_mensajes_metadata')
+                        ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                        ->where('reda_mensajes_metadata.sender_type', 'admin');
+                })->orWhereIn('messages.receiver_id', [$userId, 0]);
+            })
             ->orderBy('messages.created_at', 'asc') // Orden cronológico total
             ->get();
 
         // Marcar como leídos los mensajes de esta conversación que no sean del usuario actual
-        $userId = Auth::id();
         Messages::where('property_id', $propertyId)
             ->whereIn('booking_id', $sharedBookingIds)
             ->where(function($q) use ($userId) {
@@ -80,6 +99,14 @@ class MensajeController extends Controller
                             ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
                             ->where('reda_mensajes_metadata.sender_type', 'admin');
                   });
+            })
+            ->where(function ($query) use ($userId) {
+                $query->whereNotExists(function ($consulta) {
+                    $consulta->select(DB::raw(1))
+                        ->from('reda_mensajes_metadata')
+                        ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                        ->where('reda_mensajes_metadata.sender_type', 'admin');
+                })->orWhereIn('receiver_id', [$userId, 0]);
             })
             ->where('read', 0)
             ->update(['read' => 1]);
@@ -146,6 +173,9 @@ class MensajeController extends Controller
 
     /**
      * Guarda un nuevo mensaje enviado por el usuario (Turista o Anfitrión).
+     *
+     * @param Request $request Datos del mensaje y de la reserva.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {

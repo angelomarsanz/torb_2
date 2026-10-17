@@ -4,7 +4,8 @@
  * Este controlador gestiona la lógica de la bandeja de entrada unificada, permitiendo
  * visualizar conversaciones entre huéspedes, anfitriones y agentes de mediación.
  * Implementa una historia unificada filtrada por propiedad y contexto compartido,
- * maneja el estado de lectura de los mensajes y la virtualización de datos para el frontend.
+ * limita los mensajes administrativos privados a su destinatario y maneja el estado
+ * de lectura y la virtualización de datos para el frontend.
  */
 namespace Reda\RedaAlojamiento\Http\Controllers\General;
 
@@ -60,8 +61,10 @@ class RedaInboxController extends Controller
 
     /**
      * Muestra la página principal del Inbox con el listado de conversaciones activas.
-     * Identifica a los compañeros de chat, agrupa mensajes por propiedad y carga 
-     * el historial unificado inicial para la conversación seleccionada.
+     * Identifica a los compañeros de chat, agrupa mensajes por propiedad y carga
+     * el historial unificado inicial para la conversación seleccionada. Los mensajes
+     * administrativos privados solo se incluyen para su destinatario; los grupales
+     * permanecen visibles para ambas partes.
      * Implementa un ordenamiento por prioridad: las conversaciones con mensajes 
      * no leídos aparecen al inicio de la lista.
      * 
@@ -86,6 +89,14 @@ class RedaInboxController extends Controller
                 $q->whereIn('booking_id', $involvedBookingIds)
                   ->orWhere('sender_id', $userId)
                   ->orWhere('receiver_id', $userId);
+            })
+            ->where(function ($q) use ($userId) {
+                $q->whereNotExists(function ($consulta) {
+                  $consulta->select(DB::raw(1))
+                      ->from('reda_mensajes_metadata')
+                      ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                      ->where('reda_mensajes_metadata.sender_type', 'admin');
+                })->orWhereIn('receiver_id', [$userId, 0]);
             })
             ->orderBy('id', 'desc')
             ->get();
@@ -190,6 +201,14 @@ class RedaInboxController extends Controller
                                 ->where('reda_mensajes_metadata.sender_type', 'admin');
                       });
                 })
+                ->where(function ($q) use ($userId) {
+                    $q->whereNotExists(function ($consulta) {
+                        $consulta->select(DB::raw(1))
+                            ->from('reda_mensajes_metadata')
+                            ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                            ->where('reda_mensajes_metadata.sender_type', 'admin');
+                    })->orWhereIn('receiver_id', [$userId, 0]);
+                })
                 ->where('read', 0)
                 ->update(['read' => 1]);
 
@@ -209,6 +228,14 @@ class RedaInboxController extends Controller
                     })
                     // Criterio 2: Intervenciones en sus contextos comunes
                     ->orWhereIn('booking_id', $sharedBookingIds);
+                })
+                ->where(function ($q) use ($userId) {
+                    $q->whereNotExists(function ($consulta) {
+                        $consulta->select(DB::raw(1))
+                            ->from('reda_mensajes_metadata')
+                            ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                            ->where('reda_mensajes_metadata.sender_type', 'admin');
+                    })->orWhereIn('messages.receiver_id', [$userId, 0]);
                 })
                 ->orderBy('messages.created_at', 'asc')
                 ->get();
@@ -283,7 +310,8 @@ class RedaInboxController extends Controller
     /**
      * Carga el detalle de una conversación específica mediante AJAX.
      * Sanea el historial de mensajes, marca mensajes como leídos y retorna el HTML 
-     * renderizado para el Inbox y el panel lateral de reserva.
+     * renderizado para el Inbox y el panel lateral de reserva. Excluye mensajes privados
+     * dirigidos a la contraparte, incluso de las actualizaciones automáticas de lectura.
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -320,18 +348,42 @@ class RedaInboxController extends Controller
                             ->where('reda_mensajes_metadata.sender_type', 'admin');
                   });
             })
+            ->where(function ($q) use ($userId) {
+                  $q->whereNotExists(function ($consulta) {
+                      $consulta->select(DB::raw(1))
+                          ->from('reda_mensajes_metadata')
+                          ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                          ->where('reda_mensajes_metadata.sender_type', 'admin');
+                  })->orWhereIn('receiver_id', [$userId, 0]);
+            })
             ->where('read', 0)
             ->update(['read' => 1]);
 
         // 2. LÓGICA DE SANEAMIENTO (HEURÍSTICA DE FLUJO):
         $lastMessage = Messages::where('property_id', $propertyId)
             ->whereIn('booking_id', $sharedBookingIds)
+            ->where(function ($q) use ($userId) {
+                $q->whereNotExists(function ($consulta) {
+                    $consulta->select(DB::raw(1))
+                        ->from('reda_mensajes_metadata')
+                        ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                        ->where('reda_mensajes_metadata.sender_type', 'admin');
+                })->orWhereIn('receiver_id', [$userId, 0]);
+            })
             ->orderBy('created_at', 'desc')
             ->first();
 
         if ($lastMessage) {
             Messages::where('property_id', $propertyId)
                 ->whereIn('booking_id', $sharedBookingIds)
+                ->where(function ($q) use ($userId) {
+                    $q->whereNotExists(function ($consulta) {
+                        $consulta->select(DB::raw(1))
+                            ->from('reda_mensajes_metadata')
+                            ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                            ->where('reda_mensajes_metadata.sender_type', 'admin');
+                    })->orWhereIn('receiver_id', [$userId, 0]);
+                })
                 ->where('created_at', '<', $lastMessage->created_at)
                 ->where('sender_id', '!=', $lastMessage->sender_id)
                 ->where('read', 0)
@@ -352,6 +404,14 @@ class RedaInboxController extends Controller
                     });
                 })
                 ->orWhereIn('booking_id', $sharedBookingIds);
+            })
+            ->where(function ($q) use ($userId) {
+                $q->whereNotExists(function ($consulta) {
+                    $consulta->select(DB::raw(1))
+                        ->from('reda_mensajes_metadata')
+                        ->whereColumn('reda_mensajes_metadata.message_id', 'messages.id')
+                        ->where('reda_mensajes_metadata.sender_type', 'admin');
+                })->orWhereIn('messages.receiver_id', [$userId, 0]);
             })
             ->orderBy('messages.created_at', 'asc')
             ->get();

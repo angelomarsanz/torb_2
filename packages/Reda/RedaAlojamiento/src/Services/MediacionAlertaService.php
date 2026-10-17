@@ -4,10 +4,10 @@
  * Resumen: Servicio de Alertas, Notificaciones y Suspensiones por Límites de Mediaciones.
  * Evalúa los umbrales configurados en la tabla settings ('Cantidad mediaciones permitidas primer aviso'
  * y 'Cantidad mediaciones segundo aviso y suspensión') cada vez que se genera una nueva mediación.
- * Si se alcanza el umbral de primer aviso, envía correo preventivo, mensaje al buzón /inbox del usuario,
- * correo a administradores y alerta administrativa en el panel.
+ * Si se alcanza el umbral de primer aviso, envía correo preventivo y mensaje privado al usuario
+ * que alcanzó el límite, además de correo y alerta administrativa para los administradores.
  * Si se alcanza el límite de suspensión, coloca el estatus del usuario en 'Inactive' (Suspendido),
- * notifica por correo y buzón, y alerta a todos los administradores activos.
+ * notifica por correo y mensaje privado a ese mismo usuario, y alerta a todos los administradores activos.
  *
  * @package    Reda\RedaAlojamiento
  * @subpackage Services
@@ -34,8 +34,9 @@ use Reda\RedaAlojamiento\Models\Disputa\UsuarioAvisoMediacion;
 class MediacionAlertaService
 {
     /**
-     * Evalúa los límites de mediaciones configurados para los usuarios involucrados en la disputa.
-     * Dispara avisos preventivos, suspensiones de cuenta y notificaciones a administradores.
+     * Evalúa individualmente a los dos participantes de la disputa, sin depender de quién la inició.
+     * Los avisos privados y la suspensión se dirigen únicamente al usuario cuyo conteo
+     * alcanza el umbral; las notificaciones administrativas informan a los administradores.
      *
      * @param Disputa $disputa
      * @return void
@@ -60,17 +61,17 @@ class MediacionAlertaService
                 return;
             }
 
-            // 2. Determinar usuarios a evaluar: contraparte e iniciador
+            // 2. Evaluar al turista y al anfitrión, independientemente de quién sea demandante
             $idTurista = (int) $disputa->id_usuario_turista;
             $idAnfitrion = (int) $disputa->id_usuario_anfitrion;
-            $idIniciador = (int) $disputa->id_usuario_inicial;
 
-            // La contraparte denunciada es el usuario principal evaluado
-            $idContraparte = ($idIniciador === $idTurista) ? $idAnfitrion : $idTurista;
-
-            $usuariosAEvaluar = array_unique(array_filter([$idContraparte, $idIniciador]));
+            $usuariosAEvaluar = array_unique(array_filter(
+                [$idTurista, $idAnfitrion],
+                static fn ($idUsuario) => $idUsuario > 0
+            ));
 
             foreach ($usuariosAEvaluar as $userId) {
+                // evaluarUsuarioIndividual envía cualquier aviso privado al mismo usuario evaluado.
                 self::evaluarUsuarioIndividual($userId, $disputa, $primerAviso, $segundoAviso);
             }
 
@@ -258,7 +259,7 @@ class MediacionAlertaService
     }
 
     /**
-     * Envía un mensaje informativo al buzón /inbox del usuario vinculado a la disputa.
+     * Envía un mensaje informativo privado al buzón /inbox del usuario evaluado.
      * Utiliza la tabla Messages del core combinada con reda_mensajes_metadata para identificarlo como admin.
      *
      * @param User $user
@@ -285,6 +286,7 @@ class MediacionAlertaService
             $message = new Messages();
             $message->property_id = $booking->property_id;
             $message->booking_id  = $booking->id;
+            // El aviso no es grupal: solo debe aparecer para el usuario que alcanzó el umbral.
             $message->receiver_id = $user->id;
             $message->sender_id   = $adminId;
             $message->message     = $textoMensaje;
