@@ -12,18 +12,14 @@ Permite reanudar el trabajo sin perder el hilo en caso de cortes de energía el�
 ---
 
 ## Estado Actual / Último Punto de Control:
-- **Fecha:** 17 de octubre, 2026
-- **Tarea en Curso:** Asegurar que los mensajes privados de primer aviso y suspensión automática por exceso de mediaciones solo sean visibles para el usuario cuyo conteo rebasó el umbral, sea demandante o demandado.
-- **Diagnóstico:** `MediacionAlertaService` evalúa individualmente al iniciador y a su contraparte, y envía los mensajes al ID del usuario evaluado. Sin embargo, las consultas de historial del Inbox y de mediaciones recuperan mensajes de toda la reserva compartida, lo que puede mostrar el mensaje privado al otro participante y marcarlo como leído.
+- **Fecha:** 18 de octubre, 2026
+- **Tarea en Curso:** Corregir el error 500 del Inbox que intenta acceder a `users` en una reserva inexistente o incompleta, posiblemente por mensajes huérfanos o registros asociados eliminados manualmente.
+- **Diagnóstico Inicial:** En `users/inbox.blade.php` se accede directamente a `$sideMsg->bookings->users` y `->host`. El controlador incluye mensajes por remitente o receptor además de los que tienen reserva del usuario; esa consulta puede incluir mensajes cuyo `booking_id` esté vacío o ya no tenga una reserva relacionada. La selección automática también asume que el primer mensaje del sidebar siempre tiene reserva.
 - **Archivos a Intervenir:**
-  1. `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: filtrar mensajes de administrador dirigidos a otro usuario en lista, historial y actualizaciones de lectura.
-  2. `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php`: filtrar avisos privados de otro participante y limitar las actualizaciones de lectura al usuario o a mensajes grupales.
-  3. `packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php`: aclarar y verificar que la evaluación y la entrega de cada aviso se atan al mismo ID de usuario.
-  4. `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: documentar la corrección.
-- **Avance:**
-  - `packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php`: completada la evaluación directa e individual del turista y anfitrión, independientemente de quién inició la disputa; el aviso privado permanece dirigido al usuario evaluado.
-  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: añadidos filtros para que el usuario solo reciba avisos administrativos privados dirigidos a su ID; protegidos los historiales, el Inbox y las actualizaciones de lectura. Se mantienen visibles los mensajes grupales con `receiver_id = 0`.
-  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php`: aplicado el mismo filtro al chat de mediaciones y a sus operaciones de lectura; añadida documentación de archivo y métodos.
-  - `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: actualizados con el diagnóstico y el comportamiento corregido.
-- **Validación:** Diagnósticos estáticos sin errores en los tres archivos PHP modificados; `git diff --check` pasó sin errores. No se encontraron pruebas automatizadas específicas para mediaciones, Inbox o mensajes.
-- **Estado:** Tarea completada y documentada. No se ejecutaron compilaciones, migraciones ni comandos Artisan.
+  1. `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: representar de forma segura los participantes cuando falte una reserva o una relación de usuario y no hacer seleccionable una fila sin reserva.
+  2. `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: al seleccionar por defecto una conversación, priorizar la primera fila con una reserva válida y manejar Inbox sin reservas seleccionables.
+  3. `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: documentar causa y corrección.
+- **Avance:** `RedaInboxController@index` ahora omite del sidebar mensajes sin una reserva relacionada y selecciona la conversación inicial desde una relación de reserva ya comprobada. La vista usa relaciones opcionales para los avatares y no asigna comportamiento de clic a filas sin reserva.
+- **Documentación:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
+- **Validación:** Diagnósticos estáticos sin errores en controlador y Blade; `git diff --check` pasó.
+- **Estado:** Tarea completada. No se ejecutaron comandos Artisan, migraciones ni compilaciones.

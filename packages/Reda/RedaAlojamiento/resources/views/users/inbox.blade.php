@@ -1,8 +1,9 @@
 {{-- 
 Resumen: Vista Blade principal para el Inbox unificado del plugin Reda.
-Define la estructura de la interfaz de mensajería, incluyendo el sidebar con 
-avatares duales (propiedad y participantes) y el contenedor para los mensajes 
-enriquecidos y detalles de la reserva.
+Define la estructura de la interfaz de mensajería, incluyendo el sidebar con
+avatares duales (propiedad y participantes) y el contenedor para los mensajes
+enriquecidos y detalles de la reserva. Tolera mensajes sin reserva relacionada
+o con relaciones de participantes ausentes para evitar errores de renderizado.
 --}}
 @extends('template')
 @section('main')
@@ -31,15 +32,22 @@ enriquecidos y detalles de la reserva.
 											@forelse ($sidebar_messages as $sideMsg)
 												@php
                                                     $user = $sideMsg->chat_partner;
+                                                    $bookingRelacionada = $sideMsg->bookings;
+                                                    $turistaReserva = optional($bookingRelacionada)->users;
+                                                    $anfitrionReserva = optional($bookingRelacionada)->host;
                                                     // Determinar si el último mensaje lo envió el usuario actual (web)
                                                     $loEnvieYo = ($sideMsg->sender_id == Auth::id() && ($sideMsg->sender_type === 'user' || !$sideMsg->sender_type));
 												@endphp
-												<div class="list p-2 conversassion" data-id="{{ $sideMsg->booking_id }}">
+												<div class="list p-2 {{ $bookingRelacionada ? 'conversassion' : '' }}" @if($bookingRelacionada) data-id="{{ $sideMsg->booking_id }}" @endif>
                                                     <div class="reda-chat-avatar-container">
                                                         <img class="reda-property-bg" src="{{ optional($sideMsg->properties)->cover_photo ?? asset('img/unnamed.png') }}" alt="property" />
                                                         <div class="reda-user-avatars">
-                                                            <img class="reda-user-avatar guest" src="{{ reda_get_profile_src($sideMsg->bookings->users) }}" title="{{ __('Turista') }}: {{ $sideMsg->bookings->users->first_name }}" />
-                                                            <img class="reda-user-avatar host" src="{{ reda_get_profile_src($sideMsg->bookings->host) }}" title="{{ __('Anfitrión') }}: {{ $sideMsg->bookings->host->first_name }}" />
+                                                            @if($bookingRelacionada)
+                                                                <img class="reda-user-avatar guest" src="{{ reda_get_profile_src($turistaReserva) }}" title="{{ __('Turista') }}: {{ optional($turistaReserva)->first_name ?? __('Usuario') }}" />
+                                                                <img class="reda-user-avatar host" src="{{ reda_get_profile_src($anfitrionReserva) }}" title="{{ __('Anfitrión') }}: {{ optional($anfitrionReserva)->first_name ?? __('Usuario') }}" />
+                                                            @else
+                                                                <img class="reda-user-avatar guest" src="{{ reda_get_profile_src($user) }}" title="{{ optional($user)->first_name ?? __('Usuario') }}" />
+                                                            @endif
                                                         </div>
                                                     </div>
 													<div class="info">

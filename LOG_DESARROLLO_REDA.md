@@ -2,6 +2,20 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [18 de Octubre, 2026] - Protección del Inbox ante Mensajes sin Reserva Relacionada
+- **Tarea:** Corregir el error 500 del Inbox (`Attempt to read property "users" on null`) al renderizar el sidebar de conversaciones.
+- **Diagnóstico:** `RedaInboxController@index` también recupera mensajes por `sender_id` o `receiver_id`. Tras eliminar una reserva, una relación puede quedar sin destino (la tabla `messages` admite `booking_id` nulo y no define una clave foránea para bookings); la vista asumía que cada mensaje de sidebar tenía una reserva y accedía directamente a `bookings->users` y `bookings->host`. La selección inicial repetía la suposición al cargar el primer mensaje como reserva.
+- **Cambios realizados:**
+  - El sidebar solo incluye mensajes con una reserva relacionada y seleccionable.
+  - La conversación inicial carga la reserva desde la relación verificada del propio mensaje.
+  - La vista protege las relaciones del turista/anfitrión y presenta un avatar alternativo si falta alguna relación; una fila sin reserva no queda habilitada como conversación.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: selección del sidebar restringida a reservas relacionadas y carga segura de la conversación inicial.
+  - `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: acceso seguro a relaciones del booking y avatar de respaldo ante relaciones de usuario ausentes.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación del manejo de mensajes huérfanos y relaciones ausentes.
+  - `previo_cambios_realizados.md`: punto de control de esta corrección.
+- **Validación:** diagnósticos estáticos sin errores en el controlador y la vista; `git diff --check` pasó. No se ejecutaron Artisan, migraciones ni compilación local.
+
 ## [17 de Octubre, 2026] - Privacidad de Avisos por Límites de Mediaciones
 - **Tarea:** Garantizar que el usuario que alcanza el primer aviso o el límite de suspensión sea el único participante que vea el mensaje privado, aunque la disputa haya sido iniciada por la contraparte.
 - **Diagnóstico:** El servicio ya evaluaba por separado al demandante y al demandado y guardaba cada aviso con `receiver_id` del usuario evaluado. Sin embargo, los historiales del Inbox y del chat de mediación devolvían todos los mensajes vinculados a las reservas compartidas, incluyendo avisos privados enviados al otro participante; algunas actualizaciones de lectura también afectaban esos mensajes ajenos.

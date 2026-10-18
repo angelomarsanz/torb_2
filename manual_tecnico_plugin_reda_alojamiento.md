@@ -135,7 +135,7 @@
 
 ### Vistas
 - **packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php**
-  Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Incluye modales de seguridad desacoplados del flujo de contenido principal para prevenir rupturas del contexto de apilamiento (stacking context): `modalAdvertenciaMensajeReda` (al detectar datos sensibles en el envío) y `modalAdvertenciaPrivacidadReda` (aviso preventivo al cargar la vista con control de persistencia en `sessionStorage`), además del overlay para ampliación de fotos (`reda-chat-zoom-overlay`).
+  Vista Blade principal para el Inbox unificado del plugin Reda. Define la interfaz de mensajería con sidebar de avatares duales (propiedad y participantes), contenedor de mensajes enriquecidos e indicadores visuales (badges) para mensajes pendientes de leer. Maneja de forma segura participantes ausentes y mensajes sin reserva relacionada, evitando acceder a relaciones inexistentes en el sidebar. Incluye modales de seguridad desacoplados del flujo de contenido principal para prevenir rupturas del contexto de apilamiento (stacking context): `modalAdvertenciaMensajeReda` (al detectar datos sensibles en el envío) y `modalAdvertenciaPrivacidadReda` (aviso preventivo al cargar la vista con control de persistencia en `sessionStorage`), además del overlay para ampliación de fotos (`reda-chat-zoom-overlay`).
 - **packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php**
   Subvista Blade que estructura la conversación activa y el pie de entrada de mensajes (`.message-footer`). Presenta las burbujas enriquecidas con roles, nombres y horas, y un pie interactivo simétrico compuesto por el campo de texto `.cht_msg` y el botón circular `.send-btn` con ícono de avioncito de papel (`fa-paper-plane`), perfectamente centrados verticalmente y alineados mediante Flexbox.
 
@@ -151,7 +151,7 @@
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php**
-  Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, procesamiento de respuestas con virtualización de datos y obtención del conteo de mensajes no leídos. Filtra los mensajes administrativos privados por `receiver_id` al construir la lista del Inbox y el historial, y aplica el mismo criterio antes de marcar mensajes como leídos; mantiene visibles los mensajes grupales (`receiver_id = 0`).
+  Controlador para la mensajería unificada. Gestiona el historial de chat enriquecido, procesamiento de respuestas con virtualización de datos y obtención del conteo de mensajes no leídos. Filtra los mensajes administrativos privados por `receiver_id` al construir la lista del Inbox y el historial, y aplica el mismo criterio antes de marcar mensajes como leídos; mantiene visibles los mensajes grupales (`receiver_id = 0`). Omite del sidebar los mensajes cuya reserva ya no está relacionada y selecciona como conversación inicial una reserva ya cargada y vigente, tolerando registros huérfanos que pueden quedar tras eliminaciones manuales.
 
 ## Verificación de Correo (Signup y Login)
 
@@ -311,6 +311,5 @@
   - **Ejecución Directa y Continua:** La IA aplica todas las modificaciones y creaciones de código fuente de forma directa y autónoma, sin realizar pausas intermedias ni requerir aceptación/rechazo manual paso a paso por parte del usuario.
   - **Salvaguarda Progresiva:** Mantiene actualizado en tiempo real el archivo `previo_cambios_realizados.md` durante el proceso de desarrollo.
   - **Documentación Completa y Reporte Exhaustivo:** Al culminar todas las modificaciones, la IA actualiza obligatoriamente `LOG_DESARROLLO_REDA.md`, este manual técnico y las cabeceras correspondientes, entregando al usuario un informe final claro, pedagógico y detallado con los archivos intervenidos, las soluciones implementadas y las instrucciones pertinentes para el servidor Vesta de desarrollo.
-
 
 

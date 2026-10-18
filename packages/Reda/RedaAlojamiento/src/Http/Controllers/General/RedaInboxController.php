@@ -62,9 +62,10 @@ class RedaInboxController extends Controller
     /**
      * Muestra la página principal del Inbox con el listado de conversaciones activas.
      * Identifica a los compañeros de chat, agrupa mensajes por propiedad y carga
-     * el historial unificado inicial para la conversación seleccionada. Los mensajes
-     * administrativos privados solo se incluyen para su destinatario; los grupales
-     * permanecen visibles para ambas partes.
+     * el historial unificado inicial para la conversación seleccionada. Omite del
+     * sidebar mensajes sin una reserva vigente, ya que no se puede abrir su contexto.
+     * Los mensajes administrativos privados solo se incluyen para su destinatario;
+     * los grupales permanecen visibles para ambas partes.
      * Implementa un ordenamiento por prioridad: las conversaciones con mensajes 
      * no leídos aparecen al inicio de la lista.
      * 
@@ -128,7 +129,10 @@ class RedaInboxController extends Controller
         });
 
         // 4. Generar lista del Sidebar: un item por cada compañero de chat real Y PROPIEDAD
-        $sidebarMessages = $allMessages->unique(function ($item) {
+        // Los mensajes sin reserva relacionada no pueden abrirse con el flujo actual del Inbox.
+        $sidebarMessages = $allMessages->filter(function ($item) {
+            return $item->bookings !== null;
+        })->unique(function ($item) {
             return $item->property_id . '-' . $item->chat_partner_id;
         })->values();
 
@@ -170,7 +174,7 @@ class RedaInboxController extends Controller
                 $first = $data['sidebar_messages']->first();
                 $selectedPartnerId = $first->chat_partner_id;
                 $selectedPropertyId = $first->property_id;
-                $data['booking'] = Bookings::find($first->booking_id)->load('users', 'host', 'properties');
+                $data['booking'] = $first->bookings->load('users', 'host', 'properties');
                 $targetBookingId = $first->booking_id;
             }
 

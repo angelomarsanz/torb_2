@@ -48,7 +48,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Middleware/CheckPluginAuth.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Middleware/InjectPluginAssets.php"
     #"packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php"
-    "packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php"
+    #"packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php"
 
     #"packages/Reda/RedaAlojamiento/resources/sass/main.scss"
     #"packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss"
@@ -196,7 +196,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/horario.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/anfitrion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/precio.blade.php"
-    #"packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php"
+    "packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php"
 
     # --- PLANTILLAS EMAIL USUARIO ---
@@ -271,7 +271,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/MediaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/SoporteTecnicoController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/FavoritoController.php"
-    "packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php"
+    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php"
     "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
