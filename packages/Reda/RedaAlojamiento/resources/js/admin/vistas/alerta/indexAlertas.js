@@ -1,6 +1,7 @@
 /**
  * Resumen: Controlador JavaScript para la vista de Alertas del Sistema en el panel administrativo.
- * Gestiona la carga asíncrona de alertas, paginación de 10 en 10, filtrado por estado (todas, no leídas, leídas),
+ * Gestiona la carga asíncrona de alertas, paginación de 10 en 10 (cerrando correctamente el modal de espera),
+ * filtrado por estado (todas, no leídas, leídas),
  * marcado de alertas como leídas de forma individual o masiva, y la sincronización reactiva de los contadores
  * de insignias (badges) en la campanita del header y en el menú lateral.
  *
@@ -63,8 +64,8 @@
                     console.error("Error al obtener alertas:", error);
                     mostrarError(window.RedaAlojamientoJson["Error al cargar las alertas del servidor"] || "Error al cargar las alertas del servidor");
                 } finally {
-                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultarEspera === 'function') {
-                        window.RedaNotificaciones.ocultarEspera();
+                    if (conLoader && window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                        window.RedaNotificaciones.ocultar();
                     }
                 }
             };

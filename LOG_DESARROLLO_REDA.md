@@ -2,6 +2,24 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [18 de Octubre, 2026] - Acceso Rol 2 al Submenú de Mensajes y Alertas y Corrección de Paginación
+- **Tarea:** Conceder a administradores de rol 2 (Atención al usuario) acceso al submenú "Mensajes y Alertas" y corregir el bloqueo del modal de espera al paginar alertas.
+- **Diagnóstico:**
+  - El submenú solo se creaba al encontrar el elemento nativo "Messages", que puede no renderizarse si el rol no tiene `manage_messages`.
+  - La ruta original `/admin/messages` también está protegida por ese permiso.
+  - La paginación llamaba a `RedaNotificaciones.ocultarEspera()`, método inexistente; la función disponible para cerrar el modal es `ocultar()`.
+- **Cambios realizados:**
+  - Se permite la inyección del submenú para rol 2 incluso sin el enlace original, usando un anclaje alternativo en el menú lateral.
+  - Se agregó una migración de datos que asocia el permiso `manage_messages` al rol 2, requisito para que el enlace "Mensajes" sea funcional.
+  - La paginación de alertas cierra el modal de espera con `ocultar()` en `finally` al terminar correctamente o fallar la solicitud.
+- **Archivos modificados o creados:**
+  - `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`: inserción del submenú para rol 2 aun cuando falte el enlace nativo y actualización de la documentación de cabecera.
+  - `packages/Reda/RedaAlojamiento/database/migrations/2026_10_18_000002_habilitar_mensajes_para_rol_atencion_usuario.php`: asignación idempotente del permiso `manage_messages` al rol 2.
+  - `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js`: reemplazo de llamada inexistente a `ocultarEspera()` por `ocultar()` y cierre condicionado a que se haya solicitado loader.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación de permiso, anclaje alternativo del submenú y corrección del loader.
+  - `previo_cambios_realizados.md`: punto de control actualizado para esta solicitud.
+- **Validación:** diagnósticos estáticos sin errores en ambos scripts JavaScript y la migración; `git diff --check` pasó. No se ejecutaron pruebas de navegador, compilación ni migraciones en este entorno.
+
 ## [18 de Octubre, 2026] - Protección del Inbox ante Mensajes sin Reserva Relacionada
 - **Tarea:** Corregir el error 500 del Inbox (`Attempt to read property "users" on null`) al renderizar el sidebar de conversaciones.
 - **Diagnóstico:** `RedaInboxController@index` también recupera mensajes por `sender_id` o `receiver_id`. Tras eliminar una reserva, una relación puede quedar sin destino (la tabla `messages` admite `booking_id` nulo y no define una clave foránea para bookings); la vista asumía que cada mensaje de sidebar tenía una reserva y accedía directamente a `bookings->users` y `bookings->host`. La selección inicial repetía la suposición al cargar el primer mensaje como reserva.

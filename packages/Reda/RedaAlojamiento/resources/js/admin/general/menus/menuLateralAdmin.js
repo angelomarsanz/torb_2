@@ -5,7 +5,9 @@
  * y "Soporte Técnico" en el menú lateral AdminLTE del proyecto original.
  * Permite que los usuarios con rol 1 (Admin) y rol 2 (Atención al usuario) tengan acceso a "Mediaciones",
  * garantizando que "Configuración" solo esté visible y disponible para administradores con Rol 1.
- * Actualiza dinámicamente el contador de mediaciones tanto en el encabezado padre como en "Listado".
+ * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
+ * para el rol 2, e inserta el submenú en un anclaje alternativo en ese caso.
+ * Actualiza dinámicamente los contadores del menú.
  */
 import { mediacionSvg } from '../../../general/iconos';
 import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMediaciones.js';
@@ -243,6 +245,8 @@ export const menuLateralAdmin = () =>
                 const labelMensajes = window.RedaAlojamientoJson["Mensajes"] || "Mensajes";
                 const linkAlertas = `${baseUrl}/admin/reda/alertas`;
                 const linkMensajes = `${baseUrl}/admin/messages`;
+                const roleIdAdmin = Number(window.RedaAdminUser?.roleId);
+                const esRolAtencionUsuario = roleIdAdmin === 2;
 
                 const $headerRightNav = $('.app-header .navbar-nav.ms-auto, .navbar-nav.ms-auto');
                 if ($headerRightNav.length && !$('#reda-admin-header-bell').length) {
@@ -274,7 +278,7 @@ export const menuLateralAdmin = () =>
                 // 4. Transformación de la opción "Messages" en Submenú "Mensajes y Alertas"
                 const $messagesMenuItem = $('.sidebar-menu a[href*="admin/messages"]').closest('li');
 
-                if ($messagesMenuItem.length && !$('#menu-mensajes').length) {
+                if (($messagesMenuItem.length || esRolAtencionUsuario) && !$('#menu-mensajes').length) {
                     const labelMensajesYAlertas = window.RedaAlojamientoJson["Mensajes y Alertas"] || "Mensajes y Alertas";
                     const esRutaAlertas = window.location.href.includes('admin/reda/alertas');
                     const esRutaMessages = (window.location.href.includes('admin/messages') || window.location.href.includes('admin/messaging')) && !esRutaAlertas;
@@ -312,8 +316,22 @@ export const menuLateralAdmin = () =>
                         </li>
                     `;
 
-                    $messagesMenuItem.replaceWith(mensajesMenuHtml);
-                    console.log('Submenú "Mensajes y Alertas" inyectado en lugar de Messages.');
+                    if ($messagesMenuItem.length) {
+                        $messagesMenuItem.replaceWith(mensajesMenuHtml);
+                    } else {
+                        const $puntoInsercion = $('#menu-mediaciones').length
+                            ? $('#menu-mediaciones')
+                            : ($('#menu-negocios').length
+                                ? $('#menu-negocios')
+                                : $('.sidebar-menu a[href*="admin/properties"]').closest('li'));
+
+                        if ($puntoInsercion.length) {
+                            $puntoInsercion.after(mensajesMenuHtml);
+                        } else {
+                            $('.sidebar-menu').append(mensajesMenuHtml);
+                        }
+                    }
+                    console.log('Submenú "Mensajes y Alertas" habilitado para el administrador actual.');
 
                     // Toggle interactivo para desplegar y replegar submenú de Mensajes
                     $('#menu-mensajes > .mensajes-toggle').on('click', function(e) {

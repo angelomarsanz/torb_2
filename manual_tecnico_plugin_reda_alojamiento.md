@@ -201,6 +201,7 @@
   2. **Transformación de "Messages":** Reemplaza la opción de enlace simple "Messages" del core por el submenú interactivo "Mensajes y Alertas" (`#menu-mensajes`), que agrupa:
      - "Mensajes": Conduce a la vista original de histórico de mensajes (`/admin/messages`).
      - "Alertas": Conduce a la vista de alertas administrativas (`/admin/reda/alertas`), mostrando la insignia y contador de alertas no leídas (`Alertas (N)`).
+     - El submenú está disponible para roles 1 y 2; si el rol 2 no tiene el enlace nativo "Messages" en el DOM, se inserta después de "Mediaciones", "Negocios" o "Properties", en ese orden de preferencia.
   3. **Sincronización Reactiva:** Escucha el evento global `reda:actualizar-contador-alertas` y realiza sondeo periódico cada 60 segundos hacia `/admin/reda/alertas/count-no-leidas`, actualizando dinámicamente tanto la campanita superior como las insignias del menú lateral sin requerir recarga de página.
 
 ### Vistas (Administración General)
@@ -238,6 +239,8 @@
 - **packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000001_crear_tabla_usuarios_avisos_mediaciones.php**
   Migración que crea la tabla auxiliar `usuarios_avisos_mediaciones` como registro de auditoría y control de umbrales para prevenir envíos duplicados de correos o suspensiones reiteradas:
   - Campos: `id`, `user_id` (relación foránea con `users`), `conteo_mediaciones`, `primer_aviso_enviado` (booleano), `fecha_primer_aviso` (timestamp nullable), `segundo_aviso_enviado` (booleano), `fecha_segundo_aviso` (timestamp nullable), `cuenta_suspendida` (booleano), `fecha_suspension` (timestamp nullable), `motivo` (texto descriptivo) y marcas de tiempo.
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_10_18_000002_habilitar_mensajes_para_rol_atencion_usuario.php**
+  Migración de datos que asigna el permiso existente `manage_messages` al rol 2 (Atención al usuario), si están registrados tanto el rol como el permiso. Esto habilita las rutas originales `/admin/messages` protegidas por dicho permiso para que el enlace "Mensajes" del submenú funcione realmente; no crea ni altera tablas.
 
 ### Modelos Eloquent
 - **packages/Reda/RedaAlojamiento/src/Models/Alerta/AlertaAdmin.php**
@@ -289,6 +292,7 @@
 - **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js**
   Controlador JavaScript del panel de alertas:
   - Carga asíncrona con animación de espera (`window.RedaNotificaciones.esperar()`).
+  - Cierra la animación en `finally` con `window.RedaNotificaciones.ocultar()`, la función disponible en el módulo global, tanto al completar como al fallar la petición AJAX de paginación.
   - Renderizado dinámico de tarjetas con código de colores según tipo (advertencia para primer aviso, peligro para suspensión).
   - Paginación interactiva de 10 en 10 sin recargar página.
   - Filtrado en cliente por estado (Todas / No leídas / Leídas).
@@ -311,5 +315,4 @@
   - **Ejecución Directa y Continua:** La IA aplica todas las modificaciones y creaciones de código fuente de forma directa y autónoma, sin realizar pausas intermedias ni requerir aceptación/rechazo manual paso a paso por parte del usuario.
   - **Salvaguarda Progresiva:** Mantiene actualizado en tiempo real el archivo `previo_cambios_realizados.md` durante el proceso de desarrollo.
   - **Documentación Completa y Reporte Exhaustivo:** Al culminar todas las modificaciones, la IA actualiza obligatoriamente `LOG_DESARROLLO_REDA.md`, este manual técnico y las cabeceras correspondientes, entregando al usuario un informe final claro, pedagógico y detallado con los archivos intervenidos, las soluciones implementadas y las instrucciones pertinentes para el servidor Vesta de desarrollo.
-
 

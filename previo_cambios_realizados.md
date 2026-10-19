@@ -13,13 +13,20 @@ Permite reanudar el trabajo sin perder el hilo en caso de cortes de energía el�
 
 ## Estado Actual / Último Punto de Control:
 - **Fecha:** 18 de octubre, 2026
-- **Tarea en Curso:** Corregir el error 500 del Inbox que intenta acceder a `users` en una reserva inexistente o incompleta, posiblemente por mensajes huérfanos o registros asociados eliminados manualmente.
-- **Diagnóstico Inicial:** En `users/inbox.blade.php` se accede directamente a `$sideMsg->bookings->users` y `->host`. El controlador incluye mensajes por remitente o receptor además de los que tienen reserva del usuario; esa consulta puede incluir mensajes cuyo `booking_id` esté vacío o ya no tenga una reserva relacionada. La selección automática también asume que el primer mensaje del sidebar siempre tiene reserva.
+- **Tarea en Curso:** Habilitar el submenú administrativo "Mensajes y Alertas" para los administradores con rol 2 y corregir la paginación de alertas que deja bloqueado el loader "Por favor espere".
+- **Diagnóstico:**
+  - `menuLateralAdmin.js` solo sustituye el enlace original de Messages si ese enlace está presente; el sidebar nativo lo omite para roles sin `manage_messages`.
+  - El endpoint nativo `/admin/messages` está protegido por el permiso `manage_messages`, así que mostrar el enlace sin otorgar ese permiso no daría acceso real al rol 2.
+  - `indexAlertas.js` invoca `RedaNotificaciones.ocultarEspera()` en `finally`, pero la API disponible se llama `ocultar()`, causando que el modal no cierre tras completar la petición de paginación.
 - **Archivos a Intervenir:**
-  1. `packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php`: representar de forma segura los participantes cuando falte una reserva o una relación de usuario y no hacer seleccionable una fila sin reserva.
-  2. `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`: al seleccionar por defecto una conversación, priorizar la primera fila con una reserva válida y manejar Inbox sin reservas seleccionables.
-  3. `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: documentar causa y corrección.
-- **Avance:** `RedaInboxController@index` ahora omite del sidebar mensajes sin una reserva relacionada y selecciona la conversación inicial desde una relación de reserva ya comprobada. La vista usa relaciones opcionales para los avatares y no asigna comportamiento de clic a filas sin reserva.
-- **Documentación:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
-- **Validación:** Diagnósticos estáticos sin errores en controlador y Blade; `git diff --check` pasó.
-- **Estado:** Tarea completada. No se ejecutaron comandos Artisan, migraciones ni compilaciones.
+  1. `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`: mostrar el submenú a rol 2, con punto de inserción alternativo cuando el menú nativo Messages no exista.
+  2. `packages/Reda/RedaAlojamiento/database/migrations/2026_10_18_000002_habilitar_mensajes_para_rol_atencion_usuario.php`: asignar al rol 2 el permiso `manage_messages` requerido por las rutas originales de mensajes.
+  3. `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js`: cerrar el modal de espera con la API existente tras finalizar AJAX.
+  4. `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: documentar causa y corrección.
+- **Avance:**
+  - `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`: implementada visibilidad del submenú para rol 2 cuando falta el enlace nativo; uso de anclajes alternativos y actualización de documentación del archivo.
+  - `packages/Reda/RedaAlojamiento/database/migrations/2026_10_18_000002_habilitar_mensajes_para_rol_atencion_usuario.php`: creada migración para conceder `manage_messages` a rol 2.
+  - `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js`: corregido el cierre del loader de `ocultarEspera()` a `ocultar()`, solo para solicitudes que lo abrieron.
+  - `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`: documentados acceso, migración y corrección de paginación.
+- **Validación:** diagnósticos sin errores para ambos JavaScript y la migración; `git diff --check` pasó. No se ejecutaron compilaciones, Artisan, migraciones ni pruebas en este entorno.
+- **Estado:** Implementación y documentación finalizadas; migración pendiente de ejecutar por el usuario en Vesta.
