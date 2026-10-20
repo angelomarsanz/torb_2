@@ -278,6 +278,6 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaLoginController.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaUsuarioController.php"
-    "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaUsuarioController.php"
+    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php"
     )

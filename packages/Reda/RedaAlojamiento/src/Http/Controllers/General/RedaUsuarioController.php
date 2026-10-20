@@ -8,8 +8,8 @@
  * controladores originales del proyecto base.
  *
  * Responsabilidades:
- * - Sobrescribe la acción `create` para registrar al usuario, enviar el correo de verificación
- *   y redirigir a login sin iniciar sesión automáticamente hasta que se confirme la cuenta.
+ * - Sobrescribe la acción `create` para registrar al usuario, enviar el correo de verificación,
+ *   mostrar una notificación de éxito y redirigir a login sin activar el modal de correo pendiente.
  * - Sobrescribe la acción `confirmEmail` para permitir la activación de la cuenta desde el enlace
  *   del correo sin requerir una sesión activa previa, activando el estado del usuario y marcando
  *   la verificación del correo en 'yes'.
@@ -34,8 +34,9 @@ use Illuminate\Support\Facades\Validator;
 class RedaUsuarioController extends UserController
 {
     /**
-     * Registra un nuevo usuario en la base de datos, envía el correo de verificación
-     * y redirige a la vista de inicio de sesión sin iniciar sesión de manera automática.
+     * Registra un usuario, envía el correo de verificación y presenta la notificación de éxito.
+     * Redirige a inicio de sesión sin iniciar la sesión automáticamente ni activar el modal
+     * reservado para intentos de acceso con correo no verificado.
      *
      * @param  \Illuminate\Http\Request              $request
      * @param  \App\Http\Controllers\EmailController $email_controller
@@ -128,7 +129,7 @@ class RedaUsuarioController extends UserController
 
         $this->helper->one_time_message('success', $mensajeRegistro);
 
-        return redirect('login')->with('correo_registrado_pendiente', $user->email);
+        return redirect('login');
     }
 
     /**

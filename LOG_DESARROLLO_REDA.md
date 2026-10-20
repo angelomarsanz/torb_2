@@ -2,6 +2,35 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [20 de Octubre, 2026] - Mantener Confirmación en el Modal de Reenvío de Correo
+- **Tarea:** Ocultar el aviso genérico de correo pendiente después de un reenvío exitoso y evitar que reaparezca tras corregir la dirección.
+- **Diagnóstico:** El éxito del reenvío se mostraba como una alerta adicional debajo del aviso inicial. Al corregir el correo, el temporizador regresaba al primer paso y volvía a presentar el texto inicial, aunque el servidor ya había enviado un nuevo enlace.
+- **Cambios realizados:**
+  - Se agrupó el contenido informativo inicial para poder ocultarlo cuando el servidor confirma el envío.
+  - Se centralizó la presentación del estado exitoso; tanto el reenvío como la corrección muestran la confirmación sin el aviso genérico.
+  - El retorno temporizado tras corregir el email y la acción de cancelar conservan el mensaje de confirmación cuando ya hubo un envío exitoso.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js`: gestión del estado de confirmación del envío y retorno al paso de aviso sin restaurar el mensaje inicial.
+  - `packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php`: agrupación del texto genérico para ocultarlo al mostrar el éxito.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación actualizada de los estados del modal.
+  - `previo_cambios_realizados.md`: seguimiento de la tarea.
+- **Validación:** diagnósticos sin errores en JavaScript y Blade; `node --check` y `git diff --check` pasaron. No se ejecutó compilación ni pruebas visuales en este entorno; estas deberán realizarse en Vesta.
+
+## [20 de Octubre, 2026] - Separación del Modal de Confirmación de Correo en Registro y Login
+- **Tarea:** Evitar que el registro muestre el botón de reenvío antes de crear la cuenta y el aviso de correo pendiente tras completar exitosamente el alta.
+- **Diagnóstico:** El modal de registro incluía un botón de reenvío para una cuenta que todavía no existía. Además, `RedaUsuarioController@create` enviaba la flash `correo_registrado_pendiente`, que el JavaScript interpretaba como motivo para abrir el modal de login.
+- **Cambios realizados:**
+  - Se ocultó el botón «Re-enviar» del modal de registro; permanecen «Corregir email» y «Email correcto».
+  - El registro exitoso conserva la notificación de usuario, pero ya no envía `correo_registrado_pendiente` ni activa el modal de correo pendiente.
+  - El modal de aviso queda asociado únicamente a `correo_no_verificado`, establecido cuando se intenta iniciar sesión con credenciales válidas y correo sin confirmar. El reenvío/corrección desde el modal de login se mantiene.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js`: restricción del modal de aviso al intento de inicio de sesión.
+  - `packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php`: ocultamiento del reenvío de signup y retiro de la variable de sesión redundante.
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaUsuarioController.php`: redirección posterior al registro sin la flash `correo_registrado_pendiente`; actualización de documentación del controlador y `create`.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación de la separación de ambos contextos.
+  - `previo_cambios_realizados.md`: punto de control actualizado para esta tarea.
+- **Validación:** diagnósticos sin errores en JavaScript, Blade y controlador; `git diff --check` pasó. No se ejecutó compilación ni pruebas de navegador en este entorno; la comprobación funcional deberá realizarse en Vesta después de subir las fuentes.
+
 ## [18 de Octubre, 2026] - Acceso Rol 2 al Submenú de Mensajes y Alertas y Corrección de Paginación
 - **Tarea:** Conceder a administradores de rol 2 (Atención al usuario) acceso al submenú "Mensajes y Alertas" y corregir el bloqueo del modal de espera al paginar alertas.
 - **Diagnóstico:**

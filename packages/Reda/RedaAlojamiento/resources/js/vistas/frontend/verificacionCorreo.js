@@ -3,14 +3,13 @@
  *
  * Este script gestiona tres flujos esenciales:
  * 1. Intercepta el formulario de registro (Signup) para abrir un modal que permita
- *    al usuario revisar si su correo está bien escrito, confirmarlo, corregirlo
- *    con validación en tiempo real antes del envío, o reenviar el correo de verificación
- *    mediante el botón "Re-enviar" por si ya se había registrado previamente y no le llegó el mensaje.
+ *    al usuario revisar si su correo está bien escrito y corregirlo antes del envío.
  * 2. Detecta intentos de inicio de sesión con correo no verificado, abriendo un modal
  *    explicativo con la opción de reenviar el enlace directamente ("Re-enviar") o corregir el email
  *    y reenviar la verificación vía AJAX.
  * 3. Detecta la confirmación exitosa del correo (tras hacer clic en el enlace del email)
- *    y abre un modal amigable con un botón directo para iniciar sesión.
+ *    y abre un modal amigable con un botón directo para iniciar sesión. El aviso de
+ *    correo pendiente aparece únicamente tras un intento de acceso no verificado.
  *
  * @package    Reda\RedaAlojamiento
  * @subpackage resources/js/vistas/frontend
@@ -55,6 +54,8 @@
 
     /**
      * Inicializa los manejadores de eventos del flujo de verificación de correo.
+     * En login sustituye el aviso pendiente por la confirmación cuando el correo
+     * se reenvía o se corrige, y conserva ese estado al regresar al aviso.
      */
     function inicializarVerificacionCorreo() {
         const datosServidor = window.RedaVerificacionData || {};
@@ -241,7 +242,7 @@
         // ----------------------------------------------------------------------
         // 2. FLUJO DE LOGIN: CORREO NO VERIFICADO
         // ----------------------------------------------------------------------
-        const correoPendiente = datosServidor.correoNoVerificado || datosServidor.correoRegistradoPendiente;
+        const correoPendiente = datosServidor.correoNoVerificado;
 
         if (correoPendiente) {
             $('#reda_login_email_no_verificado_texto').text(correoPendiente);
@@ -260,6 +261,35 @@
                 show: true
             });
         }
+
+        let mensajeCorreoEnviado = '';
+
+        /**
+         * Sustituye el aviso inicial de correo pendiente por la confirmación de envío.
+         *
+         * @param {string} mensaje
+         */
+        const mostrarConfirmacionCorreoEnviado = (mensaje) => {
+            mensajeCorreoEnviado = mensaje;
+            $('#reda_login_mensaje_no_verificado').addClass('d-none');
+            $('#reda_login_aviso_alerta_exito_texto').text(mensaje);
+            $('#reda_login_aviso_alerta_exito').removeClass('d-none');
+        };
+
+        /**
+         * Regresa al aviso de login conservando la confirmación si ya se envió el correo.
+         */
+        const mostrarAvisoCorreoPendiente = () => {
+            $('#reda_login_paso_formulario').addClass('d-none');
+            $('#reda_login_paso_aviso').removeClass('d-none');
+
+            if (mensajeCorreoEnviado) {
+                mostrarConfirmacionCorreoEnviado(mensajeCorreoEnviado);
+            } else {
+                $('#reda_login_mensaje_no_verificado').removeClass('d-none');
+                $('#reda_login_aviso_alerta_exito').addClass('d-none');
+            }
+        };
 
         // Botón: "Re-enviar" correo en Login (cuando el correo sí está correcto pero no llegó el mensaje)
         $(document).on('click', '#reda_btn_reenviar_correo_login', function(e) {
@@ -296,10 +326,8 @@
                     $btn.find('.spinner').addClass('d-none');
 
                     if (respuesta && respuesta.success) {
-                        $('#reda_login_aviso_alerta_exito_texto').text(
-                            respuesta.mensaje_usuario || trans('El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de spam.', 'El correo de verificación ha sido reenviado exitosamente a su correo. Por favor revise su bandeja de entrada o carpeta de spam.').replace(':email', correoActual)
-                        );
-                        $('#reda_login_aviso_alerta_exito').removeClass('d-none');
+                        const mensajeExito = respuesta.mensaje_usuario || trans('El correo de verificación ha sido reenviado exitosamente a :email. Por favor revise su bandeja de entrada o carpeta de spam.', 'El correo de verificación ha sido reenviado exitosamente a su correo. Por favor revise su bandeja de entrada o carpeta de spam.').replace(':email', correoActual);
+                        mostrarConfirmacionCorreoEnviado(mensajeExito);
                     } else {
                         const mensajeError = respuesta.mensaje_usuario || trans('Ocurrió un error al procesar la solicitud.', 'Ocurrió un error al procesar la solicitud.');
                         $('#reda_login_aviso_alerta_error_texto').text(mensajeError);
@@ -345,11 +373,9 @@
         $(document).on('click', '#reda_btn_cancelar_corregir_login', function(e) {
             e.preventDefault();
             $('#reda_login_aviso_alerta_error').addClass('d-none');
-            $('#reda_login_aviso_alerta_exito').addClass('d-none');
             $('#reda_login_alerta_error').addClass('d-none');
             $('#reda_login_alerta_exito').addClass('d-none');
-            $('#reda_login_paso_formulario').addClass('d-none');
-            $('#reda_login_paso_aviso').removeClass('d-none');
+            mostrarAvisoCorreoPendiente();
         });
 
         // Botón: "Enviar" nuevo correo desde el modal de Login (petición AJAX)
@@ -405,10 +431,12 @@
                         );
                         $('#reda_login_alerta_exito').removeClass('d-none');
 
-                        // Opcionalmente regresar al paso 1 después de 2.5 segundos
+                        const mensajeExito = respuesta.mensaje_usuario || trans('Se ha enviado un nuevo enlace de verificación a su correo.', 'Se ha enviado un nuevo enlace de verificación a su correo.');
+                        mensajeCorreoEnviado = mensajeExito;
+
+                        // Regresar al aviso mostrando solo la confirmación del correo enviado.
                         setTimeout(function() {
-                            $('#reda_login_paso_formulario').addClass('d-none');
-                            $('#reda_login_paso_aviso').removeClass('d-none');
+                            mostrarAvisoCorreoPendiente();
                         }, 2500);
 
                     } else {
