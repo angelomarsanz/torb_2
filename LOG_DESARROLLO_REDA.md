@@ -2,6 +2,28 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [02 de Noviembre, 2026] - Pauta para Elegir JavaScript al Alterar Vistas Originales
+- **Tarea:** Documentar en las instrucciones compartidas del proyecto cómo elegir el JavaScript correcto antes de inyectar cambios al HTML de una vista original.
+- **Cambio realizado:**
+  - `.github/copilot-instructions.md`: se agregó que primero se debe buscar y reutilizar un script con responsabilidad relacionada a la vista/requerimiento; evitar incluir lógica en archivos de otro propósito; luego evaluar un script general apropiado; y crear/integrar uno nuevo si no existe un punto de extensión adecuado.
+- **Validación:** revisión del texto y `git diff --check` pasaron.
+
+## [02 de Noviembre, 2026] - Corrección del Avatar del Anfitrión en Móvil
+- **Tarea:** Corregir el avatar del anfitrión en la tarjeta resumen situada justo debajo de la foto principal en la vista móvil de `property.single`.
+- **Diagnóstico:** El ajuste inicial se aplicó por error a la sección "Sobre el anfitrión", que no es la tarjeta indicada. El elemento correcto está en `#mainDiv #sideDiv` y usa la imagen `.img-90x90`. Definir reglas SCSS no alcanzaba porque el JavaScript todavía no añadía las clases objetivo a ese HTML original.
+- **Cambios realizados:**
+  - `propiedad_detalle.js` identifica la tarjeta desde JavaScript y añade clases del plugin al contenedor flex del avatar y a la imagen. Se ejecuta al inicializar el script específico de `property.single`, antes de verificar si existe el formulario de reserva.
+  - `main.scss` fija en móvil el contenedor e imagen a 90 × 90 px y aplica `object-fit: cover`.
+  - `chat-injection.js` queda dedicado a la reubicación del bloque de anfitrión y al botón de mensajería; ya no contiene la normalización del avatar.
+  - Se corrigió la documentación anterior. No se modificaron vistas ni otros archivos originales del proyecto.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`: función documentada `normalizarTarjetaAnfitrion()` para inyectar clases a la tarjeta resumen.
+  - `packages/Reda/RedaAlojamiento/resources/js/chat-injection.js`: retirada la lógica del avatar, dejando intactas sus funciones de chat.
+  - `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: estilos móviles aplicados a las nuevas clases.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación corregida de los cambios.
+  - `previo_cambios_realizados.md`: seguimiento de esta corrección.
+- **Validación:** `node --check` sobre `propiedad_detalle.js`, `node --input-type=module --check` sobre `chat-injection.js` y `git diff --check` pasaron. No se compilaron assets ni se ejecutaron comandos Artisan en este entorno; la compilación y revisión visual se realizarán en Vesta.
+
 ## [20 de Octubre, 2026] - Mantener Confirmación en el Modal de Reenvío de Correo
 - **Tarea:** Ocultar el aviso genérico de correo pendiente después de un reenvío exitoso y evitar que reaparezca tras corregir la dirección.
 - **Diagnóstico:** El éxito del reenvío se mostraba como una alerta adicional debajo del aviso inicial. Al corregir el correo, el temporizador regresaba al primer paso y volvía a presentar el texto inicial, aunque el servidor ya había enviado un nuevo enlace.

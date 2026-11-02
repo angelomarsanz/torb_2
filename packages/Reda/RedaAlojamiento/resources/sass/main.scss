@@ -4350,3 +4350,22 @@
 
 
 
+/* Mantiene cuadrado el avatar de la tarjeta resumen inyectada por el plugin. */
+@media (max-width: 767.98px) {
+    .reda-property-host-summary {
+        .reda-property-host-avatar-wrapper {
+            flex: 0 0 90px;
+            width: 90px;
+            min-width: 90px;
+        }
+
+        .reda-property-host-avatar {
+            display: block;
+            width: 90px !important;
+            min-width: 90px;
+            max-width: 90px;
+            height: 90px !important;
+            object-fit: cover;
+        }
+    }
+}

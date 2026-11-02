@@ -5,6 +5,7 @@
  * en la vista de detalle de la propiedad (property.single).
  * 
  * Funcionalidades:
+ * - Normaliza el avatar de la tarjeta resumen superior en dispositivos móviles.
  * - Oculta el sidebar de reserva original.
  * - Inyecta un botón flotante responsivo.
  * - Verifica reservas activas antes de permitir una nueva reservación.
@@ -30,6 +31,8 @@
          * Inicializa el módulo de reserva si el formulario existe en el DOM.
          */
         init: function() {
+            this.normalizarTarjetaAnfitrion();
+
             if (!$(this.config.formId).length) return;
 
             console.log('REDA Property Detail: Inicializando sistema de reserva en modal');
@@ -38,6 +41,23 @@
             this.checkActiveBookingStatus(); // Verificación proactiva para el botón flotante
             this.handleHash();
             this.bindEvents();
+        },
+
+        /**
+         * Añade clases del plugin a la tarjeta resumen y al avatar del anfitrión para aplicar estilos móviles.
+         */
+        normalizarTarjetaAnfitrion: function() {
+            const tarjetaAnfitrion = document.querySelector(
+                '#mainDiv #sideDiv > .d-flex.border.rounded-4.p-4.mt-4'
+            );
+            const imagenAnfitrion = tarjetaAnfitrion?.querySelector('.text-center > a > img.img-90x90');
+            const contenedorAvatar = imagenAnfitrion?.closest('.text-center');
+
+            if (!tarjetaAnfitrion || !imagenAnfitrion || !contenedorAvatar) return;
+
+            tarjetaAnfitrion.classList.add('reda-property-host-summary');
+            contenedorAvatar.classList.add('reda-property-host-avatar-wrapper');
+            imagenAnfitrion.classList.add('reda-property-host-avatar');
         },
 
         /**
