@@ -1,4 +1,4 @@
-/* Estilos para el admin usando Bootstrap  v5.2.3 */
+/* Estilos para el admin usando Bootstrap  v5.2.3; incluye ajustes visuales aislados por módulo. */
 
 /* Estilos para el módulo de Soporte Técnico */
 .soporte-tecnico {
@@ -288,6 +288,7 @@
         border: 1px solid #d2d6de;
         border-radius: 5px;
     }
+
     &-box-header-custom {
         background-color: #f7f7f7;
     }
@@ -531,6 +532,177 @@
         td {
             vertical-align: middle !important;
             padding: 12px !important;
+        }
+    }
+}
+
+/* Ajustes de espaciado para la pantalla administrativa de configuración de planes. */
+#configuracion_planes_container + .content-wrapper {
+    .content-header {
+        padding: 18px 24px 0;
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+    }
+
+    .content {
+        padding: 20px 24px 30px;
+    }
+
+    .nav-tabs-custom {
+        border-radius: 8px;
+
+        > .nav-tabs {
+            padding-left: 12px;
+        }
+
+        > .tab-content {
+            padding: 18px;
+        }
+    }
+
+    .box {
+        border-radius: 8px;
+
+        .box-header {
+            padding: 14px 18px;
+        }
+
+        .box-body {
+            padding: 18px;
+        }
+
+        .box-footer {
+            padding: 14px 18px;
+        }
+    }
+
+    .planes-negocio-box-custom {
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 767px) {
+    #configuracion_planes_container + .content-wrapper {
+        .content-header {
+            padding: 16px 14px 0;
+        }
+
+        .content {
+            padding: 16px 14px 22px;
+        }
+
+        .nav-tabs-custom {
+            > .nav-tabs {
+                padding-left: 8px;
+            }
+
+            > .tab-content {
+                padding: 14px 10px;
+            }
+        }
+
+        .box {
+            .box-header {
+                padding: 12px 14px;
+            }
+
+            .box-body {
+                padding: 14px;
+            }
+
+            .box-footer {
+                padding: 12px 14px;
+            }
+        }
+    }
+}
+
+/* Espaciado y bordes del modal para agregar o editar planes de negocio. */
+#modal-plan {
+    .modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+    }
+
+    .modal-header {
+        padding: 16px 22px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .modal-body {
+        padding: 20px 22px;
+    }
+
+    .modal-body > .row {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .modal-footer {
+        padding: 14px 22px;
+        border-top: 1px solid #eee;
+    }
+
+    .planes-negocio-box-custom {
+        border-radius: 8px;
+
+        .box-header {
+            padding: 12px 16px;
+        }
+
+        .box-body {
+            padding: 16px;
+        }
+    }
+
+    .planes-negocio-mt-25 {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+
+        label {
+            margin-bottom: 0;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    #modal-plan {
+        .modal-dialog {
+            margin: 12px;
+        }
+
+        .modal-header {
+            padding: 14px 16px;
+        }
+
+        .modal-body {
+            padding: 16px 14px;
+        }
+
+        .modal-footer {
+            padding: 12px 14px;
+        }
+
+        .planes-negocio-box-custom {
+            .box-header {
+                padding: 11px 13px;
+            }
+
+            .box-body {
+                padding: 13px;
+            }
+        }
+
+        .planes-negocio-mt-25 {
+            margin-top: 0;
         }
     }
 }

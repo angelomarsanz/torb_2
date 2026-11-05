@@ -2,6 +2,18 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [05 de Noviembre, 2026] - Mejora visual de configuración de planes
+- **Tarea:** Recuperar márgenes laterales y espacio interior, y suavizar los bordes de la pantalla de configuración de planes.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se añadieron estilos scoped al contenedor de esta vista: márgenes/padding más cómodos en escritorio, ajustes compactos para móvil, padding en encabezados y cuerpos de paneles y redondeo discreto de 8 px. No se alteraron la vista Blade, JavaScript, rutas ni lógica de negocio.
+- **Validación:** revisión del diff y `git diff --check`; no se compiló localmente.
+
+## [05 de Noviembre, 2026] - Mejora visual del modal de planes
+- **Tarea:** Aplicar el espaciado y redondeo suave de la pantalla de configuración al modal «Agregar nuevo plan».
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se añadieron estilos específicos para `#modal-plan`: bordes suavemente redondeados, sombra discreta y padding en encabezado, contenido, pie y paneles interiores. En móvil se reducen los márgenes y espacios y se quita el desplazamiento superior innecesario de los controles de estado. Sin cambios en la vista, el JavaScript ni el flujo del modal.
+- **Validación:** revisión del diff y `git diff --check`; no se compiló localmente.
+
 ## [05 de Noviembre, 2026] - Alineación de opciones del menú lateral admin
 - **Tarea:** Corregir la sangría de "Negocios", "Mediaciones" y "Mensajes y Alertas" para que coincida con las opciones nativas.
 - **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.

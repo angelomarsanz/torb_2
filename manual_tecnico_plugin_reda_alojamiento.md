@@ -12,6 +12,8 @@
   Se inyectaron logs de depuración en el método `welcome_email` para rastrear la configuración de SMTP y el estado del envío. Se actualizó el método `sendPhpEmail` para redirigir errores y confirmaciones al log de Laravel en lugar de imprimirlos en pantalla (`echo`), mejorando la estabilidad de las respuestas AJAX.
 
 ### Vistas (Admin)
+- **packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/configuracion_planes.blade.php**
+  Vista administrativa para configurar los requisitos de planes destacados y administrar los planes de negocio. Su presentación recibe espaciado lateral y padding adaptable desde `resources/sass/admin/main.scss`, con paneles ligeramente redondeados y estilos limitados a esta pantalla; la vista y su lógica JavaScript permanecen sin cambios.
 - **resources/views/admin/settings/email.blade.php**
   Inyección de un campo `select` para la columna `email_status`. Esta modificación habilita la interfaz de usuario para que el administrador pueda forzar el estado del sistema de correos desde el panel de configuración de email.
 
@@ -285,6 +287,10 @@
   - `obtenerConteoNoLeidas()`: Retorna el conteo actual de alertas no leídas del administrador conectado para alimentar la campanita del header y la insignia del menú lateral.
   - `marcarLeida($id)`: Marca una alerta individual como leída (`leido = 1`, `fecha_lectura = now()`) y devuelve el conteo actualizado.
   - `marcarTodasLeidas()`: Marca de forma masiva todas las alertas no leídas del administrador actual como leídas y reinicia el contador a 0.
+
+### Estilos (Admin)
+- **packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss**
+  En la pantalla de configuración de planes administrativos, el selector `#configuracion_planes_container + .content-wrapper` aplica márgenes laterales y padding interno adaptables a encabezados, paneles, pestañas y cajas. El selector `#modal-plan` da al modal de agregar/editar planes un borde ligeramente redondeado, separa encabezado, contenido y pie, y agrega espaciado a las secciones de opciones de pago y beneficios. Ambos conjuntos de reglas ajustan sus espacios en móvil y quedan aislados de las demás pantallas del administrador.
 
 ### Vistas y Plantillas
 - **packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php**
