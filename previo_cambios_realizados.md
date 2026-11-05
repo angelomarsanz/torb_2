@@ -1,17 +1,8 @@
 # Registro Previo de Cambios en Curso
 
 ## Estado actual
-- **Fecha:** 4 de noviembre de 2026
-- **Tarea:** Bloquear en el calendario del modal de reservas las fechas ocupadas de cada propiedad.
-- **Alcance:** Revisar el calendario Flatpickr existente y el flujo de datos de reservas; exponer desde el servidor los períodos ocupados y deshabilitarlos antes de permitir seleccionar una nueva estancia; documentar los cambios.
-- **Avance:** Implementados el endpoint autenticado de fechas ocupadas, la consulta AJAX previa a la apertura del modal, el bloqueo de llegadas que caen en noches ocupadas y la validación dinámica de salidas para conservar el día de checkout como límite válido. Agregados el sombreado visual, traducciones y documentación. Las validaciones estáticas y las pruebas dirigidas de límites de fechas pasaron.
-- **Archivos modificados:**
-  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`
-  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`
-  - `packages/Reda/RedaAlojamiento/routes/web.php`
-  - `packages/Reda/RedaAlojamiento/resources/lang/es.json`
-  - `packages/Reda/RedaAlojamiento/resources/sass/main.scss`
-  - `manual_tecnico_plugin_reda_alojamiento.md`
-  - `LOG_DESARROLLO_REDA.md`
-- **Restricciones:** No ejecutar compilación, comandos Artisan, migraciones ni scripts de subida en este entorno.
-- **Estado:** Completado. Pendiente que el usuario suba los fuentes, compile en Vesta y confirme la prueba visual/funcional.
+- **Fecha:** 5 de noviembre de 2026
+- **Tarea:** Añadir a `.github/copilot-instructions.md` una directriz para revisar respaldos recientes de la base de desarrollo antes de cambios de aplicación que consulten, creen, actualicen o eliminen datos.
+- **Alcance de la directriz:** localizar el volcado más reciente con el patrón `documentacion-torbian-2/BD/appvac_torbDev2-AAAAMMDD-HHMM.sql`, inspeccionar tablas y relaciones afectadas, proyectar el comportamiento con los registros actuales, revisar incongruencias relevantes y proponer SQL acotado y verificable sin ejecutarlo en este entorno.
+- **Archivos previstos:** `.github/copilot-instructions.md`, `LOG_DESARROLLO_REDA.md` y este punto de control.
+- **Restricciones:** documentación únicamente; no ejecutar SQL, Artisan, compilación ni scripts de subida.

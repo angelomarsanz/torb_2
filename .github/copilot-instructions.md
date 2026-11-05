@@ -35,6 +35,14 @@ Los nombres de variables deben estar en español.
 - Recordad cuando se haga una migración crear o modificar el archivo modelo correspondiente en el directorio: 
     packages/Reda/RedaAlojamiento/app/Models
 
+## Revisión obligatoria de datos antes de cambios de aplicación
+- Cuando una solicitud implique que la aplicación consulte, inserte, actualice o elimine datos de la base de datos, antes de modificar el código revisar el respaldo más reciente disponible en `documentacion-torbian-2/BD` que siga este patrón: `appvac_torbDev2-AAAAMMDD-HHMM.sql` (`AAAAMMDD` es la fecha y `HHMM` la hora de generación).
+- Confirmar la fecha/hora del respaldo y usar el archivo más reciente, no asumir que un respaldo anterior representa el estado actual. Si no existe un respaldo adecuado, es demasiado antiguo o no incluye las tablas necesarias, solicitar al usuario uno actualizado o los datos faltantes antes de implementar una solución dependiente de esos datos.
+- Identificar las tablas, columnas, claves y relaciones implicadas; inspeccionar tanto su estructura como sus registros relevantes. Proyectar cómo se comportará el cambio con los datos existentes y verificar los casos importantes, incluidos estados, fechas, registros eliminados lógicamente y datos relacionados, cuando correspondan.
+- Revisar incongruencias relevantes para la solicitud, por ejemplo referencias huérfanas, duplicados, rangos de fechas inconsistentes, reservas activas sin bloqueos o bloqueos sin reservas activas. No considerar automáticamente todo bloqueo sin reserva como error: puede ser manual. Determinarlo con evidencia y conservar datos históricos o bloqueos deliberados.
+- Si se identifica una corrección de datos necesaria, explicar la evidencia y el impacto, y proponer SQL específico, limitado y verificable (consulta previa, condición precisa, resultado esperado y consulta posterior). Para cambios que puedan afectar datos, recomendar respaldo previo y una transacción cuando la interfaz de la base permita mantenerla abierta. No ejecutar SQL ni comandos de base de datos desde este entorno; el usuario los ejecuta en Vesta/phpMyAdmin y confirma el resultado.
+- No modificar ni reescribir los archivos de respaldo `.sql`; son evidencia de datos y se mantienen como insumos de solo lectura.
+
 ## Estilo de Código General
 - Los comentarios deben estar en español.
 - Usar nombres de variables descriptivos en español.

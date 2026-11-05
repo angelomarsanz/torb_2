@@ -2,6 +2,90 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [05 de Noviembre, 2026] - Directriz para Revisar Respaldos de Base de Datos Antes de Cambios
+- **Tarea:** Añadir al archivo de instrucciones de Copilot el procedimiento obligatorio para tener en cuenta datos existentes antes de implementar cambios que interactúan con la base de datos.
+- **Archivo actualizado:** `.github/copilot-instructions.md`.
+- **Cambio:** se indica localizar el respaldo reciente `documentacion-torbian-2/BD/appvac_torbDev2-AAAAMMDD-HHMM.sql`, comprobar su fecha y tablas, revisar estructura, relaciones y registros relevantes, proyectar el comportamiento de la aplicación con esos datos, identificar incongruencias pertinentes sin confundir bloqueos manuales con errores y proponer SQL puntual/verificable si se requiere corregir datos. También se aclara solicitar un volcado actualizado si el disponible no representa el estado actual y no ejecutar SQL desde este entorno ni modificar los respaldos.
+- **Validación:** revisión de contenido y `git diff --check`; no se ejecutaron consultas ni comandos de base de datos.
+
+## [05 de Noviembre, 2026] - Disponibilidad Residual Corregida y Pruebas Listas
+- **Tarea:** Confirmar el resultado del cambio de disponibilidad de la propiedad 1 y determinar si ya se puede iniciar la prueba funcional del calendario.
+- **Confirmación recibida:** `property_dates-disponible.sql` muestra `property_dates.id = 348`, propiedad 1, fecha 12/11/2026, con estado `Available`. Junto al respaldo `property_dates-consulta-despues-actualizacion.sql`, las fechas residuales asociadas a bookings borrados 54, 59 y 65 ya no bloquean esos rangos.
+- **Estado de reservas activas:** las noches ocupadas de reservas activas continúan bloqueadas. El booking 73 mantiene ocupadas las noches del 26 al 29 de noviembre para propiedad 3; las reservas activas de propiedad 2 y 4 mantienen sus noches correspondientes.
+- **Siguiente paso:** sí, se puede probar. Subir al servidor Vesta los archivos fuente de la funcionalidad del calendario, compilar con `./compilar.sh` y probar en el sitio las propiedades 2 y 3. No se ha subido ni compilado en esta sesión; las pruebas funcionales todavía no se han ejecutado.
+- **Archivos actualizados:** `manual_tecnico_plugin_reda_alojamiento.md`, `LOG_DESARROLLO_REDA.md` y `previo_cambios_realizados.md`.
+
+## [05 de Noviembre, 2026] - Verificación del Bloqueo Residual de Propiedad 1
+- **Tarea:** Revisar el resultado de las consultas SQL para la fila `property_dates.id = 348` y el booking 65.
+- **Resultado recibido:** `property_dates-verificacion-dos-registros.sql` contiene la fila 348: propiedad 1, estado `Not available`, fecha 12/11/2026, creada el 17/10/2026 20:42:04. El archivo compartido no incluye el resultado de la consulta a `bookings`; el respaldo completo anterior sí confirma que el booking 65 es de propiedad 1, del 12 al 13/11/2026, y tiene `deleted_at = 2026-10-17 23:01:47`.
+- **Conclusión y siguiente paso:** la fila de calendario coincide temporalmente y por fecha con la reserva borrada lógicamente. Si el anfitrión no bloqueó deliberadamente el 12/11, actualizar solo `property_dates.id = 348` a `Available` y verificar su estado; no se necesita tocar bookings ni otras fechas. La aplicación no debe tratar una fila de disponibilidad sin relación con una reserva como prueba de que el booking continúa activo.
+- **Archivos actualizados:** `LOG_DESARROLLO_REDA.md` y `previo_cambios_realizados.md`.
+- **Estado:** se proporcionan instrucciones SQL puntuales al usuario; no se ejecutó ni modificó la base desde este entorno.
+
+## [05 de Noviembre, 2026] - Auditoría Posterior de Fechas de Reservas
+- **Tarea:** Revisar el respaldo completo posterior a la corrección de `property_dates` y las reservas relacionadas para detectar bloqueos futuros residuales.
+- **Confirmación del cambio anterior:** `property_dates-consulta-despues-actualizacion.sql` muestra como `Available` las 22 filas de propiedad 3 (IDs 317–337 y 342); la corrección se reflejó correctamente en la base.
+- **Auditoría del volcado completo `appvac_torbDev2-20261105-0715.sql`:**
+  - Se compararon 74 bookings, 369 filas de `property_dates`, 11 propiedades y 36 usuarios. No se encontraron referencias de bookings o property_dates a propiedades inexistentes, ni bookings con anfitriones o huéspedes inexistentes.
+  - No hay fechas duplicadas para una misma combinación propiedad/fecha, ni solapamientos entre reservas activas futuras. Todas las noches de bookings activos desde el 05/11/2026 tienen el bloqueo correspondiente.
+  - Se encontró una sola indisponibilidad futura sin booking activo coincidente: `property_dates.id = 348`, propiedad 1, fecha 12/11/2026. La marca `created_at` (17/10/2026 20:42:04) coincide con la creación del booking 65 (12–13/11), borrado lógicamente el 17/10/2026 23:01:47. Si no es un bloqueo manual deliberado, debe pasar a `Available` para evitar otro falso bloqueo futuro.
+  - Las demás indisponibilidades sin reserva activa coincidente corresponden a fechas pasadas; se dejan intactas para no alterar el historial. Hay 28 bookings históricos con `start_date = end_date` y `total_night = 1`, todos anteriores al 05/11/2026; no se modifican sin confirmar cómo se desea conservar los datos históricos de prueba.
+- **Archivos actualizados:** `manual_tecnico_plugin_reda_alojamiento.md`, `LOG_DESARROLLO_REDA.md` y `previo_cambios_realizados.md`.
+- **Acción pendiente en la base de desarrollo:** verificar la fila 348 y cambiarla puntualmente a `Available` solo si no representa un bloqueo manual deseado. No se ejecutó ni modificó la base desde este entorno.
+
+## [05 de Noviembre, 2026] - Diagnóstico Integral de property_dates para el Modal de Reservas
+- **Tarea:** Completar el diagnóstico del calendario integrando `property_dates.sql` con los respaldos de `bookings.sql` y `properties.sql`.
+- **Hallazgos confirmados:**
+  - Propiedad 2: `property_dates` marca como `Not available` del 05 al 12 de noviembre (filas 362–369), coincidiendo con el booking 74, y del 13 al 17 (filas 353–357), coincidiendo con el booking 72. Desde el 18 de noviembre las fechas están disponibles en el respaldo, coherente con que el checkout del booking 72 no ocupa esa noche. El mensaje mostrado al abrir la modal no se explica por indisponibilidad de esa fecha; es compatible con el resultado residual del cálculo inicial del core que ya se limpia en `propiedad_detalle.js`.
+  - Propiedad 3: las filas 317–337 bloquean las noches del 31 de octubre al 20 de noviembre y tienen marcas de tiempo coincidentes con la creación del booking 54, eliminado lógicamente (`deleted_at`). La fila 342 bloquea el 21 de noviembre y coincide con la creación del booking 59, también eliminado lógicamente. Estas filas explican por qué el core devuelve «Las fechas no están disponibles» aunque el endpoint de reservas activas no considere esos bookings. Las filas 358–361 (26–29 de noviembre) sí coinciden con el booking 73 vigente y deben permanecer bloqueadas.
+  - `property_dates` no relaciona sus filas con el ID del booking. Por seguridad, el código no puede borrar indisponibilidades por simple solapamiento: podrían ser bloqueos manuales. La corrección de los datos identificados debe ser puntual y conservar las noches del booking 73.
+- **Archivos actualizados:** `LOG_DESARROLLO_REDA.md`, `manual_tecnico_plugin_reda_alojamiento.md`, `REDA_PAUTAS_DESARROLLO.md` y `previo_cambios_realizados.md`.
+- **Estado:** el código JavaScript previo sigue atendiendo el estado residual en la apertura del modal; el bloqueo persistido para la propiedad 3 requiere corregir las filas confirmadas de `property_dates` en la base de desarrollo antes de probar ese caso. No se modificó ni ejecutó la base de datos.
+
+## [05 de Noviembre, 2026] - Corrección de Avisos Residuales en el Modal de Reservas
+- **Tarea:** Revisar el mensaje «Las fechas no están disponibles» contrastándolo con los respaldos SQL de propiedades y reservas, y corregir avisos que provengan de cálculos iniciales o respuestas AJAX obsoletas.
+- **Diagnóstico de los respaldos:**
+  - `properties.sql` confirma los IDs y slugs consultados, pero no contiene información de disponibilidad por fecha.
+  - En `bookings.sql`, las reservas 54 y 59 de propiedad 3 tienen `deleted_at` informado; no deben considerarse activas por el modelo con borrado lógico. La reserva 73 de propiedad 3 sigue activa y ocupa noches del 26 al 29 de noviembre; su salida del 30 no está bloqueada.
+  - Para propiedad 2, la reserva 74 ocupa noches del 5 al 12 de noviembre y la 72 del 13 al 17; el 18 de noviembre es su fecha de salida y puede ser llegada de otra estancia.
+  - El mensaje devuelto por `Common::getPrice()` se origina al consultar noches `Not available` en `property_dates`. Ese respaldo no fue proporcionado, por lo que no se puede atribuir a los SQL compartidos un bloqueo manual/obsoleto concreto. La respuesta residual del cálculo inicial del core también podía permanecer en el formulario al moverlo al modal.
+- **Cambios realizados:**
+  - `propiedad_detalle.js`: se centralizó la limpieza de avisos/resultados heredados, se evita recalcular mientras no haya fecha de salida y se vigilan respuestas AJAX de precios. Si una respuesta corresponde a un rango anterior, se descarta su estado cuando el rango actual está incompleto o se recalcula el rango actualmente seleccionado.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: se documentó la limpieza de estado y el control de respuestas tardías.
+  - `previo_cambios_realizados.md`: se reemplazó el punto de control con el diagnóstico verificado y los archivos intervenidos.
+- **Validación:** `node --check` y `git diff --check` pasaron. No se compilaron assets ni se ejecutaron comandos Artisan; después de subir el fuente al servidor Vesta, se debe compilar y probar allí.
+
+## [05 de Noviembre, 2026] - Regla de Disponibilidad para Reservar el Mismo Día
+- **Tarea:** Registrar en las pautas del proyecto la condición para aceptar reservas con llegada en la fecha actual.
+- **Cambio realizado:**
+  - `REDA_PAUTAS_DESARROLLO.md`: se agregó la regla de que hoy puede reservarse cuando las noches estén libres y resten al menos 12 horas del día en la zona horaria del alojamiento. El mensaje de fechas no disponibles debe depender de una ocupación real del rango, no de que la llegada sea hoy ni de una conversión ambigua. También se estableció que el calendario sugiera hoy cuando sea elegible; de lo contrario, debe avanzar a la primera fecha futura libre.
+- **Validación:** revisión del texto y `git diff --check` pasaron. No se modificó lógica de la aplicación en esta solicitud.
+
+## [05 de Noviembre, 2026] - Corrección de Fechas No Disponibles Falsas en la Modal
+- **Tarea:** Corregir el aviso de indisponibilidad que aparecía al abrir el calendario o al seleccionar fechas que estaban libres, y permitir reservar desde hoy.
+- **Diagnóstico:** La interfaz Flatpickr entrega fechas `dd-mm-aaaa`, pero los inputs del core se procesan con `setDateForDb()` conforme a las preferencias regionales. El valor podía convertirse en otro día al calcular precios. Además, el formulario heredaba una salida predeterminada y podía validar un rango antes de que el huésped lo eligiera.
+- **Cambios realizados:**
+  - El calendario inicia el check-in en la primera fecha libre a partir de hoy, incluyendo el mismo día si aún no está ocupado.
+  - Las fechas seleccionadas se envían a `#startDate` y `#endDate` en formato ISO `Y-m-d`, preservando la fecha independientemente del formato regional de la aplicación.
+  - El checkout inicia vacío y los precios solo se consultan después de que el huésped seleccione la salida; esto evita mostrar un error por el rango predeterminado del core.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`: sincronización de fechas ISO, primera llegada desde hoy y salida inicialmente vacía.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación de la causa y del comportamiento corregido.
+  - `previo_cambios_realizados.md`: seguimiento de esta corrección.
+- **Validación:** `node --check`, la conversión ISO mediante el mismo reemplazo de separadores que `setDateForDb()` (para `-`, `/` y `.`) y `git diff --check` sobre los archivos de esta tarea pasaron. No se compilaron assets ni se ejecutaron comandos Artisan; la prueba visual/funcional debe realizarse en Vesta después de subir y compilar.
+
+## [05 de Noviembre, 2026] - Abrir el Calendario en la Primera Fecha Disponible
+- **Tarea:** Posicionar el calendario de reservación en la primera fecha libre, evitando el aviso confuso cuando el día predeterminado ya está reservado.
+- **Cambios realizados:**
+  - `prepararModalReserva()` busca desde la fecha de llegada inicial del core (o desde hoy si no hay valor) la primera fecha no incluida en los rangos ocupados, incluyendo rangos consecutivos o solapados.
+  - Flatpickr usa esa fecha como selección inicial y como fecha mínima de llegada. Los rangos ocupados continúan deshabilitados al avanzar por el calendario.
+  - El valor de llegada se sincroniza con el input del core; se limpia una fecha de salida previa que ya no sea válida para la llegada inicial.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`: cálculo de la primera fecha libre y uso al inicializar ambos calendarios.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación del comportamiento actualizado.
+  - `previo_cambios_realizados.md`: seguimiento de la tarea.
+- **Validación:** `node --check`, pruebas dirigidas de fechas iniciales con rangos ocupados consecutivos/solapados y `git diff --check` pasaron. No se compilaron assets ni se ejecutaron comandos Artisan; la compilación y prueba visual/funcional se realizarán en Vesta.
+
 ## [04 de Noviembre, 2026] - Bloqueo de Fechas Ocupadas en el Calendario de Reservas
 - **Tarea:** Evitar que el huésped seleccione noches que ya están reservadas antes de completar el formulario en el modal.
 - **Cambios realizados:**

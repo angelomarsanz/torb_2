@@ -12,6 +12,8 @@
  * - Cambia dinámicamente el botón a "Ver reserva" si ya existe una reservación.
  * - Maneja disparadores por hash (#reservar) para integraciones externas.
  * - Consulta las fechas ocupadas de la propiedad antes de mostrar el calendario de reservas.
+ * - Sincroniza las fechas seleccionadas en formato ISO con el cálculo de precios original.
+ * - Evita que respuestas de cálculos anteriores muestren avisos para fechas no seleccionadas.
  */
 
 (function( $ ) {
@@ -19,6 +21,7 @@
 
     const PropertyDetailReservation = {
         consultandoFechasOcupadas: false,
+        vigilandoRespuestasPrecio: false,
 
         config: {
             formId: '#booking_form',
@@ -44,6 +47,7 @@
             this.checkActiveBookingStatus(); // Verificación proactiva para el botón flotante
             this.handleHash();
             this.bindEvents();
+            this.vigilarRespuestasPrecio();
         },
 
         /**
@@ -270,7 +274,7 @@
         },
 
         /**
-         * Inserta el formulario en el modal y crea los selectores Flatpickr con las fechas ocupadas bloqueadas.
+         * Inserta el formulario y abre Flatpickr en la primera fecha libre; inicia la salida vacía y sincroniza fechas ISO con el core.
          */
         prepararModalReserva: function($form, $modalBody, $modal, fechasOcupadas) {
             const self = this;
@@ -278,6 +282,10 @@
                 $modalBody.append($form);
                 $form.removeClass('d-none').show();
             }
+
+            // El core puede dejar resultados de un cálculo hecho con las fechas predeterminadas de la página.
+            this.limpiarEstadoPrecios();
+            $('#endDate').val('');
 
             // 1. Inhibir/Desactivar el daterangepicker original del core para evitar interferencias
             const $daterangeBtn = $('#daterange-btn');
@@ -316,15 +324,38 @@
             }
 
             // 3. Inicializar Flatpickr en los nuevos inputs de la modal
-            const initialStartDate = $('#startDate').val();
-            const initialEndDate = $('#endDate').val();
-
             /**
              * Convierte una fecha ISO del servidor a una fecha local sin desplazamientos de zona horaria.
              */
             const crearFechaLocal = function(fechaISO) {
                 const [anio, mes, dia] = fechaISO.split('-').map(Number);
                 return new Date(anio, mes - 1, dia);
+            };
+
+            /**
+             * Calcula la primera fecha libre desde hoy.
+             */
+            const obtenerPrimeraFechaDisponible = function() {
+                const primeraFecha = new Date();
+                primeraFecha.setHours(0, 0, 0, 0);
+
+                let seMovioFecha = true;
+                while (seMovioFecha) {
+                    seMovioFecha = false;
+
+                    fechasOcupadas.forEach(function(rango) {
+                        const inicioOcupado = crearFechaLocal(rango.from);
+                        const finOcupado = crearFechaLocal(rango.to);
+
+                        if (primeraFecha >= inicioOcupado && primeraFecha <= finOcupado) {
+                            primeraFecha.setTime(finOcupado.getTime());
+                            primeraFecha.setDate(primeraFecha.getDate() + 1);
+                            seMovioFecha = true;
+                        }
+                    });
+                }
+
+                return primeraFecha;
             };
 
             /**
@@ -340,6 +371,7 @@
                     return fechaLlegada <= finOcupado && fechaSalida > inicioOcupado;
                 });
             };
+            const primeraFechaDisponible = obtenerPrimeraFechaDisponible();
 
             // Destruir instancias previas para evitar duplicidad de elementos/eventos al abrir varias veces
             if (window.redaFpCheckIn && typeof window.redaFpCheckIn.destroy === 'function') {
@@ -352,18 +384,18 @@
             // Inicializar llegada (Check-In)
             window.redaFpCheckIn = flatpickr("#new_startDate", {
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                minDate: primeraFechaDisponible,
                 locale: "es",
                 disable: fechasOcupadas,
-                defaultDate: initialStartDate || "today",
+                defaultDate: primeraFechaDisponible,
                 onReady: function(selectedDates, dateStr, instance) {
                     instance.calendarContainer.classList.add('reda-flatpickr-calendario-reserva');
                 },
                 onChange: function(selectedDates, dateStr, instance) {
                     if (selectedDates[0]) {
                         console.log('REDA Flatpickr: Fecha de llegada cambiada a:', dateStr);
-                        // Sincronizar con el input original del core
-                        $("#startDate").val(dateStr);
+                        // Enviar ISO al core para evitar ambigüedades con el formato regional configurado.
+                        $("#startDate").val(instance.formatDate(selectedDates[0], "Y-m-d"));
 
                         // Configurar la fecha mínima de salida (Checkout) para el día siguiente
                         const nextDay = new Date(selectedDates[0]);
@@ -381,11 +413,17 @@
                             $("#endDate").val("");
                         }
 
-                        // Forzar el recálculo de precios del core
-                        self.recargarPrecios();
+                        if ($("#endDate").val()) {
+                            self.recargarPrecios();
+                        } else {
+                            self.limpiarEstadoPrecios();
+                        }
                     }
                 }
             });
+            $("#startDate").val(
+                window.redaFpCheckIn.formatDate(primeraFechaDisponible, "Y-m-d")
+            );
             if (!window.redaFpCheckIn.selectedDates[0]) {
                 $("#startDate").val("");
             }
@@ -401,25 +439,21 @@
                 minDate: minCheckOutDate,
                 locale: "es",
                 disable: [salidaCruzaFechaOcupada],
-                defaultDate: initialEndDate || "",
+                defaultDate: "",
                 onReady: function(selectedDates, dateStr, instance) {
                     instance.calendarContainer.classList.add('reda-flatpickr-calendario-reserva');
                 },
                 onChange: function(selectedDates, dateStr, instance) {
                     if (selectedDates[0]) {
                         console.log('REDA Flatpickr: Fecha de salida cambiada a:', dateStr);
-                        // Sincronizar con el input original del core
-                        $("#endDate").val(dateStr);
+                        // Enviar ISO al core para que respete la fecha sin depender de su formato regional.
+                        $("#endDate").val(instance.formatDate(selectedDates[0], "Y-m-d"));
 
                         // Forzar el recálculo de precios del core
                         self.recargarPrecios();
                     }
                 }
             });
-            if (!window.redaFpCheckOut.selectedDates[0]) {
-                $("#endDate").val("");
-            }
-
             // Sincronizar el minDate del checkout inicialmente
             if (window.redaFpCheckIn.selectedDates[0]) {
                 const nextDay = new Date(window.redaFpCheckIn.selectedDates[0]);
@@ -512,9 +546,6 @@
                 });
             }
 
-            // Ejecutar un recálculo inicial para asegurar que la modal abra con los datos cargados correctamente
-            self.recargarPrecios();
-
             $modal.modal('show');
         },
 
@@ -529,6 +560,63 @@
             } else {
                 console.warn('REDA: No se detectó la función global price_calculation en la ventana.');
             }
+        },
+
+        /**
+         * Oculta resultados anteriores hasta que exista un rango completo seleccionado.
+         */
+        limpiarEstadoPrecios: function() {
+            const $form = $(this.config.formId);
+            $form.find('#book_it_disabled, #minimum_disabled, .booking-subtotal, .book_btn').addClass('d-none');
+            $form.find('#book_it_disabled_message, #minimum_disabled_message').empty();
+            $form.find('.append_date').remove();
+        },
+
+        /**
+         * Descarta respuestas iniciadas con fechas distintas a las que el huésped tiene seleccionadas.
+         */
+        vigilarRespuestasPrecio: function() {
+            if (this.vigilandoRespuestasPrecio) return;
+            this.vigilandoRespuestasPrecio = true;
+
+            const self = this;
+            $(document).on('ajaxComplete.redaDisponibilidadReserva', function(evento, xhr, configuracion) {
+                const urlCalculoPrecios = typeof getPriceURL !== 'undefined' ? getPriceURL : '';
+                if (
+                    !urlCalculoPrecios ||
+                    configuracion.url !== urlCalculoPrecios ||
+                    !$(self.config.formId).closest(self.config.modalId).length
+                ) {
+                    return;
+                }
+
+                let llegadaSolicitud;
+                let salidaSolicitud;
+                if (typeof configuracion.data === 'string') {
+                    const parametrosSolicitud = new URLSearchParams(configuracion.data);
+                    llegadaSolicitud = parametrosSolicitud.get('checkin');
+                    salidaSolicitud = parametrosSolicitud.get('checkout');
+                } else {
+                    llegadaSolicitud = configuracion.data?.checkin;
+                    salidaSolicitud = configuracion.data?.checkout;
+                }
+                if (!llegadaSolicitud || !salidaSolicitud) return;
+
+                const llegadaActual = $('#startDate').val();
+                const salidaActual = $('#endDate').val();
+                if (
+                    llegadaSolicitud === llegadaActual &&
+                    salidaSolicitud === salidaActual
+                ) {
+                    return;
+                }
+
+                if (salidaActual) {
+                    self.recargarPrecios();
+                } else {
+                    self.limpiarEstadoPrecios();
+                }
+            });
         },
 
         /**

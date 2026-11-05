@@ -18,9 +18,17 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 - **Prioridad de la Fecha:** La vigencia de la estancia (`end_date`) tiene precedencia absoluta. Si la fecha ya pasó, el botón DEBE revertirse a "Reservar" (o mantenerse como tal), ignorando estatus de "Pendiente" que puedan persistir en la base de datos.
 - **Exclusión de Consultas:** Se consideran "Consultas" (Inquiries) y deben ser ignoradas para el texto "Ver reserva" todos aquellos registros que no tengan un pago asociado (`transaction_id` o `payment_method_id`).
 
+## 2. Disponibilidad de Reservas para el Mismo Día
+
+- **Reservas para hoy:** La fecha actual puede seleccionarse como llegada cuando sus noches estén disponibles y resten al menos 12 horas del día en la zona horaria aplicable al alojamiento. Este margen permite verificar el pago y preparar la propiedad para recibir al huésped.
+- **Validación real del rango:** El aviso «Las fechas no están disponibles» solo debe mostrarse cuando alguna noche incluida en la estancia elegida esté realmente ocupada o bloqueada. No debe mostrarse únicamente porque la llegada sea hoy, por la hora del día o por una discrepancia entre formatos de fecha.
+- **Sincronización de fechas:** Al comunicar las fechas seleccionadas al core, conservar el mismo día calendario; usar un formato inequívoco (ISO `Y-m-d`) para evitar que las preferencias regionales interpreten como otro día la llegada o salida.
+- **Primera fecha sugerida:** Al abrir el calendario, proponer la fecha de hoy si es elegible según el margen de 12 horas y está libre; en caso contrario, avanzar a la primera fecha futura disponible. Mantener bloqueadas y sombreadas las demás fechas ocupadas.
+- **Sincronización de disponibilidad persistida:** Al cancelar o borrar lógicamente una reserva, verificar que las noches generadas en `property_dates` se liberen de forma consistente. `property_dates` no almacena el ID de la reserva y también puede contener bloqueos manuales; por ello no se deben liberar fechas solo por coincidencia de rango. Las correcciones de filas residuales deben basarse en evidencia verificable (reserva eliminada, rango, fechas y marcas de tiempo), preservando otras reservas activas y bloqueos manuales.
+
 ---
 
-## 2. Estabilidad del Frontend (MutationObservers)
+## 3. Estabilidad del Frontend (MutationObservers)
 
 ### Observaciones Técnicas
 - **Ciclos Infinitos:** Existe un alto riesgo de recursividad infinita entre `ocultar-consultas.js` y `reserve-injection.js` ya que ambos modifican el DOM y se observan mutuamente.
@@ -31,7 +39,7 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 
 ---
 
-## 3. Manejo de Traducciones en JavaScript
+## 4. Manejo de Traducciones en JavaScript
 
 - **Global RedaAlojamientoJson:** Siempre utiliza `window.RedaAlojamientoJson` para acceder a las traducciones.
 - **Robustez:** Siempre proporciona un *fallback* en español literal si la clave no existe:
@@ -40,7 +48,7 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 
 ---
 
-## 4. Integridad del Core (Laravel vRent)
+## 5. Integridad del Core (Laravel vRent)
 
 - **Relaciones:** El modelo `Bookings` del núcleo utiliza `currency` (en singular). No uses `currencies` en consultas de Eloquent o accesos a propiedades.
 - **No Modificar Originales:** Sigue estrictamente la regla de inyectar funcionalidad vía Middleware o JavaScript. Si es inevitable modificar un archivo original, delimita el cambio con:
@@ -48,7 +56,7 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 
 ---
 
-## 5. Documentación Obligatoria y Puntos de Control en Tiempo Real
+## 6. Documentación Obligatoria y Puntos de Control en Tiempo Real
 
 - Cada nueva función o archivo debe registrarse en:
     1.  `manual_tecnico_plugin_reda_alojamiento.md` (Descripción funcional/técnica).
@@ -61,7 +69,7 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 
 ---
 
-## 6. Entorno de Trabajo y Prohibición de Compilación/Comandos en Cloud Shell Editor
+## 7. Entorno de Trabajo y Prohibición de Compilación/Comandos en Cloud Shell Editor
 
 - **Cloud Shell Editor es ÚNICAMENTE repositorio de código fuente:**
   - Solo se crean, modifican y guardan archivos fuente (`.js`, `.scss`, `.php`, `.blade.php`, `.json`, `.md`).
@@ -80,11 +88,9 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 
 ---
 
-## 7. Modalidad de Trabajo Autónomo de la IA y Reporte Final
+## 8. Modalidad de Trabajo Autónomo de la IA y Reporte Final
 
 - **Ejecución Directa y Continua:** La IA debe realizar los cambios, ajustes y creaciones de código fuente en los archivos del proyecto de forma autónoma e independiente, **sin hacer pausas intermedias** ni requerir la aceptación o rechazo manual del usuario paso a paso.
 - **Punto de Control Progresivo:** Como medida de salvaguarda ante interrupciones imprevistas (fallas eléctricas o de internet), la IA registrará progresivamente en tiempo real el avance y los archivos intervenidos en `previo_cambios_realizados.md`.
 - **Documentación Completa y Reporte Final:** Al culminar todas las modificaciones solicitadas, la IA cumplirá obligatoriamente con la documentación en `LOG_DESARROLLO_REDA.md`, `manual_tecnico_plugin_reda_alojamiento.md` y cabeceras de código, y presentará al usuario un informe final completo, claro y pedagógico con el detalle técnico de todo lo realizado y las indicaciones pertinentes para el servidor Vesta de desarrollo.
-
-
 
