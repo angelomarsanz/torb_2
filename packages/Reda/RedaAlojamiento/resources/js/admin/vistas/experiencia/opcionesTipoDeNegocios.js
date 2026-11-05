@@ -1,5 +1,10 @@
 /**
- * Función que realiza la petición para guardar (crear o actualizar) una categoría de negocio.
+ * Gestiona la creación, edición y eliminación de tipos de negocios en el panel administrativo,
+ * incluyendo sus formularios, confirmaciones y notificaciones.
+ */
+
+/**
+ * Envía la petición para crear o actualizar un tipo de negocio.
  * @param {string} url - URL del endpoint.
  * @param {object} formData - Datos serializados del formulario.
  * @returns {Promise}
@@ -29,7 +34,7 @@ const saveOpcionTipoNegocio = (url, formData) => {
 
                     resolve({
                         'success': false,
-                        'message' : 'Error guardando categoría',
+                        'message' : 'Error guardando tipo de negocio',
                         'mensaje_usuario': respuestaServidor.mensaje_usuario ?? `${mensajeErrorBase}${detalleError}`,
                         'respuesta': respuestaServidor.respuesta || '',
                         'code': x.status !== 0 ? x.status : 504,
@@ -41,8 +46,8 @@ const saveOpcionTipoNegocio = (url, formData) => {
 }
 
 /**
- * Función que realiza la petición para eliminar una categoría de negocio.
- * @param {string} clave - Clave única de la categoría.
+ * Envía la petición para eliminar un tipo de negocio.
+ * @param {string} clave - Clave única del tipo de negocio.
  * @returns {Promise}
  */
 const destroyOpcionTipoNegocio = (clave) => {
@@ -71,7 +76,7 @@ const destroyOpcionTipoNegocio = (clave) => {
 
                     resolve({
                         'success': false,
-                        'message' : 'Error eliminando categoría',
+                        'message' : 'Error eliminando tipo de negocio',
                         'mensaje_usuario': respuestaServidor.mensaje_usuario ?? `${mensajeErrorBase}${detalleError}`,
                         'respuesta': respuestaServidor.respuesta || '',
                         'code': x.status !== 0 ? x.status : 504,
@@ -88,13 +93,15 @@ const destroyOpcionTipoNegocio = (clave) => {
     if ($(containerId).length) {
         console.log('Script para "Opciones Tipo de Negocios" cargado correctamente.');
         $(function() {
-            // Abrir modal para AGREGAR
+            // Abrir el modal para agregar un tipo de negocio.
             $(document).on('click', '#btn-add-category', function(e) {
                 e.preventDefault();
                 $('#form-category')[0].reset();
                 $('#old_clave').val(''); // Limpiar old_clave
                 $('#form-category').attr('action', window.RedaRutas.store_categoria);
-                $('#modal-title-category').text(window.RedaAlojamiento.general.agregar_nueva_categoria);
+                $('#modal-title-category').text(
+                    window.RedaAlojamientoJson["Agregar Nuevo Tipo de Negocio"] || "Agregar Nuevo Tipo de Negocio"
+                );
 
                 const $btn = $('#btn-save-category');
                 $btn.prop('disabled', false);
@@ -104,7 +111,7 @@ const destroyOpcionTipoNegocio = (clave) => {
                 $('#modal-category').modal('show');
             });
 
-            // Abrir modal para EDITAR
+            // Abrir el modal para editar un tipo de negocio.
             $(document).on('click', '.btn-edit-category', function(e) {
                 e.preventDefault();
                 const clave = $(this).data('clave');
@@ -115,7 +122,9 @@ const destroyOpcionTipoNegocio = (clave) => {
                 $('#old_clave').val(clave);
                 $('#nombre').val(nombre);
                 $('#form-category').attr('action', window.RedaRutas.update_categoria);
-                $('#modal-title-category').text(window.RedaAlojamiento.general.editar_categoria || 'Editar Categoría');
+                $('#modal-title-category').text(
+                    window.RedaAlojamientoJson["Editar tipo de negocio"] || "Editar tipo de negocio"
+                );
 
                 const $btn = $('#btn-save-category');
                 $btn.prop('disabled', false);
@@ -154,7 +163,12 @@ const destroyOpcionTipoNegocio = (clave) => {
 
                 console.log('saveOpcionTipoNegocio, response: ', response)
 
-                const mensajeRaw = response.mensaje_usuario || (response.success ? response.message : 'Error inesperado en el servidor') || '';
+                const mensajeErrorServidor = response.mensaje_usuario === 'La categoría no existe'
+                    ? (window.RedaAlojamientoJson["El tipo de negocio no existe"] || "El tipo de negocio no existe")
+                    : response.mensaje_usuario;
+                const mensajeRaw = response.success
+                    ? (window.RedaAlojamientoJson["Tipo de negocio guardado correctamente"] || "Tipo de negocio guardado correctamente")
+                    : (mensajeErrorServidor || response.message || 'Error inesperado en el servidor');
 
                 if (response.success) {
                     $('#modal-category').modal('hide');
@@ -176,26 +190,29 @@ const destroyOpcionTipoNegocio = (clave) => {
                 $btn.find('.fa-spinner').addClass('d-none');
             });
 
-            // Acción de eliminar categoría
+            // Acción de eliminar un tipo de negocio.
             $(document).on('click', '.btn-delete-category', function(e) {
                 e.preventDefault();
                 const clave = $(this).data('clave');
                 
                 mostrarConfirmacion(
-                    window.RedaAlojamiento.general.estas_seguro_de_eliminar_esta_categoria,
+                    window.RedaAlojamientoJson["¿Estás seguro que deseas eliminar este tipo de negocio?"] || "¿Estás seguro que deseas eliminar este tipo de negocio?",
                     async () => {
                         const response = await destroyOpcionTipoNegocio(clave);
                         if (response.success) {
                             mostrarNotificacion(
                                 window.RedaAlojamiento.general.exito,
-                                response.mensaje_usuario,
+                                window.RedaAlojamientoJson["Tipo de negocio eliminado correctamente"] || "Tipo de negocio eliminado correctamente",
                                 'exito',
                                 true
                             );
                         } else {
+                            const mensajeErrorServidor = response.mensaje_usuario === 'La categoría no existe'
+                                ? (window.RedaAlojamientoJson["El tipo de negocio no existe"] || "El tipo de negocio no existe")
+                                : response.mensaje_usuario;
                             mostrarNotificacion(
                                 window.RedaAlojamiento.general.error,
-                                response.mensaje_usuario,
+                                mensajeErrorServidor,
                                 'error'
                             );
                         }

@@ -1,3 +1,4 @@
+{{-- Vista administrativa para consultar y gestionar los tipos de negocios disponibles. --}}
 @extends('admin.template')
 
 @section('main')
@@ -13,9 +14,9 @@
 			<div class="col-xs-12">
 				<div class="box">
 					<div class="box-header with-border d-flex align-items-center justify-content-between flex-wrap gap-2">
-						<h3 class="box-title">{{ __('reda-alojamiento::messages.general.listado_de_categorias_configuradas') }}</h3>
+						<h3 class="box-title">{{ __('Tipos de negocios') }}</h3>
                         <div class="box-tools position-static">
-                            <button type="button" id="btn-add-category" class="btn btn-sm btn-success btn-flat"><i class="fa fa-plus"></i> {{ __('reda-alojamiento::messages.general.agregar_nueva') }}</button>
+                            <button type="button" id="btn-add-category" class="btn btn-sm btn-success btn-flat"><i class="fa fa-plus"></i> {{ __('Agregar nuevo') }}</button>
                         </div>
 					</div>
 					<div class="box-body">
@@ -104,7 +105,7 @@
 	</section>
 </div>
 
-<!-- Modal para Agregar/Editar Categoría -->
+<!-- Modal para agregar o editar un tipo de negocio -->
 <div class="modal fade" id="modal-category" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -112,14 +113,14 @@
                 @csrf
                 <input type="hidden" name="old_clave" id="old_clave">
                 <div class="modal-header d-flex align-items-center justify-content-between">
-                    <h4 class="modal-title" id="modal-title-category">{{ __('reda-alojamiento::messages.general.agregar_nueva_categoria') }}</h4>
+                    <h4 class="modal-title" id="modal-title-category">{{ __('Agregar Nuevo Tipo de Negocio') }}</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="clave">{{ __('reda-alojamiento::messages.general.clave_key') }} <span class="text-danger">*</span></label>
                         <input type="text" name="clave" id="clave" class="form-control" placeholder="ej: restaurante_gastronomia" required>
-                        <small class="text-muted">{{ __('reda-alojamiento::messages.general.identificador_unico_que_no_contenga_espacios_acentos_ni_caracteres_especiales') }}</small>
+                        <small class="text-muted">{{ __('Identificador único: Los espacios entre palabras se convertirán automáticamente en guiones bajos, no se permiten acentos ni caracteres especiales') }}</small>
                     </div>
                     <div class="form-group">
                         <label for="nombre">{{ __('reda-alojamiento::messages.general.nombre_descripcion') }} <span class="text-danger">*</span></label>
@@ -141,6 +142,7 @@
 
 @section('validate_script')
     <script>window.RedaAlojamiento = @json(__('reda-alojamiento::messages'));</script>
+    <script>window.RedaAlojamientoJson = @json(__('reda-alojamiento::es'));</script>
     {{-- Agregamos las rutas que necesitamos en JS --}}
     <script>
         window.RedaRutas = {

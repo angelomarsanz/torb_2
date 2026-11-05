@@ -2,9 +2,9 @@
 
 ## Estado actual
 - **Fecha:** 5 de noviembre de 2026
-- **Tarea:** Aplicar el diseño de espaciado y bordes suaves al modal que aparece al agregar un plan de negocio.
-- **Estado:** Implementación y revisión completas.
-- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
-- **Cambio:** Se añadieron estilos aislados para `#modal-plan`, sus paneles interiores y su disposición en móvil. Se conservaron intactos la vista, el JavaScript y la funcionalidad existente.
-- **Validación:** `git diff --check` correcto.
-- **Restricciones respetadas:** `subir_archivos_puntuales.sh` tiene modificaciones preexistentes y no se tocó ni ejecutó; no se compila localmente.
+- **Tarea:** Actualizar el texto de ayuda del identificador en el modal de tipos de negocios.
+- **Estado:** Implementación y validación completas.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, manual técnico, log de desarrollo y este punto de control.
+- **Cambio:** La vista usa ahora la traducción JSON del texto actualizado para explicar el formato del identificador. Se conservó sin cambios la lógica existente que transforma espacios en guiones bajos.
+- **Validación:** JSON válido, texto visible confirmado en la vista y `git diff --check` correcto.
+- **Restricciones:** `subir_archivos_puntuales.sh` contiene cambios ajenos a la tarea y no debe modificarse ni ejecutarse; no compilar localmente.

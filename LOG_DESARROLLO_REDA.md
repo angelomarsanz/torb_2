@@ -2,6 +2,24 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [05 de Noviembre, 2026] - Actualización de ayuda del identificador de tipos de negocios
+- **Tarea:** Aclarar en el modal las reglas para escribir el identificador de un tipo de negocio.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se reemplazó la ayuda anterior por «Identificador único: Los espacios entre palabras se convertirán automáticamente en guiones bajos, no se permiten acentos ni caracteres especiales», incorporando la nueva frase a `es.json` y retirando la referencia de la vista a la traducción PHP obsoleta. Sin cambios en la normalización existente del campo.
+- **Validación:** `python3 -m json.tool` y `git diff --check` correctos; la vista apunta a la nueva traducción. No se compila localmente.
+
+## [05 de Noviembre, 2026] - Terminología de tipos de negocios en administración
+- **Tarea:** Sustituir en la vista administrativa los textos visibles de «categoría» por «tipo de negocio» y actualizar títulos, botones y confirmaciones.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php`, `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** El listado ahora se titula «Tipos de negocios», el botón «Agregar nuevo» y el modal usa «Agregar Nuevo Tipo de Negocio»/«Editar tipo de negocio». Las notificaciones y confirmación de eliminar usan la terminología solicitada. Se mantuvieron intactos los identificadores internos, rutas y estructura de datos. No se halló un respaldo SQL en la carpeta indicada; el cambio no requiere inspeccionar ni modificar datos porque solo actualiza los textos visibles.
+- **Validación:** `node --check`, análisis de `es.json` y `git diff --check` correctos; no se compila localmente.
+
+## [05 de Noviembre, 2026] - Mejora visual de opciones de tipos de negocios
+- **Tarea:** Aplicar el diseño de espaciado y bordes suaves a la vista `opciones_tipos_de_negocios` y al modal «Agregar nueva».
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se añadieron estilos acotados a `#opciones_tipos_de_negocios + .content-wrapper` para márgenes, panel, tabla de escritorio y tarjetas móviles; `#modal-category` recibe padding en encabezado, formulario y pie, borde redondeado y ajuste de márgenes en celular. Se preservaron la vista, el JavaScript, las rutas y las operaciones de datos.
+- **Validación:** `git diff --check` correcto; no se compiló localmente.
+
 ## [05 de Noviembre, 2026] - Mejora visual de configuración de planes
 - **Tarea:** Recuperar márgenes laterales y espacio interior, y suavizar los bordes de la pantalla de configuración de planes.
 - **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.

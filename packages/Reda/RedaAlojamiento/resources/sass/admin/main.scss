@@ -707,6 +707,114 @@
     }
 }
 
+/* Espaciado de la vista administrativa de opciones de tipos de negocios. */
+#opciones_tipos_de_negocios + .content-wrapper {
+    .content-header {
+        padding: 18px 24px 0;
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+    }
+
+    .content {
+        padding: 20px 24px 30px;
+    }
+
+    .box {
+        overflow: hidden;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+
+        .box-header {
+            padding: 14px 18px;
+        }
+
+        .box-body {
+            padding: 18px;
+        }
+    }
+
+    .table-responsive {
+        border-radius: 6px;
+    }
+
+    .d-md-none .planes-negocio-card-movil {
+        border-radius: 8px;
+    }
+}
+
+@media (max-width: 767px) {
+    #opciones_tipos_de_negocios + .content-wrapper {
+        .content-header {
+            padding: 16px 14px 0;
+        }
+
+        .content {
+            padding: 16px 14px 22px;
+        }
+
+        .box {
+            .box-header {
+                padding: 12px 14px;
+            }
+
+            .box-body {
+                padding: 14px;
+            }
+        }
+    }
+}
+
+/* Bordes y espaciado del modal para agregar o editar opciones de negocio. */
+#modal-category {
+    .modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+    }
+
+    .modal-header {
+        padding: 16px 22px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .modal-body {
+        padding: 20px 22px 8px;
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+    }
+
+    .modal-footer {
+        padding: 14px 22px;
+        border-top: 1px solid #eee;
+    }
+}
+
+@media (max-width: 767px) {
+    #modal-category {
+        .modal-dialog {
+            margin: 12px;
+        }
+
+        .modal-header {
+            padding: 14px 16px;
+        }
+
+        .modal-body {
+            padding: 16px 16px 4px;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+        }
+    }
+}
+
 /* Estilos para el módulo de Mediaciones (Disputas) */
 .reda-admin-disputas {
     .reda-reservacion-thumb-size {

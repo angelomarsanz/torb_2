@@ -12,10 +12,16 @@
   Se inyectaron logs de depuración en el método `welcome_email` para rastrear la configuración de SMTP y el estado del envío. Se actualizó el método `sendPhpEmail` para redirigir errores y confirmaciones al log de Laravel en lugar de imprimirlos en pantalla (`echo`), mejorando la estabilidad de las respuestas AJAX.
 
 ### Vistas (Admin)
+- **packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php**
+  Vista administrativa para consultar, agregar, editar y eliminar tipos de negocios. Conserva su tabla para escritorio, sus tarjetas móviles y el modal `#modal-category`; el archivo `resources/sass/admin/main.scss` aplica espaciado y bordes suaves aislados a esta pantalla y al modal. Usa el mensaje de ayuda del identificador desde las traducciones JSON, explicando que los espacios se convierten en guiones bajos y que no se permiten acentos ni caracteres especiales. También mantiene el título del listado, el botón de alta y el título inicial del modal con la terminología «tipo de negocio», y exporta `RedaAlojamientoJson` para los textos dinámicos.
 - **packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/configuracion_planes.blade.php**
   Vista administrativa para configurar los requisitos de planes destacados y administrar los planes de negocio. Su presentación recibe espaciado lateral y padding adaptable desde `resources/sass/admin/main.scss`, con paneles ligeramente redondeados y estilos limitados a esta pantalla; la vista y su lógica JavaScript permanecen sin cambios.
 - **resources/views/admin/settings/email.blade.php**
   Inyección de un campo `select` para la columna `email_status`. Esta modificación habilita la interfaz de usuario para que el administrador pueda forzar el estado del sistema de correos desde el panel de configuración de email.
+
+### Traducciones (Admin)
+- **packages/Reda/RedaAlojamiento/resources/lang/es.json**
+  Contiene las etiquetas y mensajes en español para la gestión administrativa de tipos de negocios, incluyendo los títulos de alta/edición, confirmación de eliminación y notificaciones exitosas. La vista Blade y su JavaScript consumen estas cadenas mediante `__()` y `window.RedaAlojamientoJson`, sin depender de las antiguas traducciones PHP de «categoría».
 
 ### Configuración
 - **config/mail.php**
@@ -94,6 +100,9 @@
   Controlador de la vista de índice de disputas (Mediaciones). Este archivo gestiona la lógica del dashboard de mediaciones, incluyendo la carga paginada por estados, la renderización de la lista de casos, la línea de tiempo de progreso, el visor de medios (imágenes/PDF) y el chat específico de la mediación.
 
 ### JavaScript (Administración)
+- **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js**
+  Gestiona el alta, edición y eliminación de tipos de negocios en la vista administrativa. Utiliza las traducciones JSON para el título del modal, la confirmación de borrado y las notificaciones de resultado; los mensajes exitosos de crear y editar se muestran como «Tipo de negocio guardado correctamente», y el borrado como «Tipo de negocio eliminado correctamente». Traduce el mensaje legado de elemento inexistente al término actual sin cambiar rutas, nombres internos ni datos.
+
 - **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js**
   Controlador de administración para el panel de mediaciones (Disputas). Este archivo gestiona la lógica del dashboard de mediaciones para el administrador, permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo, gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
 
@@ -290,7 +299,7 @@
 
 ### Estilos (Admin)
 - **packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss**
-  En la pantalla de configuración de planes administrativos, el selector `#configuracion_planes_container + .content-wrapper` aplica márgenes laterales y padding interno adaptables a encabezados, paneles, pestañas y cajas. El selector `#modal-plan` da al modal de agregar/editar planes un borde ligeramente redondeado, separa encabezado, contenido y pie, y agrega espaciado a las secciones de opciones de pago y beneficios. Ambos conjuntos de reglas ajustan sus espacios en móvil y quedan aislados de las demás pantallas del administrador.
+  En la pantalla de configuración de planes administrativos, el selector `#configuracion_planes_container + .content-wrapper` aplica márgenes laterales y padding interno adaptables a encabezados, paneles, pestañas y cajas. El selector `#modal-plan` da al modal de agregar/editar planes un borde ligeramente redondeado, separa encabezado, contenido y pie, y agrega espaciado a las secciones de opciones de pago y beneficios. Para las opciones de tipos de negocios, `#opciones_tipos_de_negocios + .content-wrapper` aplica márgenes, padding y radios suaves a la página, panel, tabla y tarjetas móviles; `#modal-category` estiliza el modal de agregar/editar. Los estilos de ambos módulos reducen sus espacios en pantallas móviles y permanecen aislados del resto del administrador.
 
 ### Vistas y Plantillas
 - **packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php**
