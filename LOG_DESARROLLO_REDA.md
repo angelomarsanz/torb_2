@@ -2,6 +2,18 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [05 de Noviembre, 2026] - Alineación de opciones del menú lateral admin
+- **Tarea:** Corregir la sangría de "Negocios", "Mediaciones" y "Mensajes y Alertas" para que coincida con las opciones nativas.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se normalizó el HTML inyectado a la estructura de AdminLTE (`nav-item`, `nav-link`, `nav-icon` y `p`) en encabezados y subopciones, eliminando el espacio de icono añadido que duplicaba el ancho reservado. Se preservaron navegación, estado activo, flechas y badges.
+- **Validación:** `node --input-type=module --check` y `git diff --check` finalizaron correctamente. No se compila localmente.
+
+## [05 de Noviembre, 2026] - Atención al comercio dentro de Negocios
+- **Tarea:** Mover la opción "Atención al comercio" desde el nivel principal del menú lateral a una subopción de "Negocios".
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se agregó el enlace de soporte al acordeón de "Negocios" con la misma URL de destino y reutilizando el manejador existente de enlaces del submenú para la animación de espera. Se eliminó su inyección independiente después de "Mensajes y Alertas".
+- **Validación:** revisión del diff y `git diff --check`; no se ejecutó compilación local.
+
 ## [05 de Noviembre, 2026] - Cambio de nombre en menú lateral del admin
 - **Tarea:** Cambiar la opción "Soporte técnico" del menú lateral administrativo a "Atención al comercio".
 - **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md`, `documentacion-torbian-2/requerimientos.md` y `previo_cambios_realizados.md`.

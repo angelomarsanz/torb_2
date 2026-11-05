@@ -1,8 +1,8 @@
 /**
  * Resumen: Gestión de menús adicionales en la barra lateral del panel administrativo (Backend).
- * Este archivo inyecta de forma reactiva y no invasiva las opciones de "Negocios", "Mediaciones"
- * (como submenú desplegable con "Listado" y condicionalmente "Configuración" exclusivo para Rol 1)
- * y "Atención al comercio" en el menú lateral AdminLTE del proyecto original.
+ * Este archivo inyecta de forma reactiva y no invasiva las opciones de "Negocios" (incluida la
+ * subopción "Atención al comercio") y "Mediaciones" (como submenú desplegable con "Listado" y
+ * condicionalmente "Configuración" exclusivo para Rol 1) en el menú lateral AdminLTE original.
  * Permite que los usuarios con rol 1 (Admin) y rol 2 (Atención al usuario) tengan acceso a "Mediaciones",
  * garantizando que "Configuración" solo esté visible y disponible para administradores con Rol 1.
  * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
@@ -13,7 +13,8 @@ import { mediacionSvg } from '../../../general/iconos';
 import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMediaciones.js';
 
 /**
- * Función principal que orquesta la inyección y comportamiento de los menús del plugin en el panel admin.
+ * Función principal que orquesta la inyección y el comportamiento de los menús del plugin en el panel admin.
+ * Incluye "Atención al comercio" dentro del submenú "Negocios" y aplica la animación de espera a sus enlaces.
  */
 export const menuLateralAdmin = () =>
 {
@@ -33,22 +34,33 @@ export const menuLateralAdmin = () =>
                 if ($propertiesMenuItem.length && !$('#menu-negocios').length) {
                     const linkOpcionesNegocios = `${baseUrl}/admin/reda/negocios/opciones-tipos-de-negocios`;
                     const linkConfiguracionPlanes = `${baseUrl}/admin/reda/negocios/configuracion-planes`;
+                    const linkAtencionComercio = `${baseUrl}/admin/reda/general/soporte-tecnico`;
                     const labelNegocios = window.RedaAlojamientoJson["Negocios"] || "Negocios";
                     const labelConfigurarPlanes = window.RedaAlojamientoJson["Configurar planes"] || "Configurar planes";
                     const labelTiposNegocios = window.RedaAlojamientoJson["Tipos de negocios"] || "Tipos de negocios";
+                    const labelAtencionComercio = window.RedaAlojamientoJson["Atención al comercio"] || "Atención al comercio";
 
                     const nuevoMenuHtml = `
-                        <li class="treeview" id="menu-negocios">
-                            <a href="#" class="negocios-toggle">
-                                <i class="fa fa-briefcase"></i> <span>${labelNegocios}</span>
-                                <i class="fa fa-angle-left pull-right"></i>
+                        <li class="nav-item treeview" id="menu-negocios">
+                            <a href="#" class="nav-link negocios-toggle">
+                                <i class="nav-icon fa fa-briefcase"></i>
+                                <p>${labelNegocios}<i class="fa fa-angle-left nav-arrow pull-right"></i></p>
                             </a>
-                            <ul class="treeview-menu reda-admin-menu-hidden">
-                                <li>
-                                    <a href="${linkConfiguracionPlanes}" class="btn-menu-negocios"><span>${labelConfigurarPlanes}</span></a>
+                            <ul class="nav nav-treeview treeview-menu reda-admin-menu-hidden">
+                                <li class="nav-item">
+                                    <a href="${linkConfiguracionPlanes}" class="nav-link btn-menu-negocios">
+                                        <i class="nav-icon far fa-circle"></i><p>${labelConfigurarPlanes}</p>
+                                    </a>
                                 </li>
-                                <li>
-                                    <a href="${linkOpcionesNegocios}" class="btn-menu-negocios"><span>${labelTiposNegocios}</span></a>
+                                <li class="nav-item">
+                                    <a href="${linkOpcionesNegocios}" class="nav-link btn-menu-negocios">
+                                        <i class="nav-icon far fa-circle"></i><p>${labelTiposNegocios}</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item" id="menu-atencion-comercio">
+                                    <a href="${linkAtencionComercio}" class="nav-link btn-menu-negocios">
+                                        <i class="nav-icon far fa-circle"></i><p>${labelAtencionComercio}</p>
+                                    </a>
                                 </li>
                             </ul>
                         </li>
@@ -116,28 +128,24 @@ export const menuLateralAdmin = () =>
                         const configuracionHtml = esAdminRol1 ? `
                             <li class="nav-item">
                                 <a href="${linkConfiguracion}" class="nav-link btn-menu-mediacion-config ${esRutaConfigActiva ? 'active' : ''}">
-                                    <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
-                                    <span>${labelConfiguracion}</span>
+                                <i class="far fa-circle nav-icon" style="font-size: 0.65rem;"></i>
+                                <p>${labelConfiguracion}</p>
                                 </a>
                             </li>
                         ` : '';
 
                         const mediacionMenuHtml = `
                             <li class="nav-item treeview ${esRutaSubmenuActiva ? 'active menu-open' : ''}" id="menu-mediaciones">
-                                <a href="#" class="nav-link mediaciones-toggle d-flex align-items-center justify-content-between ${esRutaSubmenuActiva ? 'active' : ''}">
-                                    <div class="d-flex align-items-center">
-                                        <span class="reda-icon-svg-18 me-2">
-                                            ${mediacionSvg}
-                                        </span>
-                                        <span class="reda-mediaciones-texto-admin">${labelMediaciones}</span>
-                                    </div>
-                                    <i class="fa ${esRutaSubmenuActiva ? 'fa-angle-down' : 'fa-angle-left'} pull-right ms-auto"></i>
+                                <a href="#" class="nav-link mediaciones-toggle ${esRutaSubmenuActiva ? 'active' : ''}">
+                                    <span class="nav-icon reda-icon-svg-18">${mediacionSvg}</span>
+                                    <p class="reda-mediaciones-texto-admin">${labelMediaciones}</p>
+                                    <i class="fa ${esRutaSubmenuActiva ? 'fa-angle-down' : 'fa-angle-left'} nav-arrow pull-right"></i>
                                 </a>
                                 <ul class="nav nav-treeview treeview-menu ${esRutaSubmenuActiva ? '' : 'reda-admin-menu-hidden'}" style="${esRutaSubmenuActiva ? 'display: block;' : ''}">
                                     <li class="nav-item">
                                         <a href="${linkMediaciones}" class="nav-link btn-menu-mediacion-item ${esRutaListadoActiva ? 'active' : ''}">
-                                            <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
-                                            <span class="reda-mediaciones-listado-texto-admin">${labelListado}</span>
+                                            <i class="far fa-circle nav-icon" style="font-size: 0.65rem;"></i>
+                                            <p class="reda-mediaciones-listado-texto-admin">${labelListado}</p>
                                         </a>
                                     </li>
                                     ${configuracionHtml}
@@ -286,29 +294,22 @@ export const menuLateralAdmin = () =>
 
                     const mensajesMenuHtml = `
                         <li class="nav-item treeview ${esSubmenuMensajesAbierto ? 'active menu-open' : ''}" id="menu-mensajes">
-                            <a href="#" class="nav-link mensajes-toggle d-flex align-items-center justify-content-between ${esSubmenuMensajesAbierto ? 'active' : ''}">
-                                <div class="d-flex align-items-center">
-                                    <i class="nav-icon fa fa-comments me-2"></i>
-                                    <span class="reda-mensajes-padre-texto">${labelMensajesYAlertas}</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <span id="reda-admin-alertas-badge" class="badge bg-danger rounded-pill me-2 d-none">0</span>
-                                    <i class="fa ${esSubmenuMensajesAbierto ? 'fa-angle-down' : 'fa-angle-left'} pull-right ms-auto"></i>
-                                </div>
+                            <a href="#" class="nav-link mensajes-toggle ${esSubmenuMensajesAbierto ? 'active' : ''}">
+                                <i class="nav-icon fa fa-comments"></i>
+                                <p class="reda-mensajes-padre-texto">${labelMensajesYAlertas}<span id="reda-admin-alertas-badge" class="badge bg-danger rounded-pill ms-2 d-none">0</span></p>
+                                <i class="fa ${esSubmenuMensajesAbierto ? 'fa-angle-down' : 'fa-angle-left'} nav-arrow pull-right"></i>
                             </a>
                             <ul class="nav nav-treeview treeview-menu ${esSubmenuMensajesAbierto ? '' : 'reda-admin-menu-hidden'}" style="${esSubmenuMensajesAbierto ? 'display: block;' : ''}">
                                 <li class="nav-item">
                                     <a href="${linkMensajes}" class="nav-link btn-menu-mensajes-item ${esRutaMessages ? 'active' : ''}">
-                                        <i class="far fa-circle nav-icon me-2" style="font-size: 0.65rem;"></i>
-                                        <span>${labelMensajes}</span>
+                                        <i class="far fa-circle nav-icon" style="font-size: 0.65rem;"></i>
+                                        <p>${labelMensajes}</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="${linkAlertas}" class="nav-link btn-menu-alertas-item d-flex align-items-center justify-content-between ${esRutaAlertas ? 'active' : ''}">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fa fa-bell nav-icon me-2" style="font-size: 0.75rem;"></i>
-                                            <span class="reda-alertas-texto-admin">${labelAlertas}</span>
-                                        </div>
+                                        <i class="fa fa-bell nav-icon" style="font-size: 0.75rem;"></i>
+                                        <p class="reda-alertas-texto-admin">${labelAlertas}</p>
                                         <span id="reda-admin-sub-alertas-badge" class="badge bg-danger rounded-pill ms-auto d-none">0</span>
                                     </a>
                                 </li>
@@ -380,34 +381,7 @@ export const menuLateralAdmin = () =>
                     });
                 }
 
-                // 5. Inyección de Opción "Atención al comercio" (Después de Mensajes)
-                const $anchorSoporte = $('#menu-mensajes').length ? $('#menu-mensajes') : $('.sidebar-menu a[href*="admin/messages"]').closest('li');
-
-                if ($anchorSoporte.length && !$('#menu-soporte').length) {
-                    const linkSoporte = `${baseUrl}/admin/reda/general/soporte-tecnico`;
-                    const labelAtencionComercio = window.RedaAlojamientoJson["Atención al comercio"] || "Atención al comercio";
-
-                    const soporteMenuHtml = `
-                        <li id="menu-soporte" class="nav-item">
-                            <a href="${linkSoporte}" class="nav-link btn-menu-soporte">
-                                <i class="fa fa-life-ring"></i> <span>${labelAtencionComercio}</span>
-                            </a>
-                        </li>
-                    `;
-                    $anchorSoporte.after(soporteMenuHtml);
-                    console.log('Opción "Atención al comercio" inyectada.');
-
-                    // Animación de espera al hacer clic en Atención al comercio
-                    $(document).on('click', '.btn-menu-soporte', function(e) {
-                        if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
-                            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
-                                window.RedaNotificaciones.esperar();
-                            }
-                        }
-                    });
-                }
-
-                // 6. Función y eventos para sincronización reactiva de contadores de Alertas
+                // 5. Función y eventos para sincronización reactiva de contadores de Alertas
                 const aplicarConteoAlertas = (count) => {
                     const $bellBadge = $('#reda-admin-bell-badge');
                     const $parentBadge = $('#reda-admin-alertas-badge');
