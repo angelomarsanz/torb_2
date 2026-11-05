@@ -55,6 +55,10 @@ Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
     // Rutas exclusivas REDA para AJAX del Inbox
     Route::get('reda/messaging/unread-count', [RedaInboxController::class, 'getUnreadCount'])->name('reda.messaging.unread_count');
     Route::get('reda/bookings/check-active', [RedaBookingController::class, 'getActiveBookingPropertyIds'])->name('reda.bookings.check_active');
+    // Proporciona los intervalos reservados para bloquearlos en el Flatpickr del modal.
+    Route::get('reda/bookings/fechas-ocupadas/{idPropiedad}', [RedaBookingController::class, 'obtenerFechasOcupadas'])
+        ->whereNumber('idPropiedad')
+        ->name('reda.bookings.fechas_ocupadas');
     Route::get('reda/bookings/count-active', [RedaBookingController::class, 'getCountActiveBookings'])->name('reda.bookings.count_active');
     Route::get('reda/bookings/details/{property_id}', [RedaBookingController::class, 'getBookingDetails'])->name('reda.bookings.details');
     Route::get('reda/bookings/paid-ids', [RedaBookingController::class, 'getPaidBookingIds'])->name('reda.bookings.paid_ids');

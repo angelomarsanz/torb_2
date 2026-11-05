@@ -4,7 +4,7 @@
  * RedaBookingController
  * 
  * Controlador para gestionar consultas relacionadas con las reservas 
- * desde el plugin REDA Alojamiento.
+ * desde el plugin REDA Alojamiento, incluyendo la consulta de fechas ocupadas por propiedad.
  */
 
 namespace Reda\RedaAlojamiento\Http\Controllers\General;
@@ -191,6 +191,60 @@ class RedaBookingController extends Controller
                 'respuesta' => '',
                 'code' => 500
             ];
+            return response()->json($respuesta, $respuesta['code']);
+        }
+    }
+
+    /**
+     * Obtiene los intervalos ocupados de una propiedad para bloquearlos en el calendario de reservas.
+     * La fecha de salida no se incluye en el intervalo porque ese día puede iniciar otra estancia.
+     *
+     * @param int $idPropiedad
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function obtenerFechasOcupadas(int $idPropiedad)
+    {
+        try {
+            $hoy = date('Y-m-d');
+            $reservas = Bookings::query()
+                ->where('property_id', $idPropiedad)
+                ->whereIn('status', ['Accepted', 'Pending', 'Processing', 'processing'])
+                ->where('end_date', '>', $hoy)
+                ->orderBy('start_date')
+                ->get(['start_date', 'end_date']);
+
+            $rangosOcupados = $reservas
+                ->map(function ($reserva) {
+                    return [
+                        'from' => date('Y-m-d', strtotime($reserva->start_date)),
+                        'to' => \Carbon\Carbon::parse($reserva->end_date)->subDay()->toDateString()
+                    ];
+                })
+                ->filter(function ($rango) {
+                    return $rango['from'] <= $rango['to'];
+                })
+                ->values()
+                ->all();
+
+            $respuesta = [
+                'success' => true,
+                'message' => __('Fechas ocupadas obtenidas'),
+                'mensaje_usuario' => '',
+                'respuesta' => $rangosOcupados,
+                'code' => 200
+            ];
+
+            return response()->json($respuesta, $respuesta['code']);
+        } catch (\Exception $e) {
+            Log::error("REDA Booking Error (obtenerFechasOcupadas): " . $e->getMessage());
+            $respuesta = [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'mensaje_usuario' => __('Error al consultar las fechas ocupadas'),
+                'respuesta' => '',
+                'code' => 500
+            ];
+
             return response()->json($respuesta, $respuesta['code']);
         }
     }

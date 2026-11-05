@@ -11,12 +11,15 @@
  * - Verifica reservas activas antes de permitir una nueva reservación.
  * - Cambia dinámicamente el botón a "Ver reserva" si ya existe una reservación.
  * - Maneja disparadores por hash (#reservar) para integraciones externas.
+ * - Consulta las fechas ocupadas de la propiedad antes de mostrar el calendario de reservas.
  */
 
 (function( $ ) {
     "use strict";
 
     const PropertyDetailReservation = {
+        consultandoFechasOcupadas: false,
+
         config: {
             formId: '#booking_form',
             sidebarContainerId: '#booking-price',
@@ -200,10 +203,76 @@
         },
 
         /**
-         * Muestra el modal físicamente después de las validaciones, inhíbe el selector original
-         * y configura la nueva lógica de calendario Flatpickr.
+         * Consulta los intervalos ocupados antes de abrir el modal para evitar ofrecer fechas reservadas.
          */
         mostrarModalFinal: function($form, $modalBody, $modal) {
+            const self = this;
+            const idPropiedad = $('#property_id').val();
+            const mensajeError = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["No fue posible consultar las fechas disponibles. Inténtelo de nuevo."])
+                || "No fue posible consultar las fechas disponibles. Inténtelo de nuevo.";
+
+            if (!idPropiedad) {
+                this.notificarErrorFechasOcupadas(mensajeError);
+                return;
+            }
+            if (this.consultandoFechasOcupadas) return;
+
+            this.consultandoFechasOcupadas = true;
+            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                window.RedaNotificaciones.esperar();
+            }
+
+            $.ajax({
+                url: `${window.APP_URL}/reda/bookings/fechas-ocupadas/${encodeURIComponent(idPropiedad)}`,
+                type: 'GET'
+            }).done(function(data) {
+                if (!data || !data.success || !Array.isArray(data.respuesta)) {
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                        window.RedaNotificaciones.ocultar();
+                    }
+                    setTimeout(() => self.notificarErrorFechasOcupadas(mensajeError), 500);
+                    return;
+                }
+
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
+                }
+                setTimeout(() => {
+                    self.prepararModalReserva($form, $modalBody, $modal, data.respuesta);
+                }, 600);
+            }).fail(function(xhr) {
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                    window.RedaNotificaciones.ocultar();
+                }
+
+                const respuestaServidor = xhr.responseJSON || {};
+                setTimeout(() => {
+                    self.notificarErrorFechasOcupadas(respuestaServidor.mensaje_usuario || mensajeError);
+                }, 500);
+            }).always(function() {
+                self.consultandoFechasOcupadas = false;
+            });
+        },
+
+        /**
+         * Muestra un error de consulta de disponibilidad sin abrir el formulario con datos incompletos.
+         */
+        notificarErrorFechasOcupadas: function(mensaje) {
+            const titulo = (window.RedaAlojamientoJson && window.RedaAlojamientoJson["Error"]) || "Error";
+            const mensajeSeguro = $('<div>').text(mensaje).html();
+
+            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                window.RedaNotificaciones.notificar(titulo, mensajeSeguro, 'error');
+                return;
+            }
+
+            window.alert(mensaje);
+        },
+
+        /**
+         * Inserta el formulario en el modal y crea los selectores Flatpickr con las fechas ocupadas bloqueadas.
+         */
+        prepararModalReserva: function($form, $modalBody, $modal, fechasOcupadas) {
             const self = this;
             if (!$modalBody.find(this.config.formId).length) {
                 $modalBody.append($form);
@@ -250,6 +319,28 @@
             const initialStartDate = $('#startDate').val();
             const initialEndDate = $('#endDate').val();
 
+            /**
+             * Convierte una fecha ISO del servidor a una fecha local sin desplazamientos de zona horaria.
+             */
+            const crearFechaLocal = function(fechaISO) {
+                const [anio, mes, dia] = fechaISO.split('-').map(Number);
+                return new Date(anio, mes - 1, dia);
+            };
+
+            /**
+             * Deshabilita una salida solo cuando la estancia elegida se cruza con una noche ocupada.
+             */
+            const salidaCruzaFechaOcupada = function(fechaSalida) {
+                const fechaLlegada = window.redaFpCheckIn?.selectedDates[0];
+                if (!fechaLlegada) return false;
+
+                return fechasOcupadas.some(function(rango) {
+                    const inicioOcupado = crearFechaLocal(rango.from);
+                    const finOcupado = crearFechaLocal(rango.to);
+                    return fechaLlegada <= finOcupado && fechaSalida > inicioOcupado;
+                });
+            };
+
             // Destruir instancias previas para evitar duplicidad de elementos/eventos al abrir varias veces
             if (window.redaFpCheckIn && typeof window.redaFpCheckIn.destroy === 'function') {
                 window.redaFpCheckIn.destroy();
@@ -263,7 +354,11 @@
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 locale: "es",
+                disable: fechasOcupadas,
                 defaultDate: initialStartDate || "today",
+                onReady: function(selectedDates, dateStr, instance) {
+                    instance.calendarContainer.classList.add('reda-flatpickr-calendario-reserva');
+                },
                 onChange: function(selectedDates, dateStr, instance) {
                     if (selectedDates[0]) {
                         console.log('REDA Flatpickr: Fecha de llegada cambiada a:', dateStr);
@@ -274,9 +369,14 @@
                         const nextDay = new Date(selectedDates[0]);
                         nextDay.setDate(nextDay.getDate() + 1);
                         window.redaFpCheckOut.set("minDate", nextDay);
+                        window.redaFpCheckOut.set("disable", [salidaCruzaFechaOcupada]);
 
-                        // Si el Checkout es menor o igual al Check-In, limpiarlo
-                        if (window.redaFpCheckOut.selectedDates[0] && window.redaFpCheckOut.selectedDates[0] <= selectedDates[0]) {
+                        // Limpiar la salida si queda antes de la llegada o se cruza con una reserva.
+                        const fechaSalidaActual = window.redaFpCheckOut.selectedDates[0];
+                        if (fechaSalidaActual && (
+                            fechaSalidaActual <= selectedDates[0] ||
+                            salidaCruzaFechaOcupada(fechaSalidaActual)
+                        )) {
                             window.redaFpCheckOut.clear();
                             $("#endDate").val("");
                         }
@@ -286,6 +386,9 @@
                     }
                 }
             });
+            if (!window.redaFpCheckIn.selectedDates[0]) {
+                $("#startDate").val("");
+            }
 
             // Establecer fecha mínima inicial para el Checkout basada en el Check-In seleccionado
             const minCheckOutDate = window.redaFpCheckIn.selectedDates[0]
@@ -297,7 +400,11 @@
                 dateFormat: "d-m-Y",
                 minDate: minCheckOutDate,
                 locale: "es",
+                disable: [salidaCruzaFechaOcupada],
                 defaultDate: initialEndDate || "",
+                onReady: function(selectedDates, dateStr, instance) {
+                    instance.calendarContainer.classList.add('reda-flatpickr-calendario-reserva');
+                },
                 onChange: function(selectedDates, dateStr, instance) {
                     if (selectedDates[0]) {
                         console.log('REDA Flatpickr: Fecha de salida cambiada a:', dateStr);
@@ -309,6 +416,9 @@
                     }
                 }
             });
+            if (!window.redaFpCheckOut.selectedDates[0]) {
+                $("#endDate").val("");
+            }
 
             // Sincronizar el minDate del checkout inicialmente
             if (window.redaFpCheckIn.selectedDates[0]) {

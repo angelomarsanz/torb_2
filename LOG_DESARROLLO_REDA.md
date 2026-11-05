@@ -2,6 +2,23 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [04 de Noviembre, 2026] - Bloqueo de Fechas Ocupadas en el Calendario de Reservas
+- **Tarea:** Evitar que el huésped seleccione noches que ya están reservadas antes de completar el formulario en el modal.
+- **Cambios realizados:**
+  - El controlador incorpora `obtenerFechasOcupadas($idPropiedad)`, que consulta reservas con estados `Accepted`, `Pending`, `Processing` o `processing`, excluye las reservas canceladas, rechazadas, expiradas y consultas, y retorna intervalos de noches donde la fecha de salida no queda bloqueada.
+  - La ruta autenticada `GET /reda/bookings/fechas-ocupadas/{idPropiedad}` proporciona esos intervalos al frontend.
+  - `propiedad_detalle.js` consulta la disponibilidad antes de presentar el formulario, mantiene la animación de espera, bloquea los intervalos en ambos campos Flatpickr y no abre el modal cuando la consulta falla.
+  - `main.scss` da un sombreado visible a los días ocupados deshabilitados; `es.json` incorpora los textos de respuesta y error.
+- **Archivos modificados:**
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`: método documentado `obtenerFechasOcupadas()` y actualización de la descripción del controlador.
+  - `packages/Reda/RedaAlojamiento/routes/web.php`: ruta autenticada para consultar disponibilidad por inmueble.
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`: consulta previa, manejo de errores y configuración de fechas bloqueadas en Flatpickr.
+  - `packages/Reda/RedaAlojamiento/resources/sass/main.scss`: estilo sombreado para fechas ocupadas.
+  - `packages/Reda/RedaAlojamiento/resources/lang/es.json`: traducciones para la consulta de disponibilidad.
+  - `manual_tecnico_plugin_reda_alojamiento.md`: documentación del endpoint, controlador, flujo JS y estilo.
+  - `previo_cambios_realizados.md`: seguimiento del avance de esta tarea.
+- **Validación:** `node --check`, `php -l` para controlador y rutas, validación JSON, pruebas dirigidas de límites de checkout/llegada y `git diff --check` pasaron. No se compilaron assets ni se ejecutaron comandos Artisan; la compilación y prueba visual/funcional deben realizarse en Vesta.
+
 ## [02 de Noviembre, 2026] - Pauta para Elegir JavaScript al Alterar Vistas Originales
 - **Tarea:** Documentar en las instrucciones compartidas del proyecto cómo elegir el JavaScript correcto antes de inyectar cambios al HTML de una vista original.
 - **Cambio realizado:**

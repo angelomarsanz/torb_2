@@ -23,11 +23,11 @@
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js**
-  Gestiona el sistema de reserva en modal y botones flotantes para la vista de detalle de propiedad (property.single). Su método `normalizarTarjetaAnfitrion()` añade clases del plugin a la tarjeta resumen superior y a la imagen del anfitrión para conservar el avatar cuadrado en móvil. También oculta el sidebar original, inyecta el botón flotante con animación y maneja la apertura del modal mediante el hash `#reservar`. Incluye una verificación proactiva de reservas activas para prevenir duplicidades. Se actualizó para desactivar el `daterangepicker` original del core, inyectar inputs de fecha adaptados y configurar una lógica robusta mediante **Flatpickr** (Llegada y Salida con rango dinámico y fecha mínima de salida), sincronizándose con los inputs ocultos del core y gatillando el recálculo automático de precios (`price_calculation`).
+  Gestiona el sistema de reserva en modal y botones flotantes para la vista de detalle de propiedad (property.single). Su método `normalizarTarjetaAnfitrion()` añade clases del plugin a la tarjeta resumen superior y a la imagen del anfitrión para conservar el avatar cuadrado en móvil. También oculta el sidebar original, inyecta el botón flotante con animación y maneja la apertura del modal mediante el hash `#reservar`. Incluye una verificación proactiva de reservas activas para prevenir duplicidades. Se actualizó para consultar los intervalos ocupados antes de abrir el formulario; `mostrarModalFinal()` gestiona la petición y `prepararModalReserva()` inicializa Flatpickr para impedir que el huésped llegue en una noche ocupada y para validar las salidas según el intervalo seleccionado. Así, el día de checkout de otra reserva puede seguir usándose como salida, pero no como llegada cuando inicia la siguiente estancia. Si la consulta falla, `notificarErrorFechasOcupadas()` informa al usuario y no abre el formulario. Los campos siguen sincronizándose con los inputs originales del core y gatillan el recálculo automático de precios (`price_calculation`).
   **Actualización Desglose Huéspedes (Airbnb-style):** Oculta el selector `#number_of_guests` original dentro de la modal e inyecta dos selectores dinámicos para "Adulto(s)" y "Niño(s)". Sincroniza dinámicamente las opciones para respetar la capacidad máxima (`accommodates`), actualiza `#number_of_guests` con el total y gatilla el recálculo de precios y tarifas en tiempo real.
 
 - **packages/Reda/RedaAlojamiento/resources/sass/main.scss**
-  En la vista móvil de detalle de propiedad, mantiene el avatar de la tarjeta resumen superior cuadrado de 90 × 90 px con `object-fit: cover`. Las reglas se limitan a las clases que `propiedad_detalle.js` añade por JavaScript a esa tarjeta y a la imagen del anfitrión.
+  En la vista móvil de detalle de propiedad, mantiene el avatar de la tarjeta resumen superior cuadrado de 90 × 90 px con `object-fit: cover`. Las reglas se limitan a las clases que `propiedad_detalle.js` añade por JavaScript a esa tarjeta y a la imagen del anfitrión. También da un fondo gris, texto atenuado y cursor no disponible a los días ocupados que Flatpickr deshabilita en la modal de reservas.
 
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/desgloseHuespedes.js**
   Script encargado de actualizar dinámicamente y de forma no invasiva todas las vistas de la aplicación donde se muestra el conteo de huéspedes, sustituyendo etiquetas monolíticas ("X Guests") por el desglose detallado "X Adulto(s), Y Niño(s)":
@@ -72,7 +72,14 @@
   Controlador extendido para gestionar el flujo de pagos y redirecciones de reserva. Asegura que los datos de la reserva se mantengan persistentes durante el proceso de login y valida si el usuario ya posee una reservación vigente antes de permitir el acceso al formulario de reserva, redirigiendo con alertas personalizadas si es necesario. Se actualizó para asegurar en sesión `payment_adultos` y `payment_ninos`.
 
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php**
-  Controlador para consultas de reservas. Se enriqueció `getBookingDetails` para retornar `adultos`, `ninos` y `huespedes_desglose`. Se incorporó el método `getHuespedesInfo` que devuelve el desglose de huéspedes por `booking_id` o `code` para consumo de las vistas AJAX.
+  Controlador para consultas de reservas. Se enriqueció `getBookingDetails` para retornar `adultos`, `ninos` y `huespedes_desglose`. Se incorporó el método `getHuespedesInfo` que devuelve el desglose de huéspedes por `booking_id` o `code` para consumo de las vistas AJAX. El método `obtenerFechasOcupadas($idPropiedad)` consulta las reservas `Accepted`, `Pending`, `Processing` y `processing` con fecha de salida futura, excluye estados no ocupantes y retorna intervalos `[llegada, salida)` para que el día de checkout permanezca disponible como llegada de otra reserva.
+
+### Rutas
+- **packages/Reda/RedaAlojamiento/routes/web.php**
+  La ruta autenticada `GET /reda/bookings/fechas-ocupadas/{idPropiedad}` dirige a `RedaBookingController@obtenerFechasOcupadas` y entrega al calendario del detalle de propiedad los intervalos de noches ocupadas.
+
+- **packages/Reda/RedaAlojamiento/resources/lang/es.json**
+  Incluye los textos de respuesta del endpoint de disponibilidad y el mensaje mostrado cuando no se pueden consultar las fechas; en ese caso el modal de reserva permanece cerrado.
 
 ## Mediaciones (Disputas)
 ... (resto del archivo)

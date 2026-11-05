@@ -1,12 +1,17 @@
 # Registro Previo de Cambios en Curso
 
 ## Estado actual
-- **Fecha:** 2 de noviembre de 2026
-- **Tarea:** Añadir a `.github/copilot-instructions.md` el procedimiento para encontrar el JavaScript apropiado antes de alterar HTML de vistas originales.
-- **Alcance:** Incorporar una pauta breve junto a las reglas existentes de vistas y registrar el cambio.
-- **Avance:** Añadida en "Directrices del proyecto" la secuencia para reutilizar un script específico relacionado, revisar el JavaScript general del plugin y, si no hay uno idóneo, crear e integrar un archivo dedicado. Se prohíbe expresamente poner lógica de una vista en scripts de otro propósito.
+- **Fecha:** 4 de noviembre de 2026
+- **Tarea:** Bloquear en el calendario del modal de reservas las fechas ocupadas de cada propiedad.
+- **Alcance:** Revisar el calendario Flatpickr existente y el flujo de datos de reservas; exponer desde el servidor los períodos ocupados y deshabilitarlos antes de permitir seleccionar una nueva estancia; documentar los cambios.
+- **Avance:** Implementados el endpoint autenticado de fechas ocupadas, la consulta AJAX previa a la apertura del modal, el bloqueo de llegadas que caen en noches ocupadas y la validación dinámica de salidas para conservar el día de checkout como límite válido. Agregados el sombreado visual, traducciones y documentación. Las validaciones estáticas y las pruebas dirigidas de límites de fechas pasaron.
 - **Archivos modificados:**
-  - `.github/copilot-instructions.md`: nueva directriz de selección de JavaScript para alterar HTML original.
-  - `LOG_DESARROLLO_REDA.md`: registro del cambio y su validación.
-- **Validación:** La directriz quedó en la sección indicada; `git diff --check` pasó.
-- **Estado:** Completado.
+  - `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`
+  - `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php`
+  - `packages/Reda/RedaAlojamiento/routes/web.php`
+  - `packages/Reda/RedaAlojamiento/resources/lang/es.json`
+  - `packages/Reda/RedaAlojamiento/resources/sass/main.scss`
+  - `manual_tecnico_plugin_reda_alojamiento.md`
+  - `LOG_DESARROLLO_REDA.md`
+- **Restricciones:** No ejecutar compilación, comandos Artisan, migraciones ni scripts de subida en este entorno.
+- **Estado:** Completado. Pendiente que el usuario suba los fuentes, compile en Vesta y confirme la prueba visual/funcional.
