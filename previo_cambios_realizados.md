@@ -2,7 +2,7 @@
 
 ## Estado actual
 - **Fecha:** 5 de noviembre de 2026
-- **Tarea:** Añadir a `.github/copilot-instructions.md` una directriz para revisar respaldos recientes de la base de desarrollo antes de cambios de aplicación que consulten, creen, actualicen o eliminen datos.
-- **Alcance de la directriz:** localizar el volcado más reciente con el patrón `documentacion-torbian-2/BD/appvac_torbDev2-AAAAMMDD-HHMM.sql`, inspeccionar tablas y relaciones afectadas, proyectar el comportamiento con los registros actuales, revisar incongruencias relevantes y proponer SQL acotado y verificable sin ejecutarlo en este entorno.
-- **Archivos previstos:** `.github/copilot-instructions.md`, `LOG_DESARROLLO_REDA.md` y este punto de control.
-- **Restricciones:** documentación únicamente; no ejecutar SQL, Artisan, compilación ni scripts de subida.
+- **Tarea:** Completada: cambiar en el menú lateral del admin «Soporte Técnico» por «Atención al comercio».
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md`, `documentacion-torbian-2/requerimientos.md`, `LOG_DESARROLLO_REDA.md` y este punto de control.
+- **Resultado:** actualizado el nombre visible y su traducción; se conservó la ruta y la funcionalidad del módulo de soporte.
+- **Validación:** `git diff --check` correcto y JSON de traducciones válido. No se ejecutó compilación en este entorno.

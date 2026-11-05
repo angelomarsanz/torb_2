@@ -2,7 +2,7 @@
  * Resumen: Gestión de menús adicionales en la barra lateral del panel administrativo (Backend).
  * Este archivo inyecta de forma reactiva y no invasiva las opciones de "Negocios", "Mediaciones"
  * (como submenú desplegable con "Listado" y condicionalmente "Configuración" exclusivo para Rol 1)
- * y "Soporte Técnico" en el menú lateral AdminLTE del proyecto original.
+ * y "Atención al comercio" en el menú lateral AdminLTE del proyecto original.
  * Permite que los usuarios con rol 1 (Admin) y rol 2 (Atención al usuario) tengan acceso a "Mediaciones",
  * garantizando que "Configuración" solo esté visible y disponible para administradores con Rol 1.
  * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
@@ -380,24 +380,24 @@ export const menuLateralAdmin = () =>
                     });
                 }
 
-                // 5. Inyección de Opción "Soporte Técnico" (Después de Mensajes)
+                // 5. Inyección de Opción "Atención al comercio" (Después de Mensajes)
                 const $anchorSoporte = $('#menu-mensajes').length ? $('#menu-mensajes') : $('.sidebar-menu a[href*="admin/messages"]').closest('li');
 
                 if ($anchorSoporte.length && !$('#menu-soporte').length) {
                     const linkSoporte = `${baseUrl}/admin/reda/general/soporte-tecnico`;
-                    const labelSoporte = window.RedaAlojamientoJson["Soporte técnico"] || "Soporte técnico";
+                    const labelAtencionComercio = window.RedaAlojamientoJson["Atención al comercio"] || "Atención al comercio";
 
                     const soporteMenuHtml = `
                         <li id="menu-soporte" class="nav-item">
                             <a href="${linkSoporte}" class="nav-link btn-menu-soporte">
-                                <i class="fa fa-life-ring"></i> <span>${labelSoporte}</span>
+                                <i class="fa fa-life-ring"></i> <span>${labelAtencionComercio}</span>
                             </a>
                         </li>
                     `;
                     $anchorSoporte.after(soporteMenuHtml);
-                    console.log('Opción "Soporte Técnico" inyectada.');
+                    console.log('Opción "Atención al comercio" inyectada.');
 
-                    // Animación de espera al hacer clic en Soporte Técnico
+                    // Animación de espera al hacer clic en Atención al comercio
                     $(document).on('click', '.btn-menu-soporte', function(e) {
                         if (this.href && !this.target && !e.ctrlKey && !e.metaKey) {
                             if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {

@@ -2,6 +2,12 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [05 de Noviembre, 2026] - Cambio de nombre en menú lateral del admin
+- **Tarea:** Cambiar la opción "Soporte técnico" del menú lateral administrativo a "Atención al comercio".
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md`, `documentacion-torbian-2/requerimientos.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se actualizó el texto inyectado y su clave de traducción, manteniendo sin cambios la URL y el comportamiento existentes del módulo de soporte técnico. Se actualizó el manual y se trasladó la tarea de pendientes a ejecutados.
+- **Validación:** revisión del diff y del formato JSON; no se ejecutó compilación local, según las restricciones del proyecto.
+
 ## [05 de Noviembre, 2026] - Directriz para Revisar Respaldos de Base de Datos Antes de Cambios
 - **Tarea:** Añadir al archivo de instrucciones de Copilot el procedimiento obligatorio para tener en cuenta datos existentes antes de implementar cambios que interactúan con la base de datos.
 - **Archivo actualizado:** `.github/copilot-instructions.md`.
