@@ -1,3 +1,6 @@
+/**
+ * Inicializa la vista administrativa del listado de tickets y delimita sus estilos.
+ */
 (function( $ ) {
     "use strict";
 
@@ -8,7 +11,7 @@
     const containerId = '#index_soporte_tecnico';
 
     /**
-     * Inicializa los componentes necesarios en la vista
+     * Inicializa los controles de búsqueda, navegación y paginación del listado.
      */
     const inicializarSoporteTecnico = () => {
         // Inicialización de tooltips para las acciones (Ver detalle, etc.)
@@ -104,6 +107,7 @@
 
     // Ejecutar cuando el DOM esté listo y el contenedor exista
     if ($(containerId).length) {
+        $('body').addClass('reda-admin-soporte-tecnico');
         $(function() {
             inicializarSoporteTecnico();
         });

@@ -1,3 +1,6 @@
+/**
+ * Gestiona la vista administrativa del ticket y delimita los estilos de sus modales.
+ */
 (function( $ ) {
     "use strict";
 
@@ -250,7 +253,7 @@
     };
 
     /**
-     * Inicializa los componentes necesarios en la vista de detalle
+     * Inicializa la gestión, confirmación y navegación de la vista de detalle.
      */
     const inicializarDetalleSoporte = () => {
         // Inicialización de tooltips
@@ -362,6 +365,7 @@
 
     // Ejecutar cuando el DOM esté listo y el contenedor exista
     if ($(containerId).length) {
+        $('body').addClass('reda-admin-soporte-tecnico');
         $(function() {
             inicializarDetalleSoporte();
         });

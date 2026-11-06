@@ -2,6 +2,24 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [06 de Noviembre, 2026] - Espaciado del botón de regreso en soporte
+- **Tarea:** Separar la flecha del texto «Volver al listado» en el detalle del ticket.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se añadió un margen derecho de 8 px al icono del botón, acotado al detalle de soporte. No se modificaron la vista, el enlace ni el JavaScript.
+- **Validación:** selector contrastado con la vista y `git diff --check` correcto; no se compila localmente.
+
+## [06 de Noviembre, 2026] - Espaciado del modal de búsqueda de soporte
+- **Tarea:** Mejorar la separación de los elementos del modal que se abre desde la lupa del listado de atención al comercio.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Se ajustaron separaciones entre filas y etiquetas, espaciado interior y radios de los campos. La lupa flotante se sitúa en el pie, con espacio reservado para ella, evitando cubrir los filtros o los botones inferiores. Se mantienen los campos, filtros y operaciones existentes.
+- **Validación:** revisión de selectores frente a la estructura Blade y `git diff --check` correctos. La compilación y prueba visual quedan pendientes en Vesta.
+
+## [06 de Noviembre, 2026] - Diseño de atención al comercio
+- **Tarea:** Aplicar el espaciado adaptable y el redondeo discreto de las demás vistas administrativas al listado, detalle, modales y alertas de soporte técnico.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js`, `packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Ambos scripts marcan sus páginas con `reda-admin-soporte-tecnico`; los estilos limitados por esa clase ajustan encabezados, paneles, formularios de búsqueda, detalle y gestión de ticket, y modales compartidos de confirmación y notificación. Se preservan las operaciones de datos y la navegación; se contempla la distribución móvil.
+- **Validación:** `node --check` en ambos scripts y `git diff --check` correctos. La compilación y prueba visual quedan pendientes en Vesta.
+
 ## [05 de Noviembre, 2026] - Actualización de ayuda del identificador de tipos de negocios
 - **Tarea:** Aclarar en el modal las reglas para escribir el identificador de un tipo de negocio.
 - **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php`, `packages/Reda/RedaAlojamiento/resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.

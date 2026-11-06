@@ -300,6 +300,14 @@
 ### Estilos (Admin)
 - **packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss**
   En la pantalla de configuración de planes administrativos, el selector `#configuracion_planes_container + .content-wrapper` aplica márgenes laterales y padding interno adaptables a encabezados, paneles, pestañas y cajas. El selector `#modal-plan` da al modal de agregar/editar planes un borde ligeramente redondeado, separa encabezado, contenido y pie, y agrega espaciado a las secciones de opciones de pago y beneficios. Para las opciones de tipos de negocios, `#opciones_tipos_de_negocios + .content-wrapper` aplica márgenes, padding y radios suaves a la página, panel, tabla y tarjetas móviles; `#modal-category` estiliza el modal de agregar/editar. Los estilos de ambos módulos reducen sus espacios en pantallas móviles y permanecen aislados del resto del administrador.
+  La clase `reda-admin-soporte-tecnico` delimita los márgenes y el padding del listado y detalle de atención al comercio, y los bordes suavemente redondeados de sus paneles, alertas, modal de búsqueda, modal de gestión, confirmaciones y notificaciones. En el detalle, añade 8 px entre la flecha y el texto del botón «Volver al listado». Ajusta también los espacios en móvil, la separación entre filtros y el ajuste de los botones de gestión; los modales compartidos mantienen su estilo original en otras páginas. Los selectores con `!important` contrarrestan exclusivamente utilidades Bootstrap existentes en los modales.
+  En `#modal_busqueda_soporte`, las filas de filtros tienen separación horizontal y vertical adaptable, las etiquetas y campos disponen de mayor espacio y los controles presentan bordes discretos. La lupa flotante queda en el pie del modal, que reserva espacio lateral para evitar superponer los filtros y los botones de cancelar o limpiar.
+
+### JavaScript (Atención al comercio)
+- **packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js**
+  El script del listado añade `reda-admin-soporte-tecnico` al `body` cuando existe `#index_soporte_tecnico`. `inicializarSoporteTecnico()` conserva la búsqueda, los filtros, la navegación y las animaciones de espera del listado y de la paginación.
+- **packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js**
+  El script de detalle añade la misma clase cuando existe `#show_soporte_tecnico`, permitiendo aislar también los modales compartidos. `inicializarDetalleSoporte()` conserva la gestión del ticket y las confirmaciones de mantener o eliminar una reseña; las peticiones y sus respuestas no se modificaron.
 
 ### Vistas y Plantillas
 - **packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php**

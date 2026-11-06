@@ -85,6 +85,234 @@
     }
 }
 
+/* Presentación aislada de las vistas y modales de atención al comercio. */
+.reda-admin-soporte-tecnico {
+    .content-wrapper {
+        .content-header {
+            padding: 18px 24px 0;
+
+            h1 {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+        }
+
+        > .content {
+            padding: 20px 24px 30px;
+        }
+    }
+
+    #index_soporte_tecnico,
+    #show_soporte_tecnico > div > .box {
+        border-radius: 8px;
+
+        > .box-header {
+            padding: 14px 18px;
+        }
+
+        > .box-body {
+            padding: 18px;
+        }
+
+        > .box-footer {
+            padding: 14px 18px;
+        }
+    }
+
+    #show_soporte_tecnico {
+        .btn-volver-listado > i {
+            margin-right: 8px;
+        }
+
+        .well,
+        .alert {
+            border-radius: 8px;
+            padding: 16px;
+        }
+    }
+
+    #modal_busqueda_soporte,
+    #modal_gestionar_ticket,
+    #modal-confirmacion,
+    #modal-notificacion {
+        .modal-content {
+            border-radius: 8px !important;
+        }
+
+        .modal-header {
+            padding: 16px 22px;
+            border-top-left-radius: 8px !important;
+            border-top-right-radius: 8px !important;
+        }
+
+        .modal-body {
+            padding: 20px 22px;
+            overflow-wrap: anywhere;
+        }
+
+        .modal-footer {
+            padding: 14px 22px;
+            gap: 8px;
+        }
+
+        .btn:not(.soporte-tecnico-btn-flotante-buscar) {
+            border-radius: 6px;
+        }
+
+        .reda-modal-custom-btn-pill {
+            border-radius: 6px !important;
+        }
+    }
+
+    #modal_busqueda_soporte,
+    #modal-confirmacion,
+    #modal-notificacion {
+        .modal-header {
+            padding: 16px 22px !important;
+        }
+
+        .modal-body {
+            padding: 20px 22px !important;
+        }
+
+        .modal-footer {
+            padding: 14px 22px !important;
+        }
+    }
+
+    #modal_busqueda_soporte {
+        .modal-body {
+            > .row {
+                --bs-gutter-x: 20px;
+                row-gap: 16px;
+                margin-left: -10px;
+                margin-right: -10px;
+            }
+
+            .form-label {
+                display: block;
+                margin-bottom: 8px !important;
+            }
+
+            .form-control,
+            .input-group-addon {
+                padding: 9px 12px;
+                border-radius: 6px;
+            }
+
+            .input-group > .input-group-addon {
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+
+            .input-group > .form-control {
+                border-top-left-radius: 0;
+                border-bottom-left-radius: 0;
+            }
+        }
+
+        .soporte-tecnico-btn-flotante-buscar {
+            bottom: 12px;
+            right: 16px;
+        }
+
+        .modal-footer {
+            min-height: 84px;
+            padding-right: 92px !important;
+        }
+    }
+
+    #modal_gestionar_ticket {
+        .alert {
+            border-radius: 8px;
+        }
+
+        #acciones_dinamicas_modal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .reda-admin-soporte-tecnico {
+        .content-wrapper {
+            .content-header {
+                padding: 16px 14px 0;
+            }
+
+            > .content {
+                padding: 16px 14px 22px;
+            }
+        }
+
+        #index_soporte_tecnico,
+        #show_soporte_tecnico > div > .box {
+            > .box-header {
+                padding: 12px 14px;
+            }
+
+            > .box-body {
+                padding: 14px;
+            }
+
+            > .box-footer {
+                padding: 12px 14px;
+            }
+        }
+
+        #modal_busqueda_soporte,
+        #modal_gestionar_ticket,
+        #modal-confirmacion,
+        #modal-notificacion {
+            .modal-dialog {
+                margin: 12px;
+            }
+
+            .modal-header {
+                padding: 14px 16px;
+            }
+
+            .modal-body {
+                padding: 16px 16px 12px;
+            }
+
+            .modal-footer {
+                padding: 12px 16px;
+            }
+        }
+
+        #modal_busqueda_soporte,
+        #modal-confirmacion,
+        #modal-notificacion {
+            .modal-header {
+                padding: 14px 16px !important;
+            }
+
+            .modal-body {
+                padding: 16px 16px 12px !important;
+            }
+
+            .modal-footer {
+                padding: 12px 16px !important;
+            }
+        }
+
+        #modal_busqueda_soporte {
+            .modal-body {
+                > .row {
+                    row-gap: 14px;
+                }
+            }
+
+            .modal-footer {
+                padding-right: 92px !important;
+            }
+        }
+    }
+}
+
 .cursor-pointer {
     cursor: pointer !important;
 }
