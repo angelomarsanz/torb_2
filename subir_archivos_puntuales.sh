@@ -207,12 +207,12 @@ ARCHIVOS_PHP_PUNTUALES=(
     # --- Archivos Javascript admin ---
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/notificaciones.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js"
-    "packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
-    "packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js"
+    "packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js"
 
     # --- Archivos Javascript en la carpeta frontend ---

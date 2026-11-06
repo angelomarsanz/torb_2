@@ -2,6 +2,18 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [06 de Noviembre, 2026] - Permanencia del resultado de configuración de mediaciones
+- **Tarea:** Evitar que la notificación de guardado desaparezca antes de que el administrador pueda leerla.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** Al finalizar la petición se restablece el botón sin cerrar el modal de espera, que `mostrarResultado()` reutiliza para el éxito o error. Así no se programan los cierres diferidos de `ocultar()` sobre la nueva notificación. Si no está disponible `notificar()`, se cierra la espera cuando sea posible y se usa la alerta alternativa.
+- **Validación:** `node --check` sobre el script y `git diff --check` sin errores; compilación y prueba funcional reservadas a Vesta.
+
+## [06 de Noviembre, 2026] - Diseño de configuración de mediaciones
+- **Tarea:** Mejorar márgenes, espaciado y bordes de la vista administrativa de configuración de mediaciones.
+- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.
+- **Cambio:** El script identifica la vista mediante una clase en el `body`; el SCSS añade márgenes y espacios interiores adaptables, separa etiquetas y textos de ayuda, y redondea discretamente tarjeta, campos y botón. Se conservaron la plantilla, validaciones, rutas y operaciones de guardado.
+- **Validación:** `node --check` y `git diff --check` correctos. La compilación y prueba visual quedan pendientes en Vesta.
+
 ## [06 de Noviembre, 2026] - Espaciado del botón de regreso en soporte
 - **Tarea:** Separar la flecha del texto «Volver al listado» en el detalle del ticket.
 - **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss`, `manual_tecnico_plugin_reda_alojamiento.md` y `previo_cambios_realizados.md`.

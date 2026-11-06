@@ -2,7 +2,9 @@
  * Resumen: Controlador JavaScript para la vista de configuración de mediaciones en el panel administrativo.
  * Gestiona la validación del lado del cliente y el guardado asíncrono vía AJAX de las cantidades permitidas
  * para el primer aviso y para el segundo aviso y suspensión de cuenta, interactuando con la tabla settings
- * mediante la estructura estándar de respuestas y notificaciones de REDA.
+ * mediante la estructura estándar de respuestas y notificaciones de REDA. Identifica la página
+ * con una clase en el body para limitar los estilos del formulario a esta vista y transforma
+ * el modal de espera en la notificación de resultado sin cerrarlo prematuramente.
  */
 
 (function( $ ) {
@@ -11,6 +13,7 @@
     const formId = '#form-configuracion-mediaciones';
 
     if ($(formId).length) {
+        $('body').addClass('reda-admin-configuracion-mediaciones');
         console.log('Script "configuracionDisputas" cargado correctamente.');
 
         $(function() {
@@ -35,13 +38,24 @@
             };
 
             /**
-             * Desactiva el estado de carga visual en el botón de guardar.
+             * Restablece el botón sin cerrar el modal que mostrará el resultado.
              */
             const desactivarCargando = () => {
                 $btnGuardar.prop('disabled', false);
                 $spinner.addClass('d-none');
-                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
-                    window.RedaNotificaciones.ocultar();
+            };
+
+            /**
+             * Presenta el resultado en el modal de espera o utiliza una alerta alternativa.
+             */
+            const mostrarResultado = (titulo, mensaje, tipo) => {
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                    window.RedaNotificaciones.notificar(titulo, mensaje, tipo);
+                } else {
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                        window.RedaNotificaciones.ocultar();
+                    }
+                    alert(mensaje);
                 }
             };
 
@@ -152,29 +166,17 @@
                     if (respuesta.success) {
                         const tituloExito = trans["¡Éxito!"] || "¡Éxito!";
                         const mensajeExito = respuesta.mensaje_usuario || trans["Configuración de mediaciones guardada con éxito."] || "Configuración de mediaciones guardada con éxito.";
-                        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
-                            window.RedaNotificaciones.notificar(tituloExito, mensajeExito, 'exito');
-                        } else {
-                            alert(mensajeExito);
-                        }
+                        mostrarResultado(tituloExito, mensajeExito, 'exito');
                     } else {
                         const tituloError = trans["Error"] || "Error";
                         const mensajeError = respuesta.mensaje_usuario || trans["Ocurrió un error al guardar la configuración."] || "Ocurrió un error al guardar la configuración.";
-                        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
-                            window.RedaNotificaciones.notificar(tituloError, mensajeError, 'error');
-                        } else {
-                            alert(mensajeError);
-                        }
+                        mostrarResultado(tituloError, mensajeError, 'error');
                     }
                 } catch (err) {
                     desactivarCargando();
                     console.error("Error al procesar la solicitud de guardado de configuración:", err);
                     const msgInesperado = trans["Ocurrió un error inesperado al procesar la solicitud."] || "Ocurrió un error inesperado al procesar la solicitud.";
-                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
-                        window.RedaNotificaciones.notificar(trans["Error"] || "Error", msgInesperado, 'error');
-                    } else {
-                        alert(msgInesperado);
-                    }
+                    mostrarResultado(trans["Error"] || "Error", msgInesperado, 'error');
                 }
             });
         });
