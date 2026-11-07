@@ -2,6 +2,14 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [07 de Noviembre, 2026] - Diagnóstico de visibilidad del reinicio
+- El usuario compartió el resultado efectivo de Laravel en Vesta: entorno `local` y `reinicio_habilitado` `false`; el entorno satisface la comprobación, pero la bandera impide mostrar y ejecutar la herramienta. Se indicó habilitarla explícitamente solo en el entorno de pruebas.
+- La salida compartida de la subida incluye los archivos relevantes y avisos FTP `550 File exists` al crear directorios ya existentes; la salida no comprueba por sí sola el contenido remoto. El texto adjunto de compilación no estuvo accesible en la conversación, por lo que su resultado queda sin verificar.
+- El usuario informó que subió los archivos, ejecutó la migración y compiló en Vesta; el submenú no aparece. Estas operaciones no se verificaron directamente en el servidor.
+- Se compararon los archivos del último commit del plugin con las entradas activas de `subir_archivos_puntuales.sh`: todos están listados, incluida la migración, el menú, el pie, los servicios y la vista. `subir.sh` solo envía los archivos listados; estar en la lista no confirma su transferencia ni el contenido remoto.
+- El menú exige la bandera booleana habilitada, entorno `local`, `development` o `dev` y rol 1. Se recomienda comprobar los valores efectivos de Laravel en Vesta; la compilación debe incluir Reda Alojamiento. No se modificaron ni ejecutaron scripts de subida.
+- Archivo actualizado: `LOG_DESARROLLO_REDA.md`.
+
 ## [07 de Noviembre, 2026] - Análisis previo del reinicio de mediaciones
 - **Solicitud:** Crear una acción administrativa de rol 1 para reiniciar las mediaciones de prueba, con confirmación textual y conservación de la configuración de límites.
 - **Respaldo revisado:** `documentacion-torbian-2/BD/appvac_torbDev2-20261107-0702.sql`, del 7 de noviembre a las 07:02. Se identificaron 8 mediaciones, 93 alertas, 6 registros de avisos y 271 mensajes; 32 alertas refieren mediaciones ausentes. `disputas_respaldo` no figura en este respaldo.
