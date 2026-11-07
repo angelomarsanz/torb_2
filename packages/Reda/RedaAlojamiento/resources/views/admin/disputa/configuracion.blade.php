@@ -1,7 +1,7 @@
 {{-- 
     Resumen: Vista de administración para la configuración de mediaciones permitidas.
     Permite a los administradores con Rol 1 definir los umbrales máximos de mediaciones:
-    cantidad para primer aviso y cantidad para segundo aviso y suspensión de cuenta.
+    cantidad para primer aviso y cantidad para segundo aviso y restricciones de acciones.
     Los valores se almacenan en la tabla settings del sistema con type "Mediaciones".
 --}}
 @extends('admin.template')
@@ -48,10 +48,10 @@
                                     </small>
                                 </div>
 
-                                {{-- Input 2: Cantidad de mediaciones para segundo aviso y suspensión de cuenta --}}
+                                {{-- Input 2: Cantidad para segundo aviso y restricciones --}}
                                 <div class="form-group mb-4">
                                     <label for="input-segundo-aviso" class="form-label fw-semibold text-dark">
-                                        {{ __('Cantidad de mediaciones para segundo aviso y suspensión de cuenta') }} <span class="text-danger">*</span>
+                                        {{ __('Cantidad de mediaciones para segundo aviso y restricciones') }} <span class="text-danger">*</span>
                                     </label>
                                     <input 
                                         type="number" 
@@ -65,7 +65,7 @@
                                         required
                                     >
                                     <small class="form-text text-muted">
-                                        {{ __('Número de mediaciones acumuladas que activará el segundo aviso y la suspensión de la cuenta.') }}
+                                        {{ __('Número de mediaciones acumuladas que activará el segundo aviso y las restricciones de acciones.') }}
                                     </small>
                                 </div>
 

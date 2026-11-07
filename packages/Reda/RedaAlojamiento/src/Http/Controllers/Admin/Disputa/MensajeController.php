@@ -1,5 +1,7 @@
 <?php
 
+/** Administra el historial y los mensajes exclusivos de los chats de mediación administrativos. */
+
 namespace Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa;
 
 use App\Http\Controllers\Controller;
@@ -10,6 +12,7 @@ use App\Models\User;
 use App\Models\Admin;
 use Reda\RedaAlojamiento\Models\Disputa\Disputa;
 use Reda\RedaAlojamiento\Models\Disputa\MensajeMetadata;
+use Reda\RedaAlojamiento\Models\Disputa\MensajeDeMediacion;
 use Auth;
 use Validator;
 use Illuminate\Support\Facades\Log;
@@ -162,7 +165,7 @@ class MensajeController extends Controller
     }
 
     /**
-     * Guarda un nuevo mensaje enviado por el administrador.
+     * Guarda y marca transaccionalmente el mensaje de mediación del administrador.
      */
     public function store(Request $request)
     {
@@ -188,18 +191,19 @@ class MensajeController extends Controller
         try {
             $booking = Bookings::findOrFail($request->booking_id);
             
-            $message = new Messages;
-            $message->property_id = $booking->property_id;
-            $message->booking_id  = $request->booking_id;
-            $message->receiver_id = $request->receiver_id ?? 0; // 0 indica broadcast/grupo para mediaciones
-            
-            $adminId = Auth::guard('admin')->id();
-            $message->sender_id   = $adminId; 
-            
-            $message->message     = $request->message;
-            $message->type_id     = 1; // Tipo query/chat
-            $message->read        = 0;
-            $message->save();
+            $message = DB::transaction(function () use ($booking, $request) {
+                $mensaje = new Messages;
+                $mensaje->property_id = $booking->property_id;
+                $mensaje->booking_id = $request->booking_id;
+                $mensaje->receiver_id = $request->receiver_id ?? 0;
+                $mensaje->sender_id = Auth::guard('admin')->id();
+                $mensaje->message = $request->message;
+                $mensaje->type_id = 1;
+                $mensaje->read = 0;
+                $mensaje->save();
+                MensajeDeMediacion::create(['mensaje_id' => $mensaje->id]);
+                return $mensaje;
+            });
 
             // Evitar crash en PHP 8.2 por accessors en el modelo original Messages.php
             $message->makeHidden(['host_user', 'guest_user']);

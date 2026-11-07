@@ -1,11 +1,16 @@
 # Registro Previo de Cambios en Curso
 
 ## Estado actual
-- **Fecha:** 6 de noviembre de 2026
-- **Tarea:** Mantener visible la notificación de guardado de configuración de mediaciones hasta que el usuario la cierre.
-- **Diagnóstico:** `desactivarCargando()` llama a `ocultar()` y después se abre la notificación en el mismo modal; los temporizadores de limpieza de `ocultar()` cierran el resultado.
-- **Estado:** Flujo y documentación actualizados; revisión estática completada. Pendiente compilación y prueba funcional en Vesta.
-- **Archivos actualizados:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js`, `manual_tecnico_plugin_reda_alojamiento.md`, `LOG_DESARROLLO_REDA.md` y este archivo.
-- **Cambio:** El modal de espera se reutiliza directamente para el resultado de éxito/error sin invocar su limpieza diferida; el botón vuelve a habilitarse y el fallback conserva la alerta.
-- **Validación:** `node --check` y `git diff --check` sin errores.
-- **Restricciones:** Preservar cambios existentes, no compilar ni hacer pruebas funcionales localmente y no modificar ni ejecutar scripts de subida.
+- **Fecha:** 7 de noviembre de 2026.
+- **Tarea:** Preparar un reinicio de mediaciones de prueba, accesible exclusivamente al administrador de rol 1 y protegido con una confirmación explícita.
+- **Respaldo revisado:** `documentacion-torbian-2/BD/appvac_torbDev2-20261107-0702.sql`, del 7 de noviembre a las 07:02. Se identificaron 8 mediaciones, 93 alertas, 6 registros de avisos y 271 mensajes; cuatro reservas relacionadas están borradas lógicamente y 32 alertas refieren mediaciones ausentes. La tabla histórica `disputas_respaldo` no figura en este respaldo.
+- **Decisiones confirmadas:** Conservar mensajes de origen ambiguo, preservar `disputas_respaldo` si existe y eliminar los adjuntos físicos identificados de mediaciones.
+- **Seguridad confirmada:** Herramienta habilitada expresamente solo en desarrollo. El administrador seleccionará mediante casillas las cuentas inactivas que desea reactivar; no se restaurarán cuentas borradas lógicamente.
+- **Concurrencia:** El usuario eligió ejecutar el reinicio durante una ventana de mantenimiento sin otros usuarios ni procesos usando mediaciones; no se ha implementado un bloqueo automático.
+- **Hallazgos:** El chat normal y la mediación comparten `messages`; el observador marca como tipo de disputa mensajes creados durante una mediación activa, incluso desde otros chats. Los datos no identifican con certeza la procedencia de todos los mensajes históricos.
+- **Estado:** Código de reinicio y menú implementado; pendiente despliegue ordenado y pruebas funcionales en Vesta. No se ejecutaron migraciones ni operaciones sobre la base de datos en este entorno.
+- **Preparación:** Creada la migración `packages/Reda/RedaAlojamiento/database/migrations/2026_11_07_000000_crear_tablas_reinicio_mediaciones.php` y los modelos `packages/Reda/RedaAlojamiento/src/Models/Disputa/MensajeDeMediacion.php` y `packages/Reda/RedaAlojamiento/src/Models/Disputa/AdjuntoMediacionPendiente.php`.
+- **Mensajes:** Los controladores `src/Http/Controllers/Disputa/MensajeController.php` y `src/Http/Controllers/Admin/Disputa/MensajeController.php` y el servicio `src/Services/MediacionAlertaService.php` marcan los mensajes nuevos de mediación en la misma transacción de su creación. La migración debe aplicarse antes de activar este código en Vesta.
+- **Integración:** Se añadieron `src/Services/ReinicioMediacionesService.php`, `src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php`, `resources/views/admin/disputa/reinicio_mediaciones.blade.php` y `resources/js/admin/vistas/disputa/reinicioMediaciones.js`; se integraron `routes/web.php`, `config/reda-alojamiento.php`, `resources/views/admin/general/main_footer.blade.php`, `resources/js/admin/general/menus/menuLateralAdmin.js`, `resources/js/admin/general/main.js` y `resources/lang/es.json`. Se actualizaron `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
+- **Despliegue:** Primero subir y ejecutar la migración en Vesta antes de subir el código que escribe mensajes; después subir los demás archivos, habilitar expresamente solo en desarrollo, compilar y probar. El proceso de adjuntos no es atómico con la base; el registro persistente permite reintentos y se conservan todos los adjuntos si existe `disputas_respaldo`.
+- **Validación:** Sintaxis PHP 8.2, JavaScript, JSON y `git diff --check` correctos. Pendiente comprobar las rutas, permisos, transacciones, archivos y presentación en Vesta.

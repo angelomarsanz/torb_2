@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Registra los servicios, rutas, vistas y middlewares del plugin Reda Alojamiento.
+ * Integra la protección de acciones por mediaciones después del inicio de la sesión web.
+ */
+
 // CAMBIO 1: Nuevo namespace del paquete
 namespace Reda\RedaAlojamiento;
 
@@ -44,9 +49,10 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
         // Esto registra tu middleware con una prioridad alta
         $router->aliasMiddleware('reda.auth', \Reda\RedaAlojamiento\Http\Middleware\CheckPluginAuth::class);
 
-        // Inyectar assets del plugin en todas las páginas web
+        // Inyectar assets y proteger las acciones restringidas después de iniciar la sesión web.
         if (!$this->app->runningInConsole()) {
             $this->app->make(\Illuminate\Contracts\Http\Kernel::class)->prependMiddlewareToGroup('web', \Reda\RedaAlojamiento\Http\Middleware\InjectPluginAssets::class);
+            $this->app->make(\Illuminate\Contracts\Http\Kernel::class)->appendMiddlewareToGroup('web', \Reda\RedaAlojamiento\Http\Middleware\RestringirAccionesPorMediaciones::class);
         }
 
         // Carga las rutas base

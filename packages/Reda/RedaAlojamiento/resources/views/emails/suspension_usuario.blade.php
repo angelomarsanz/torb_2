@@ -1,14 +1,13 @@
 {{--
-    Resumen: Plantilla de correo electrónico notificando la suspensión de cuenta de un usuario por exceder mediaciones.
-    Informa al usuario que su cuenta ha sido suspendida automáticamente tras haber alcanzado el límite máximo
-    de mediaciones permitidas y le indica las vías de contacto con soporte técnico para revisión de su caso.
+    Resumen: Notifica las restricciones de acciones por alcanzar el límite de mediaciones.
+    Explica los accesos afectados y la posibilidad de consultar el caso con soporte.
 --}}
 @extends('emails.template')
 
 @section('emails.main')
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="border-bottom: 2px solid #dc3545; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2 style="color: #dc3545; margin: 0;">{{ __('Notificación: Cuenta de usuario suspendida') }}</h2>
+        <h2 style="color: #dc3545; margin: 0;">{{ __('Notificación: Acciones restringidas por mediaciones') }}</h2>
     </div>
 
     <p style="font-size: 16px;">
@@ -16,12 +15,12 @@
     </p>
 
     <p style="font-size: 15px;">
-        {{ __('Le comunicamos que su cuenta en') }} {{ siteName() }} {{ __('ha sido') }} <strong style="color: #dc3545;">{{ __('SUSPENDIDA') }}</strong> {{ __('debido a que ha acumulado') }} <strong>{{ $conteoMediaciones }} {{ __('mediaciones') }}</strong>, {{ __('alcanzando el límite máximo estipulado en las políticas de la plataforma.') }}
+        {{ __('Le comunicamos que se han restringido algunas acciones de su cuenta en') }} {{ siteName() }} {{ __('porque ha acumulado') }} <strong>{{ $conteoMediaciones }} {{ __('mediaciones') }}</strong>, {{ __('alcanzando el límite máximo estipulado en las políticas de la plataforma.') }}
     </p>
 
     <div style="background-color: #f8d7da; border-left: 4px solid #f5c6cb; padding: 15px; margin: 20px 0; border-radius: 4px;">
         <p style="margin: 0; color: #721c24; font-size: 14px;">
-            <strong>{{ __('Efecto de la suspensión:') }}</strong> {{ __('A partir de este momento su acceso se encuentra restringido para iniciar sesión, publicar nuevas propiedades o experiencias, y realizar contrataciones o reservaciones.') }}
+            <strong>{{ __('Acciones restringidas:') }}</strong> {{ __('Crear propiedades o negocios, hacer reservaciones, iniciar nuevas mediaciones y solicitar retiros de dinero. Podrá seguir accediendo a su cuenta.') }}
         </p>
     </div>
 

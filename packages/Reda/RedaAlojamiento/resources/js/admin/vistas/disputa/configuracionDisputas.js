@@ -1,7 +1,7 @@
 /**
  * Resumen: Controlador JavaScript para la vista de configuración de mediaciones en el panel administrativo.
  * Gestiona la validación del lado del cliente y el guardado asíncrono vía AJAX de las cantidades permitidas
- * para el primer aviso y para el segundo aviso y suspensión de cuenta, interactuando con la tabla settings
+ * para el primer aviso y para el segundo aviso y restricciones de acciones, interactuando con la tabla settings
  * mediante la estructura estándar de respuestas y notificaciones de REDA. Identifica la página
  * con una clase en el body para limitar los estilos del formulario a esta vista y transforma
  * el modal de espera en la notificación de resultado sin cerrarlo prematuramente.
@@ -127,8 +127,8 @@
                 }
 
                 if (valSegundoAviso === '' || isNaN(valSegundoAviso) || parseInt(valSegundoAviso, 10) < 0) {
-                    const msg = trans["Ingrese una cantidad válida para el segundo aviso y suspensión (número mayor o igual a 0)."] 
-                        || "Ingrese una cantidad válida para el segundo aviso y suspensión (número mayor o igual a 0).";
+                    const msg = trans["Ingrese una cantidad válida para el segundo aviso y restricciones (número mayor o igual a 0)."]
+                        || "Ingrese una cantidad válida para el segundo aviso y restricciones (número mayor o igual a 0).";
                     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                         window.RedaNotificaciones.notificar(trans["Validación"] || "Validación", msg, 'error');
                     } else {
@@ -144,7 +144,7 @@
                 // Advertencia lógica opcional: el segundo aviso no debería ser inferior al primer aviso
                 if (intSegundoAviso < intPrimerAviso) {
                     const msg = trans["La cantidad para segundo aviso debe ser mayor o igual a la cantidad del primer aviso."] 
-                        || "La cantidad para segundo aviso y suspensión debe ser mayor o igual a la cantidad del primer aviso.";
+                        || "La cantidad para segundo aviso debe ser mayor o igual a la cantidad del primer aviso.";
                     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                         window.RedaNotificaciones.notificar(trans["Advertencia"] || "Advertencia", msg, 'error');
                     } else {

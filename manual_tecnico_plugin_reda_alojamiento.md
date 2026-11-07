@@ -1,5 +1,34 @@
 # Documentación de Archivos del Plugin RedaAlojamiento
 
+## Reinicio de mediaciones de prueba
+
+Herramienta destructiva y deshabilitada por defecto. Solo se muestra y ejecuta con `REDA_REINICIO_MEDIACIONES=true`, `APP_ENV` igual a `local`, `development` o `dev`, sesión administrativa y rol ID 1. No cambiar `APP_ENV` global de un servidor para forzar el acceso. El administrador debe disponer de un respaldo reciente y coordinar una ventana sin usuarios ni procesos de mediación o chat; no existe bloqueo automático de las demás operaciones. No elimina correos ya entregados.
+
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_11_07_000000_crear_tablas_reinicio_mediaciones.php**
+  `up()` crea las tablas auxiliares `mensajes_de_mediacion` y `adjuntos_mediacion_pendientes`; `down()` impide revertir mientras existan marcadores o adjuntos pendientes. La migración debe aplicarse antes de desplegar los controladores y el servicio de mensajes modificados.
+- **packages/Reda/RedaAlojamiento/src/Models/Disputa/MensajeDeMediacion.php**
+  Modelo del marcador inequívoco de origen de cada mensaje nuevo de mediación.
+- **packages/Reda/RedaAlojamiento/src/Models/Disputa/AdjuntoMediacionPendiente.php**
+  Modelo para rutas y huellas SHA-256 de archivos pendientes de eliminar tras confirmar la transacción.
+- **packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php**
+  `usuariosElegibles()` filtra cuentas inactivas, no borradas y con antecedentes de segundo aviso o restricción. `reiniciar()` usa un bloqueo de MySQL para impedir reinicios simultáneos, valida de nuevo la selección y en una transacción elimina disputas, alertas `primer_aviso`/`suspension`, avisos y mensajes con marcador inequívoco; reactiva solo cuentas seleccionadas y conserva reservas y ajustes. Los mensajes históricos sin marcador permanecen por su origen ambiguo. `normalizarRuta()` y `archivoSeguro()` limitan las rutas y rechazan enlaces simbólicos. `procesarAdjuntos()` elimina después del commit solo archivos con la misma huella, mantiene la cola si falla y registra el error. Si existe `disputas_respaldo`, conserva todos los adjuntos por precaución; informa el número conservado. El borrado de archivos no es atómico con la base de datos. Un reinicio posterior, durante mantenimiento, reintenta los pendientes; antes de reintentar revisar el registro y no sustituir archivos pendientes.
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php**
+  `autorizar()` comprueba bandera, entorno y rol real en cada petición; `index()` presenta las cuentas elegibles y `reiniciar()` valida la frase exacta y selección, registra el resultado y devuelve el formato estándar. Un error posterior al commit puede dejar archivos pendientes.
+- **packages/Reda/RedaAlojamiento/resources/views/admin/disputa/reinicio_mediaciones.blade.php**
+  Presenta advertencias, selección voluntaria de cuentas, confirmación textual y modal adaptable. El antecedente no prueba por sí solo el motivo de inactividad; no se ofrecen cuentas borradas lógicamente.
+- **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/reinicioMediaciones.js**
+  `solicitarReinicio()` normaliza la petición AJAX; el manejador exige la frase, impide cerrar el modal durante la operación, muestra espera y presenta el resultado. Tras un error se debe actualizar la página y revisar el registro antes de reintentar.
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php** y **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/MensajeController.php**
+  `store()` guarda el mensaje y el marcador dentro de la misma transacción; el observador sigue creando los metadatos de remitente. Esto identifica los mensajes futuros creados desde las pantallas de mediación, no el chat normal.
+- **packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php**
+  `enviarMensajeBuzon()` guarda transaccionalmente el aviso privado, sus metadatos y el marcador de mediación.
+- **packages/Reda/RedaAlojamiento/config/reda-alojamiento.php**, **packages/Reda/RedaAlojamiento/routes/web.php** y **packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php**
+  Declaran la bandera, las dos rutas y los datos de disponibilidad para el menú. La verificación del controlador es independiente de la visibilidad.
+- **packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js** y **packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js**
+  Insertan el submenú «Pruebas aplicación» cuando el servidor lo permite e incluyen el controlador de la pantalla en el bundle administrativo existente.
+- **packages/Reda/RedaAlojamiento/resources/lang/es.json**
+  Incluye los textos nuevos del modal, las advertencias y los resultados.
+
 ## Modificaciones en Archivos del Core (Originales)
 *Excepciones delimitadas con comentarios de Inicio/Fin para el plugin REDA.*
 
@@ -235,7 +264,7 @@
   - **Rol 1 (Admin):** Visualiza todas las mediaciones en el panel. Consulta y expone la colección de agentes disponibles (usuarios de la tabla `admin` con roles 1 y 2 activos). Procesa la asignación directa de cualquier agente a una mediación. Accede con exclusividad a los métodos `configuracion()` y `guardarConfiguracion()` para definir los umbrales de mediaciones permitidas.
   - **Rol 2 (Atención al usuario / Agente):** Aplica un filtro estricto en `obtenerDisputasPaginadas`, `obtenerConteoDisputasActivas` y `getDetailModal` para mostrar únicamente las mediaciones que no han sido asignadas o tomadas (`id_usuario_agente_asignado IS NULL` o `0`) y aquellas asignadas a él mismo. Las mediaciones asignadas a otros agentes quedan completamente ocultas y protegidas ante accesos no autorizados. Tiene restringido el acceso a la configuración (403 Forbidden).
   - **Método `asignarAgente`:** Endpoint `POST /admin/reda/disputas/asignar-agente` que actualiza la columna `id_usuario_agente_asignado` en la tabla `disputas`. Permite a usuarios de Rol 1 asignar cualquier agente o a sí mismos, y a usuarios de Rol 2 tomar mediaciones disponibles asignándose a sí mismos, retornando la estructura estándar JSON de REDA con los datos de avatar y nombre del agente.
-  - **Métodos de Configuración (`configuracion` y `guardarConfiguracion`):** Endpoints `GET /admin/reda/disputas/configuracion` y `POST /admin/reda/disputas/configuracion/store` protegidos exclusivamente para Rol 1. Gestionan la recuperación y almacenamiento en la tabla `settings` de los parámetros con `type = 'Mediaciones'`: `'Cantidad mediaciones permitidas primer aviso'` y `'Cantidad mediaciones segundo aviso y suspensión'`.
+  - **Métodos de Configuración (`configuracion` y `guardarConfiguracion`):** Endpoints `GET /admin/reda/disputas/configuracion` y `POST /admin/reda/disputas/configuracion/store` protegidos exclusivamente para Rol 1. Gestionan en `settings` las claves históricas `'Cantidad mediaciones permitidas primer aviso'` y `'Cantidad mediaciones segundo aviso y suspensión'`; los mensajes de validación describen el segundo umbral como restricciones, no como inactivación.
 
 ### Vistas y Scripts de Administración
 - **packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php**
@@ -246,12 +275,12 @@
   - Para Rol 2: Sustituye el texto por un suiche tipo toggle (`form-check form-switch`) con la etiqueta "Tomar mediación". Al activarlo, toma la mediación vía AJAX con animación de espera y actualiza la tarjeta mostrando la foto de perfil y el nombre del agente.
   - Sincroniza dinámicamente la información del agente asignado en las tarjetas del listado, el panel lateral de detalles y el acordeón en dispositivos móviles.
 - **packages/Reda/RedaAlojamiento/resources/views/admin/disputa/configuracion.blade.php**
-  Vista Blade administrativa para la configuración de mediaciones permitidas, reservada para administradores con Rol 1. Renderiza un panel/recuadro titulado "Cantidad de mediaciones permitidas" que contiene dos campos de entrada numéricos: "Cantidad de mediaciones para primer aviso" y "Cantidad de mediaciones para segundo aviso y suspensión de cuenta". Integra validación y envío asíncrono con animación de espera hacia `route('reda.admin.disputas.configuracion.store')`.
+  Vista Blade administrativa para la configuración de mediaciones permitidas, reservada para administradores con Rol 1. Incluye los umbrales de primer aviso y de segundo aviso con restricciones de acciones; conserva los identificadores y las claves de almacenamiento existentes. Integra validación y envío asíncrono con animación de espera hacia `route('reda.admin.disputas.configuracion.store')`.
 - **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js**
-  Controlador JavaScript del formulario de configuración de mediaciones permitidas. Añade la clase `reda-admin-configuracion-mediaciones` al `body` cuando existe el formulario para limitar los estilos a esta pantalla. Intercepta el evento submit, valida en el cliente que los valores sean números enteros no negativos y que el segundo aviso no sea menor que el primero, activa la animación de espera global (`window.RedaNotificaciones.esperar()`), envía los datos vía AJAX con token CSRF y presenta notificaciones reactivas de confirmación o error basadas en el formato estándar JSON de REDA.
+  Controlador JavaScript del formulario de configuración de mediaciones permitidas. Añade la clase `reda-admin-configuracion-mediaciones` al `body` cuando existe el formulario para limitar los estilos a esta pantalla. Intercepta el evento submit, valida en el cliente que los valores sean números enteros no negativos y que el segundo aviso no sea menor que el primero, usa terminología de restricciones, activa la animación de espera global (`window.RedaNotificaciones.esperar()`), envía los datos vía AJAX con token CSRF y presenta notificaciones basadas en el formato estándar JSON de REDA.
   `desactivarCargando()` restablece el botón sin cerrar el modal de espera. `mostrarResultado()` transforma ese mismo modal en una notificación de éxito o error para evitar que los temporizadores de `ocultar()` la cierren inmediatamente; si no está disponible `notificar()`, oculta la espera cuando sea posible y muestra una alerta alternativa.
 
-## Sistema de Alertas y Suspensiones por Límites de Mediaciones
+## Sistema de Alertas y Restricciones por Límites de Mediaciones
 
 ### Base de Datos y Migraciones
 - **packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000000_crear_tabla_alertas_admin.php**
@@ -268,26 +297,30 @@
 - **packages/Reda/RedaAlojamiento/src/Models/Alerta/AlertaAdmin.php**
   Modelo Eloquent para la tabla `alertas_admin`. Define los campos asignables en `$fillable`, casteo booleano para `leido` y timestamp para `fecha_lectura`. Establece las relaciones `admin()` (`App\Models\Admin`), `usuario()` (`App\Models\User`) y `disputa()` (`Reda\RedaAlojamiento\Models\Disputa\Disputa`).
 - **packages/Reda/RedaAlojamiento/src/Models/Disputa/UsuarioAvisoMediacion.php**
-  Modelo Eloquent para la tabla `usuarios_avisos_mediaciones`. Gestiona el estado de control de avisos y suspensión por usuario, con conversiones de tipo para banderas booleanas y fechas, y relación `usuario()` con `App\Models\User`.
+  Modelo Eloquent para la tabla `usuarios_avisos_mediaciones`. La columna histórica `cuenta_suspendida = 1` identifica restricciones activas, incluso en registros históricos; no implica que deba cambiarse el estado de inicio de sesión. Conserva fechas, motivo y relación `usuario()`.
+
+### Integración y protección de acciones
+- **packages/Reda/RedaAlojamiento/resources/lang/es.json**
+  Incluye los textos de configuración, bloqueo, primer y segundo aviso sobre restricciones de acciones, sin cambiar las claves históricas de configuración.
+- **packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php**
+  En `boot()` agrega el middleware de restricciones al grupo `web`, después del inicio de sesión, sin modificar las rutas originales; mantiene las integraciones existentes del plugin.
+- **packages/Reda/RedaAlojamiento/src/Http/Middleware/RestringirAccionesPorMediaciones.php**
+  `handle()` comprueba el indicador histórico del usuario autenticado antes de permitir crear propiedades y negocios, iniciar mediaciones, comenzar reservas o procesar solicitudes de retiro. Bloquea también las entradas de la pasarela para impedir el acceso directo; devuelve JSON REDA con código 403 a AJAX o redirige con un aviso a los formularios normales. No bloquea el listado de retiros, la edición de elementos existentes, las mediaciones en curso ni los callbacks de pagos.
+  Cuando `payments/create_booking` prepara un pago con pasarela mientras el usuario aún no está restringido, `identificarPago()` vincula en sesión el usuario, propiedad, fechas y método. El middleware permite abrir y completar esa pasarela si la restricción aparece después; los callbacks y webhooks siguen disponibles para conciliar pagos ya iniciados. Las sesiones preparadas antes de desplegar esta modificación no tienen esa marca: se deben completar antes del despliegue. Esta medida no altera registros de reservas o pagos existentes.
+  Los cuatro registros históricos marcados en el respaldo del 06/11/2026 11:25 quedan sujetos a restricciones si su usuario accede. Dos cuentas no borradas estaban inactivas, una estaba activa y otra borrada lógicamente; no se reactiva ni restaura ninguna automáticamente. Antes de reactivar se debe verificar cada motivo de inactividad en Vesta.
 
 ### Servicios y Lógica de Negocio
 - **packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php**
   Servicio centralizado que orquesta la verificación automática de umbrales cada vez que se registra una nueva mediación (`DisputaController@store`).
   - **Recuperación de Configuración:** Consulta en la tabla `settings` los parámetros `Cantidad mediaciones permitidas primer aviso` y `Cantidad mediaciones segundo aviso y suspensión`.
-  - **Evaluación de Partes Involucradas:** Calcula individualmente el conteo de mediaciones del turista y del anfitrión, sin depender de cuál inició la disputa y asumió el rol de demandante.
+  - **Evaluación de Partes Involucradas:** Calcula individualmente el conteo total de mediaciones del turista y del anfitrión, sin filtrar por estado ni resultado y sin depender de quién inició la disputa. El conteo por resultados es un requerimiento independiente pendiente.
   - **Disparo de Primer Aviso:** Si el conteo alcanza o supera el umbral de primer aviso y no ha sido notificado previamente:
     1. Registra la emisión del aviso en `usuarios_avisos_mediaciones` con fecha y hora actual.
     2. Envía correo preventivo al usuario evaluado (`emails.primer_aviso_usuario`).
     3. Envía un mensaje privado al buzón `/inbox` del usuario evaluado usando `receiver_id` con su propio ID y metadato `sender_type = 'admin'` (`MensajeMetadata`).
     4. Envía correo informativo a todos los administradores activos (`emails.primer_aviso_admin`).
     5. Genera un registro en `alertas_admin` para cada administrador activo (`tipo = 'primer_aviso'`).
-  - **Disparo de Suspensión (Segundo Aviso):** Si el conteo alcanza o supera el umbral máximo de suspensión:
-    1. Actualiza el estatus nativo del usuario a `'Inactive'` en la tabla `users` (bloqueando de inmediato su inicio de sesión en el sistema core).
-    2. Registra la suspensión y motivo en `usuarios_avisos_mediaciones`.
-    3. Envía correo de notificación de suspensión al usuario (`emails.suspension_usuario`).
-    4. Envía mensaje privado de suspensión al buzón `/inbox` del usuario cuyo conteo alcanzó el límite.
-    5. Envía correo de alerta crítica a todos los administradores activos (`emails.suspension_admin`).
-    6. Genera un registro en `alertas_admin` para cada administrador (`tipo = 'suspension'`).
+  - **Segundo aviso y restricciones:** Si el segundo límite es mayor que cero y el conteo lo alcanza o supera, guarda `cuenta_suspendida = 1`, fechas y motivo sin modificar `users.status`. Envía avisos al usuario y administradores y conserva el tipo histórico `suspension` para las alertas. Las restricciones continúan vigentes mientras el indicador permanezca marcado; cambiar el umbral no las levanta automáticamente. Si el segundo límite es cero, no se activa la restricción ni se anuncia un límite de cero en el primer aviso.
 
 ### Controladores
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Alerta/AlertaController.php**
@@ -315,13 +348,13 @@
 - **packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php**
   Vista administrativa que presenta el panel de Alertas del Sistema. Incorpora botones de filtrado rápido ("Todas", "No leídas" con badge dinámico, "Leídas"), botón de acción masiva "Marcar todas como leídas" con spinner de carga, contenedor asíncrono para las tarjetas de alertas y contenedor inferior para la paginación de 10 en 10.
 - **packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php**
-  Plantilla de correo electrónico en español dirigida al usuario, advirtiendo de manera clara y cordial que ha acumulado mediaciones y que se encuentra próximo al límite de suspensión. Incluye botón directo a su buzón de mensajes.
+  Plantilla de primer aviso con el límite de restricciones y las cinco acciones afectadas cuando dicho límite está habilitado. Incluye botón al buzón.
 - **packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php**
-  Plantilla de correo dirigida al equipo de administradores, resumiendo los datos del usuario, el número de mediaciones acumuladas y un enlace directo a la mediación en el panel administrativo.
+  Plantilla de primer aviso para administradores con el conteo, límite de restricciones y enlace al panel.
 - **packages/Reda/RedaAlojamiento/resources/views/emails/suspension_usuario.blade.php**
-  Plantilla de correo notificando la suspensión inmediata de la cuenta por haber alcanzado el límite máximo de mediaciones estipulado, detallando los efectos de la sanción y proporcionando enlace de contacto a soporte.
+  Plantilla de segundo aviso: informa las cinco acciones restringidas, que no se modifica el acceso a la cuenta y cómo contactar a soporte. Se conserva el nombre histórico del archivo.
 - **packages/Reda/RedaAlojamiento/resources/views/emails/suspension_admin.blade.php**
-  Plantilla de correo para administradores con carácter de prioridad crítica, notificando la suspensión automática de la cuenta de usuario, con ficha técnica completa y enlace al visor de alertas del panel.
+  Plantilla para administradores que informa las restricciones, los datos de la mediación y que no se modificó el estado de acceso. Se conserva el nombre histórico del archivo.
 
 ### JavaScript (Vistas y Clientes)
 - **packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js**

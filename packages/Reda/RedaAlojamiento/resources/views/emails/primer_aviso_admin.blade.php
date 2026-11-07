@@ -26,7 +26,7 @@
             <li><strong>{{ __('Nombre completo:') }}</strong> {{ $nombreUsuario }}</li>
             <li><strong>{{ __('Correo electrónico:') }}</strong> {{ $emailUsuario }}</li>
             <li><strong>{{ __('Mediaciones acumuladas:') }}</strong> {{ $conteoMediaciones }}</li>
-            <li><strong>{{ __('Límite para suspensión:') }}</strong> {{ $limiteSegundoAviso }}</li>
+            <li><strong>{{ __('Límite para restricciones:') }}</strong> {{ $limiteSegundoAviso }}</li>
             @if (!empty($disputaId))
             <li><strong>{{ __('Última Mediación:') }}</strong> #{{ $disputaId }}</li>
             @endif

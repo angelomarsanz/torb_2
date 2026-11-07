@@ -1,6 +1,6 @@
 <?php
 
-// El archivo debe devolver un array asociativo
+// Configuración del plugin, incluida la habilitación explícita del reinicio en desarrollo.
 return [
 
     /*
@@ -12,6 +12,9 @@ return [
     */
 
     'module_version' => '1.0',
+
+    // Herramienta destructiva: también exige APP_ENV de desarrollo y rol administrativo 1.
+    'reinicio_mediaciones_habilitado' => env('REDA_REINICIO_MEDIACIONES', false),
 
     // Puedes añadir aquí tus primeras configuraciones futuras, como:
     // 'api_prefix' => 'api/experiencias',

@@ -2,8 +2,8 @@
 
 /**
  * Resumen: Modelo Eloquent para la tabla auxiliar usuarios_avisos_mediaciones del plugin REDA.
- * Mantiene el registro de estado, fechas de primer aviso preventivo y suspensión de cuentas
- * de usuarios por exceso de mediaciones acumuladas, previniendo duplicidades operativas.
+ * Mantiene los avisos y fechas por mediaciones. La columna histórica cuenta_suspendida
+ * identifica las cuentas con acciones restringidas, sin modificar su estado de acceso.
  *
  * @package    Reda\RedaAlojamiento
  * @subpackage Models\Disputa

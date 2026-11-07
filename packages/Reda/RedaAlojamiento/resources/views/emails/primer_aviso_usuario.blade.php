@@ -1,7 +1,7 @@
 {{--
     Resumen: Plantilla de correo electrónico para el primer aviso preventivo al usuario por límite de mediaciones.
     Notifica cordialmente al usuario sobre la cantidad de mediaciones acumuladas y le advierte sobre
-    el límite que activará la suspensión de su cuenta si continúa acumulando disputas.
+    el límite que activará restricciones de acciones si continúa acumulando disputas.
 --}}
 @extends('emails.template')
 
@@ -19,12 +19,14 @@
         {{ __('Le informamos que ha acumulado') }} <strong>{{ $conteoMediaciones }} {{ __('mediaciones') }}</strong> {{ __('en la plataforma, alcanzando el umbral del primer aviso de advertencia.') }}
     </p>
 
+    @if ($limiteSegundoAviso > 0)
     <div style="background-color: #fff3cd; border-left: 4px solid #ffeeba; padding: 15px; margin: 20px 0; border-radius: 4px;">
         <p style="margin: 0; color: #856404; font-size: 14px;">
             <strong>{{ __('Importante:') }}</strong> {{ __('El límite máximo permitido en el sistema es de') }} <strong>{{ $limiteSegundoAviso }} {{ __('mediaciones') }}</strong>. 
-            {{ __('En caso de alcanzar dicho límite, su cuenta será suspendida de manera automática, restringiendo su acceso a reservas, publicaciones y contrataciones.') }}
+            {{ __('Al alcanzar dicho límite se restringirá la creación de propiedades y negocios, las reservaciones, las nuevas mediaciones y las solicitudes de retiro. Podrá seguir accediendo a su cuenta.') }}
         </p>
     </div>
+    @endif
 
     <p style="font-size: 14px; color: #555;">
         {{ __('Le recomendamos revisar el historial de sus estancias y comunicarse con nuestro equipo de atención o su contraparte para resolver cualquier diferencia de manera amigable.') }}

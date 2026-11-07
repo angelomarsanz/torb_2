@@ -8,6 +8,7 @@
  * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
  * para el rol 2, e inserta el submenú en un anclaje alternativo en ese caso.
  * Actualiza dinámicamente los contadores del menú.
+ * Incluye el acceso a pruebas de mediaciones cuando el servidor lo habilita para el rol 1.
  */
 import { mediacionSvg } from '../../../general/iconos';
 import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMediaciones.js';
@@ -27,6 +28,30 @@ export const menuLateralAdmin = () =>
 
             $(function() {
                 const baseUrl = window.location.origin;
+
+                if (window.RedaAdminUser && window.RedaAdminUser.reinicioMediacionesHabilitado && !$('#menu-pruebas-aplicacion').length) {
+                    const traducciones = window.RedaAlojamientoJson || {};
+                    const $menuPruebas = $(`
+                        <li class="nav-item treeview" id="menu-pruebas-aplicacion">
+                            <a href="#" class="nav-link pruebas-toggle"><i class="nav-icon fa fa-flask"></i>
+                                <p>${traducciones["Pruebas aplicación"] || "Pruebas aplicación"}<i class="fa fa-angle-left nav-arrow pull-right"></i></p></a>
+                            <ul class="nav nav-treeview treeview-menu reda-admin-menu-hidden">
+                                <li class="nav-item"><a class="nav-link btn-menu-reinicio" href="${window.RedaAdminUser.rutaReinicioMediaciones}">
+                                    <i class="nav-icon far fa-circle"></i><p>${traducciones["Reiniciar mediaciones"] || "Reiniciar mediaciones"}</p></a></li>
+                            </ul>
+                        </li>`);
+                    $(containerId).append($menuPruebas);
+                    $menuPruebas.find('.pruebas-toggle').on('click', function (evento) {
+                        evento.preventDefault();
+                        evento.stopImmediatePropagation();
+                        $menuPruebas.find('.treeview-menu').slideToggle('fast');
+                        $menuPruebas.toggleClass('active menu-open');
+                        $(this).find('.pull-right').toggleClass('fa-angle-left fa-angle-down');
+                    });
+                    $menuPruebas.find('.btn-menu-reinicio').on('click', function () {
+                        if (window.RedaNotificaciones) window.RedaNotificaciones.esperar();
+                    });
+                }
 
                 // 1. Inyección de Menú "Negocios" (Después de Properties)
                 const $propertiesMenuItem = $('.sidebar-menu a[href*="admin/properties"]').closest('li');

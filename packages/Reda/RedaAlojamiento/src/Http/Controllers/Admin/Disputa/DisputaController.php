@@ -7,7 +7,7 @@
  * turistas y anfitriones en el backend de Torbian. Permite acceso y gestión tanto
  * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario),
  * y proporciona la gestión de la configuración de límites de mediaciones
- * (primer aviso y segundo aviso/suspensión) exclusivamente para Rol 1.
+ * (primer aviso y segundo aviso con restricciones) exclusivamente para Rol 1.
  * 
  * @package Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa
  */
@@ -546,7 +546,7 @@ class DisputaController extends Controller
 
     /**
      * Muestra la vista de configuración de mediaciones para administradores con Rol 1.
-     * Recupera de la tabla settings los umbrales de primer aviso y segundo aviso/suspensión.
+     * Recupera de settings los umbrales de primer aviso y segundo aviso con restricciones.
      *
      * @return \Illuminate\View\View|\Illuminate\Http\Response
      */
@@ -611,9 +611,9 @@ class DisputaController extends Controller
                 'primer_aviso.required' => __('La cantidad de mediaciones para primer aviso es obligatoria.'),
                 'primer_aviso.integer' => __('La cantidad de mediaciones para primer aviso debe ser un número entero.'),
                 'primer_aviso.min' => __('La cantidad de mediaciones para primer aviso no puede ser negativa.'),
-                'segundo_aviso.required' => __('La cantidad de mediaciones para segundo aviso y suspensión es obligatoria.'),
-                'segundo_aviso.integer' => __('La cantidad de mediaciones para segundo aviso y suspensión debe ser un número entero.'),
-                'segundo_aviso.min' => __('La cantidad de mediaciones para segundo aviso y suspensión no puede ser negativa.'),
+                'segundo_aviso.required' => __('La cantidad de mediaciones para segundo aviso y restricciones es obligatoria.'),
+                'segundo_aviso.integer' => __('La cantidad de mediaciones para segundo aviso y restricciones debe ser un número entero.'),
+                'segundo_aviso.min' => __('La cantidad de mediaciones para segundo aviso y restricciones no puede ser negativa.'),
             ]);
 
             // Guardar o actualizar en la tabla settings con name, value y type 'Mediaciones'

@@ -1,6 +1,6 @@
 {{-- 
     Archivo maestro para inyectar recursos al final del <body> del Administrador.
-    Carga modales globales, scripts del plugin y expone datos de traducción y rol de sesión.
+    Carga modales globales, scripts del plugin y expone datos de traducción, rol y disponibilidad del reinicio.
 --}}
 
 @php
@@ -40,7 +40,9 @@
         roleId: {{ $roleIdActual !== null ? $roleIdActual : 'null' }},
         roleName: {!! json_encode($roleNombreActual) !!},
         tieneAccesoMediaciones: {{ $tieneAccesoMediaciones ? 'true' : 'false' }},
-        esAdminTotal: {{ ($roleIdActual === 1 || in_array($roleNombreNorm, ['admin'])) ? 'true' : 'false' }}
+        esAdminTotal: {{ ($roleIdActual === 1 || in_array($roleNombreNorm, ['admin'])) ? 'true' : 'false' }},
+        reinicioMediacionesHabilitado: {{ (config('reda-alojamiento.reinicio_mediaciones_habilitado') === true && app()->environment(['local', 'development', 'dev']) && $adminActual && \DB::table('role_admin')->where('admin_id', $adminActual->id)->where('role_id', 1)->exists()) ? 'true' : 'false' }},
+        rutaReinicioMediaciones: @json(route('reda.admin.pruebas.mediaciones'))
     };
 </script>
 

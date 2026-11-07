@@ -18,6 +18,7 @@ use Reda\RedaAlojamiento\Http\Controllers\Disputa\DisputaController;
 // Controladores del admin
 use Reda\RedaAlojamiento\Http\Controllers\Admin\Experiencia\ExperienciaController as AdminExperienciaController;
 use Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa\DisputaController as AdminDisputaController;
+use Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa\ReinicioMediacionesController;
 
 // Controladores de Experiencia
 use Reda\RedaAlojamiento\Http\Controllers\Experiencia\ExperienciaController;
@@ -77,6 +78,9 @@ Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
 // Grupo principal para el administrador: fusiona el prefijo 'admin/reda'
 // y protege el acceso mediante el middleware 'admin' del proyecto original.
 Route::group(['prefix' => 'admin/reda', 'middleware' => ['web', 'guest:admin']], function () {
+
+    Route::get('pruebas/reiniciar-mediaciones', [ReinicioMediacionesController::class, 'index'])->name('reda.admin.pruebas.mediaciones');
+    Route::post('pruebas/reiniciar-mediaciones', [ReinicioMediacionesController::class, 'reiniciar'])->name('reda.admin.pruebas.mediaciones.reiniciar');
 
     // Subgrupo para Disputas (Admin)
     Route::prefix('disputas')->as('reda.admin.disputas.')->group(function () {
