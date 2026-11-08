@@ -2,6 +2,18 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [08 de Noviembre, 2026] - Persistencia del resultado al solicitar mediación
+- **Hallazgo:** La ruta AJAX `reda/disputas/store` devuelve HTTP 403 con el mensaje de restricciones cuando el middleware detecta el indicador correspondiente. `guardarMediacionReda()` conserva ese mensaje, pero el formulario cerraba la espera e inmediatamente reutilizaba el mismo modal; los temporizadores de limpieza de `ocultar()` podían esconder la notificación.
+- **Archivo:** `packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js`. `configurarEventosModal()` transforma la espera en la notificación de éxito o error sin llamar previamente a `ocultar()`; conserva la alerta alternativa cuando no existe `notificar()`. No se modifican la validación del servidor ni los datos.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. Quedan pendientes la compilación y prueba funcional en Vesta.
+- **Validación estática:** Sintaxis JavaScript y `git diff --check` correctos. La respuesta concreta de la prueba del usuario no se capturó, por lo que corresponde confirmar el texto en Vesta.
+
+## [08 de Noviembre, 2026] - Visibilidad del submenú de pruebas
+- **Solicitud:** Mostrar «Reiniciar mediaciones» al desplegar «Pruebas aplicación» sin reducir el zoom.
+- **Archivo:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`. Tras desplegar el submenú, desplaza el contenedor lateral únicamente cuando el enlace queda por debajo del área visible. También sincroniza `aria-expanded` y finaliza animaciones pendientes ante clics rápidos, sin alterar los permisos ni otros menús.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript y `git diff --check` correctos; no se ejecutó compilación ni prueba visual local.
+
 ## [07 de Noviembre, 2026] - Diagnóstico de visibilidad del reinicio
 - El usuario compartió el resultado efectivo de Laravel en Vesta: entorno `local` y `reinicio_habilitado` `false`; el entorno satisface la comprobación, pero la bandera impide mostrar y ejecutar la herramienta. Se indicó habilitarla explícitamente solo en el entorno de pruebas.
 - La salida compartida de la subida incluye los archivos relevantes y avisos FTP `550 File exists` al crear directorios ya existentes; la salida no comprueba por sí sola el contenido remoto. El texto adjunto de compilación no estuvo accesible en la conversación, por lo que su resultado queda sin verificar.

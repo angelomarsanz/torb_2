@@ -3,7 +3,8 @@
  * Este archivo se encarga de inyectar la lógica de mediación en vistas preexistentes
  * del proyecto principal, como el Inbox (chat general) y la barra lateral de 
  * detalles de reservación. Permite verificar disputas, solicitar nuevas mediaciones
- * y enriquecer el chat original con información del plugin Reda.
+ * y enriquecer el chat original con información del plugin Reda. Al enviar una solicitud,
+ * transforma el modal de espera en la notificación de resultado sin cerrarlo antes.
  */
 import { mediacionSvg } from './iconos';
 
@@ -482,7 +483,7 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Configura los controladores de eventos para el formulario y gestión de archivos en el modal.
+     * Configura el formulario y los archivos; conserva visible el resultado hasta que el usuario lo cierre.
      */
     const configurarEventosModal = () => {
         // Trigger para el input oculto
@@ -534,10 +535,6 @@ const getModalMediacionHtml = () => {
             
             const response = await guardarMediacionReda(formData);
             
-            if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
-                window.RedaNotificaciones.ocultar();
-            }
-
             if (response.success) {
                 $('#modal-mediacion-reda').modal('hide');
                 const exitoTitle = window.RedaAlojamientoJson["¡Éxito!"] || "¡Éxito!";
@@ -545,6 +542,9 @@ const getModalMediacionHtml = () => {
                 if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                     window.RedaNotificaciones.notificar(exitoTitle, response.mensaje_usuario, 'exito');
                 } else {
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                        window.RedaNotificaciones.ocultar();
+                    }
                     alert(response.mensaje_usuario);
                 }
                 
@@ -558,6 +558,9 @@ const getModalMediacionHtml = () => {
                 if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                     window.RedaNotificaciones.notificar(errorTitle, response.mensaje_usuario, 'error');
                 } else {
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                        window.RedaNotificaciones.ocultar();
+                    }
                     alert(response.mensaje_usuario);
                 }
             }

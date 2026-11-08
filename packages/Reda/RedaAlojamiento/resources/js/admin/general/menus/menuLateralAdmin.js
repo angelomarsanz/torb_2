@@ -8,14 +8,15 @@
  * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
  * para el rol 2, e inserta el submenú en un anclaje alternativo en ese caso.
  * Actualiza dinámicamente los contadores del menú.
- * Incluye el acceso a pruebas de mediaciones cuando el servidor lo habilita para el rol 1.
+ * Incluye el acceso a pruebas de mediaciones cuando el servidor lo habilita para el rol 1
+ * y desplaza la barra lateral si la subopción queda fuera del área visible.
  */
 import { mediacionSvg } from '../../../general/iconos';
 import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMediaciones.js';
 
 /**
  * Función principal que orquesta la inyección y el comportamiento de los menús del plugin en el panel admin.
- * Incluye "Atención al comercio" dentro del submenú "Negocios" y aplica la animación de espera a sus enlaces.
+ * Incluye "Atención al comercio" dentro de "Negocios" y mantiene visible el submenú de pruebas al abrirlo.
  */
 export const menuLateralAdmin = () =>
 {
@@ -33,9 +34,9 @@ export const menuLateralAdmin = () =>
                     const traducciones = window.RedaAlojamientoJson || {};
                     const $menuPruebas = $(`
                         <li class="nav-item treeview" id="menu-pruebas-aplicacion">
-                            <a href="#" class="nav-link pruebas-toggle"><i class="nav-icon fa fa-flask"></i>
+                            <a href="#" class="nav-link pruebas-toggle" aria-expanded="false" aria-controls="submenu-pruebas-aplicacion"><i class="nav-icon fa fa-flask"></i>
                                 <p>${traducciones["Pruebas aplicación"] || "Pruebas aplicación"}<i class="fa fa-angle-left nav-arrow pull-right"></i></p></a>
-                            <ul class="nav nav-treeview treeview-menu reda-admin-menu-hidden">
+                            <ul id="submenu-pruebas-aplicacion" class="nav nav-treeview treeview-menu reda-admin-menu-hidden">
                                 <li class="nav-item"><a class="nav-link btn-menu-reinicio" href="${window.RedaAdminUser.rutaReinicioMediaciones}">
                                     <i class="nav-icon far fa-circle"></i><p>${traducciones["Reiniciar mediaciones"] || "Reiniciar mediaciones"}</p></a></li>
                             </ul>
@@ -44,9 +45,27 @@ export const menuLateralAdmin = () =>
                     $menuPruebas.find('.pruebas-toggle').on('click', function (evento) {
                         evento.preventDefault();
                         evento.stopImmediatePropagation();
-                        $menuPruebas.find('.treeview-menu').slideToggle('fast');
-                        $menuPruebas.toggleClass('active menu-open');
-                        $(this).find('.pull-right').toggleClass('fa-angle-left fa-angle-down');
+
+                        const $enlace = $(this);
+                        const $subMenu = $menuPruebas.find('.treeview-menu');
+                        $subMenu.stop(true, true);
+                        const abrir = !$menuPruebas.hasClass('menu-open');
+                        $enlace.attr('aria-expanded', abrir ? 'true' : 'false');
+                        $enlace.find('.pull-right').toggleClass('fa-angle-left', !abrir).toggleClass('fa-angle-down', abrir);
+
+                        if (abrir) {
+                            $subMenu.slideDown('fast', function () {
+                                const barra = $menuPruebas.closest('.sidebar-wrapper')[0];
+                                const opcion = $menuPruebas.find('.btn-menu-reinicio')[0];
+                                if (barra && opcion) {
+                                    const diferencia = opcion.getBoundingClientRect().bottom - barra.getBoundingClientRect().bottom;
+                                    if (diferencia > 0) barra.scrollTop += diferencia;
+                                }
+                            });
+                        } else {
+                            $subMenu.slideUp('fast');
+                        }
+                        $menuPruebas.toggleClass('active menu-open', abrir);
                     });
                     $menuPruebas.find('.btn-menu-reinicio').on('click', function () {
                         if (window.RedaNotificaciones) window.RedaNotificaciones.esperar();
