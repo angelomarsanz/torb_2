@@ -6,6 +6,7 @@
  * Gestiona el listado, filtrado, conteo y detalle de casos de mediación entre
  * turistas y anfitriones en el backend de Torbian. Permite acceso y gestión tanto
  * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario),
+ * actualiza el paso de asignación al asignar o tomar una mediación,
  * y proporciona la gestión de la configuración de límites de mediaciones
  * (primer aviso y segundo aviso con restricciones) exclusivamente para Rol 1.
  * 
@@ -405,7 +406,8 @@ class DisputaController extends Controller
      * Asigna o toma una mediación por parte de un administrador o agente.
      * Si el usuario logueado tiene Rol 1, puede asignar a cualquier agente o a sí mismo.
      * Si el usuario logueado tiene Rol 2, toma la mediación para sí mismo ("Tomar mediación").
-     * Actualiza la columna id_usuario_agente_asignado en la tabla disputas.
+     * Guarda el agente y el paso actual de asignación en la tabla disputas.
+     * Devuelve el paso persistido para sincronizar las líneas de tiempo.
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -507,8 +509,8 @@ class DisputaController extends Controller
                 $agenteAsignarId = $adminId;
             }
 
-            // Actualizar la columna id_usuario_agente_asignado en la tabla disputas
             $disputa->id_usuario_agente_asignado = $agenteAsignarId;
+            $disputa->paso_actual = 'Asignación a agente';
             $disputa->save();
 
             // Cargar datos del agente asignado para devolverlos a la interfaz
@@ -525,6 +527,7 @@ class DisputaController extends Controller
                 'mensaje_usuario' => $mensajeAccion,
                 'respuesta' => [
                     'disputa_id' => $disputa->id,
+                    'paso_actual' => $disputa->paso_actual,
                     'agente_id' => (int) $agenteAsignarId,
                     'agente_nombre' => $agenteAdmin->username,
                     'agente_foto' => $agenteFoto

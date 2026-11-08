@@ -2,6 +2,21 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [08 de Noviembre, 2026] - Selector visual de pasos en tarjetas de mediación
+- **Solicitud:** Mostrar el selector junto al estado de cada tarjeta, en escritorio y móvil; no en el panel lateral ni en la información adicional. La selección es únicamente visual y no ejecuta acciones.
+- **JavaScript:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` comparte los seis pasos entre línea de tiempo y selectores. En cada tarjeta, los dos primeros aparecen deshabilitados y los otros cuatro habilitados; un aviso indica que la selección no se guarda. Interactuar con el select no cambia la tarjeta seleccionada.
+- **Presentación y textos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` permite distribuir el selector y el estado en espacios estrechos; `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade los textos accesibles y de aviso.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript, lectura del JSON y `git diff --check` correctos. No se realizó compilación ni prueba visual local.
+
+## [08 de Noviembre, 2026] - Paso de asignación de mediaciones
+- **Respaldo revisado:** `documentacion-torbian-2/BD/appvac_torbDev2-20261107-1645.sql` (7 de noviembre a las 16:45). Las ocho mediaciones estaban abiertas, con `paso_actual` «Caso creado» y sin agente; `disputas` tiene clave primaria `id` y clave foránea de reserva, mientras `role_admin` vincula administradores con roles. No se modificaron datos históricos ni el respaldo.
+- **Controlador:** `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php` guarda y devuelve `paso_actual` «Asignación a agente» junto al agente al asignar, tomar o reasignar, con los permisos existentes.
+- **Interfaz:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` sincroniza el paso, la tarjeta y la línea de tiempo seleccionada en escritorio o el detalle móvil abierto. `packages/Reda/RedaAlojamiento/resources/js/vistas/disputa/disputas/indexDisputas.js` y el script administrativo reconocen el paso español persistido incluso si la etiqueta está traducida.
+- **Corrección necesaria:** En el script del dashboard del usuario se eliminó una línea textual preexistente `... (resto del archivo)` que provocaba error de sintaxis e impedía su compilación.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. Quedan pendientes subida, compilación y pruebas funcionales en Vesta.
+- **Validación estática:** PHP y ambos scripts pasan las comprobaciones de sintaxis; `git diff --check` no detectó errores de formato. No se ejecutaron compilación, pruebas funcionales ni operaciones de base de datos.
+
 ## [08 de Noviembre, 2026] - Persistencia del resultado al solicitar mediación
 - **Hallazgo:** La ruta AJAX `reda/disputas/store` devuelve HTTP 403 con el mensaje de restricciones cuando el middleware detecta el indicador correspondiente. `guardarMediacionReda()` conserva ese mensaje, pero el formulario cerraba la espera e inmediatamente reutilizaba el mismo modal; los temporizadores de limpieza de `ocultar()` podían esconder la notificación.
 - **Archivo:** `packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js`. `configurarEventosModal()` transforma la espera en la notificación de éxito o error sin llamar previamente a `ocultar()`; conserva la alerta alternativa cuando no existe `notificar()`. No se modifican la validación del servidor ni los datos.

@@ -3,6 +3,8 @@
  * Este archivo gestiona la lógica del dashboard de mediaciones para el administrador,
  * permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo,
  * gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
+ * Sincroniza el paso de asignación con las líneas de tiempo de escritorio y móvil
+ * y muestra en cada tarjeta un selector visual de pasos sin guardar las selecciones.
  */
 import {
     todosSvg,
@@ -202,22 +204,29 @@ import {
     };
 
     /**
-     * Construye la estructura de pasos de la línea de tiempo según el paso actual.
+     * Devuelve los pasos compartidos por la línea de tiempo y el selector.
+     * @returns {Array<object>} Pasos con valor, etiqueta, icono y disponibilidad.
+     */
+    const obtenerPasosMediacion = () => {
+        const trans = window.RedaAlojamientoJson || {};
+        return [
+            { valor: "Caso creado", nombre: trans["Caso creado"] || "Caso creado", icono: 'fas fa-plus', seleccionable: false },
+            { valor: "Asignación a agente", nombre: trans["Asignación a agente"] || "Asignación a agente", icono: 'fas fa-user-tie', seleccionable: false },
+            { valor: "En revisión", nombre: trans["En revisión"] || "En revisión", icono: 'fas fa-search', seleccionable: true },
+            { valor: "Solicitud de información adicional", nombre: trans["Solicitud de información adicional"] || "Solicitud de información adicional", icono: 'fas fa-info-circle', seleccionable: true },
+            { valor: "Análisis del caso", nombre: trans["Análisis del caso"] || "Análisis del caso", icono: 'fas fa-balance-scale', seleccionable: true },
+            { valor: "Resuelto o escalado", nombre: trans["Resuelto o escalado"] || "Resuelto o escalado", icono: 'fas fa-check-double', seleccionable: true }
+        ];
+    };
+
+    /**
+     * Construye la línea de tiempo identificando el paso en español o traducido.
      * @param {string} pasoActual - Nombre del paso actual del caso.
      * @returns {object} Objeto con el HTML y el índice del paso actual.
      */
     const generarTimelineHtml = (pasoActual) => {
-        const trans = window.RedaAlojamientoJson || {};
-        const pasos = [
-            { id: 1, nombre: trans["Caso creado"] || "Caso creado", icono: 'fas fa-plus' },
-            { id: 2, nombre: trans["Asignación a agente"] || "Asignación a agente", icono: 'fas fa-user-tie' },
-            { id: 3, nombre: trans["En revisión"] || "En revisión", icono: 'fas fa-search' },
-            { id: 4, nombre: trans["Solicitud de información adicional"] || "Solicitud de información adicional", icono: 'fas fa-info-circle' },
-            { id: 5, nombre: trans["Análisis del caso"] || "Análisis del caso", icono: 'fas fa-balance-scale' },
-            { id: 6, nombre: trans["Resuelto o escalado"] || "Resuelto o escalado", icono: 'fas fa-check-double' }
-        ];
-
-        const currentIndex = pasos.findIndex(p => p.nombre === pasoActual);
+        const pasos = obtenerPasosMediacion();
+        const currentIndex = pasos.findIndex(p => p.nombre === pasoActual || p.valor === pasoActual);
 
         let html = '';
         pasos.forEach((p, index) => {
@@ -866,7 +875,6 @@ import {
     const renderizarCabeceraMediacion = (item, containerSelector) => {
         const container = $(containerSelector);
         if (!container.length) return;
-        const trans = window.RedaAlojamientoJson || {};
         const badgeClass = getStatusBadgeClass(item.estado);
         const statusText = formatStatusText(item.estado);
 
@@ -1092,7 +1100,7 @@ import {
     };
 
     /**
-     * Renderiza el listado principal de tarjetas de mediación.
+     * Renderiza las tarjetas y sus selectores visuales de pasos sin guardar cambios.
      * @param {Array} items - Colección de objetos de mediación.
      */
     const renderizarLista = (items) => {
@@ -1112,6 +1120,11 @@ import {
         }
 
         let html = '<div class="row mt-4">';
+        const etiquetaSelector = trans["Seleccionar paso de mediación"] || "Seleccionar paso de mediación";
+        const avisoSelector = trans["La selección todavía no guarda cambios."] || "La selección todavía no guarda cambios.";
+        const opcionesPasos = obtenerPasosMediacion().map(paso =>
+            `<option value="${paso.valor}" ${paso.seleccionable ? '' : 'disabled'}>${paso.nombre}</option>`
+        ).join('');
         items.forEach(item => {
             // Prioridad con color
             let prioridadHtml = '';
@@ -1139,10 +1152,17 @@ import {
                                 </div>
 
                                 <div class="col-md-4 p-4 border-end">
-                                    <div class="mb-2 d-flex justify-content-between align-items-center">
-                                        <span class="badge ${badgeClass}">${statusText}</span>
+                                    <div class="mb-1 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <div class="reda-estado-paso">
+                                            <span class="badge ${badgeClass}">${statusText}</span>
+                                            <select class="form-select form-select-sm reda-select-paso-mediacion" aria-label="${etiquetaSelector} #${item.id}" aria-describedby="aviso-paso-mediacion-${item.id}" data-disputa-id="${item.id}">
+                                                <option value="" selected disabled>${trans["Paso:"] || "Paso:"}</option>
+                                                ${opcionesPasos}
+                                            </select>
+                                        </div>
                                         <span class="text-muted small fw-600">ID: #${item.id}</span>
                                     </div>
+                                    <p class="reda-aviso-paso text-muted mb-2" id="aviso-paso-mediacion-${item.id}">${avisoSelector}</p>
 
                                     <h5 class="text-18 fw-600 text-color mb-1 reda-motivo-clamped cursor-pointer reda-expandible"
                                         title="${item.motivo}">
@@ -1361,6 +1381,7 @@ import {
                     $(e.target).closest('.btn-ver-mensajes-mediacion').length ||
                     $(e.target).closest('.reda-viewer-trigger').length ||
                     $(e.target).closest('.select-asignar-agente-disputa').length ||
+                    $(e.target).closest('.reda-select-paso-mediacion').length ||
                     $(e.target).closest('.switch-tomar-mediacion').length ||
                     $(e.target).closest('.btn-cambiar-agente-asignado').length ||
                     $(e.target).closest('.btn-cancelar-cambio-agente').length ||
@@ -1554,6 +1575,37 @@ import {
             // GESTIÓN DE AGENTE EN MEDIACIONES (ROL 1 SELECT, ROL 2 SWITCH)
             // -------------------------------------------------------------
 
+            /**
+             * Sincroniza la tarjeta y las líneas de tiempo con la asignación guardada.
+             * @param {object} datos - Datos de asignación devueltos por el servidor.
+             */
+            const actualizarAsignacionMediacion = (datos) => {
+                const item = mediacionesCargadas.find(m => m.id == datos.disputa_id);
+                if (!item) return;
+
+                item.id_usuario_agente_asignado = datos.agente_id;
+                item.paso_actual = datos.paso_actual;
+                item.agente = {
+                    id: datos.agente_id,
+                    nombre: datos.agente_nombre,
+                    foto: datos.agente_foto
+                };
+
+                const nuevoBloqueHtml = generarBloqueAgenteAsignadoHtml(item, datos.agente_nombre, datos.agente_foto);
+                $(`.bloque-agente-${datos.disputa_id}`).replaceWith(nuevoBloqueHtml);
+
+                if (mediacionSeleccionadaId == datos.disputa_id && window.innerWidth >= 768) {
+                    renderizarTimeline(item.paso_actual, '#reda-timeline-container');
+                    renderizarResumenMediacion(item, '#disputas-info-extra-content');
+                }
+
+                const detalleMovil = $(`#mobile-detail-${datos.disputa_id} .mobile-detail-content`);
+                if (detalleMovil.length && !detalleMovil.hasClass('d-none')) {
+                    renderizarTimeline(item.paso_actual, `#mobile-detail-${datos.disputa_id} .mobile-timeline-container`);
+                    renderizarResumenMediacion(item, `#mobile-detail-${datos.disputa_id} .mobile-resumen-container`);
+                }
+            };
+
             // Evento: Selección de agente desde <select> (Rol 1)
             $(document).on('change', '.select-asignar-agente-disputa', async function(e) {
                 e.preventDefault();
@@ -1577,22 +1629,7 @@ import {
                 }
 
                 if (respuesta.success) {
-                    const item = mediacionesCargadas.find(m => m.id == disputaId);
-                    if (item) {
-                        item.id_usuario_agente_asignado = respuesta.respuesta.agente_id;
-                        item.agente = {
-                            id: respuesta.respuesta.agente_id,
-                            nombre: respuesta.respuesta.agente_nombre,
-                            foto: respuesta.respuesta.agente_foto
-                        };
-                    }
-
-                    const nuevoBloqueHtml = generarBloqueAgenteAsignadoHtml(item, respuesta.respuesta.agente_nombre, respuesta.respuesta.agente_foto);
-                    $(`.bloque-agente-${disputaId}`).replaceWith(nuevoBloqueHtml);
-
-                    if (mediacionSeleccionadaId == disputaId && window.innerWidth >= 768) {
-                        renderizarResumenMediacion(item, '#disputas-info-extra-content');
-                    }
+                    actualizarAsignacionMediacion(respuesta.respuesta);
 
                     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                         window.RedaNotificaciones.notificar(trans["¡Éxito!"] || "¡Éxito!", respuesta.mensaje_usuario, 'exito');
@@ -1631,22 +1668,7 @@ import {
                 }
 
                 if (respuesta.success) {
-                    const item = mediacionesCargadas.find(m => m.id == disputaId);
-                    if (item) {
-                        item.id_usuario_agente_asignado = respuesta.respuesta.agente_id;
-                        item.agente = {
-                            id: respuesta.respuesta.agente_id,
-                            nombre: respuesta.respuesta.agente_nombre,
-                            foto: respuesta.respuesta.agente_foto
-                        };
-                    }
-
-                    const nuevoBloqueHtml = generarBloqueAgenteAsignadoHtml(item, respuesta.respuesta.agente_nombre, respuesta.respuesta.agente_foto);
-                    $(`.bloque-agente-${disputaId}`).replaceWith(nuevoBloqueHtml);
-
-                    if (mediacionSeleccionadaId == disputaId && window.innerWidth >= 768) {
-                        renderizarResumenMediacion(item, '#disputas-info-extra-content');
-                    }
+                    actualizarAsignacionMediacion(respuesta.respuesta);
 
                     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
                         window.RedaNotificaciones.notificar(trans["¡Éxito!"] || "¡Éxito!", respuesta.mensaje_usuario, 'exito');

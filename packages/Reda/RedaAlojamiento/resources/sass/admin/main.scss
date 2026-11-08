@@ -1,4 +1,4 @@
-/* Estilos para el admin usando Bootstrap  v5.2.3; incluye ajustes visuales aislados por módulo. */
+/* Estilos para el admin usando Bootstrap v5.2.3; incluye ajustes visuales aislados por módulo y el selector de pasos de mediaciones. */
 
 /* Estilos para el módulo de Soporte Técnico */
 .soporte-tecnico {
@@ -1122,6 +1122,26 @@
 
 /* Estilos para el módulo de Mediaciones (Disputas) */
 .reda-admin-disputas {
+    .reda-estado-paso {
+        display: flex;
+        align-items: center;
+        flex: 1 1 150px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .reda-select-paso-mediacion {
+        flex: 1 1 105px;
+        min-width: 0;
+        width: auto;
+    }
+
+    .reda-aviso-paso {
+        font-size: 0.7rem;
+        line-height: 1.25;
+    }
+
     .reda-reservacion-thumb-size {
         width: 80px !important;
         height: 60px !important;
