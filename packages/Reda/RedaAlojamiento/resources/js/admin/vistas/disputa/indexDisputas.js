@@ -4,7 +4,7 @@
  * permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo,
  * gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
  * Sincroniza el paso de asignación con las líneas de tiempo de escritorio y móvil
- * y muestra en cada tarjeta un selector visual de pasos sin guardar las selecciones.
+ * y muestra bajo el título un selector visual etiquetado «Paso actual» sin guardar las selecciones.
  */
 import {
     todosSvg,
@@ -217,6 +217,27 @@ import {
             { valor: "Análisis del caso", nombre: trans["Análisis del caso"] || "Análisis del caso", icono: 'fas fa-balance-scale', seleccionable: true },
             { valor: "Resuelto o escalado", nombre: trans["Resuelto o escalado"] || "Resuelto o escalado", icono: 'fas fa-check-double', seleccionable: true }
         ];
+    };
+
+    /**
+     * Genera las opciones y selecciona el paso persistido, incluso si está inhabilitado.
+     * @param {string|null} pasoActual - Paso recibido del servidor.
+     * @returns {string} Opciones del selector.
+     */
+    const generarOpcionesPasos = (pasoActual) => {
+        const pasos = obtenerPasosMediacion();
+        const pasoSeleccionado = pasos.find(paso => paso.valor === pasoActual || paso.nombre === pasoActual);
+        const trans = window.RedaAlojamientoJson || {};
+        let opciones = '';
+
+        if (!pasoSeleccionado) {
+            console.warn('REDA Admin: Paso de mediación no reconocido:', pasoActual);
+            opciones = `<option value="" selected disabled>${trans["Paso actual no disponible"] || "Paso actual no disponible"}</option>`;
+        }
+
+        return opciones + pasos.map(paso =>
+            `<option value="${paso.valor}" ${paso.seleccionable ? '' : 'disabled'} ${paso === pasoSeleccionado ? 'selected' : ''}>${paso.nombre}</option>`
+        ).join('');
     };
 
     /**
@@ -868,7 +889,7 @@ import {
     };
 
     /**
-     * Renderiza los datos básicos del caso (ID, Estatus, Motivo) en el contenedor de cabecera.
+     * Renderiza estado, ID y motivo en la cabecera de escritorio o móvil.
      * @param {object} item - Datos de la mediación.
      * @param {string} containerSelector - Selector del contenedor.
      */
@@ -880,7 +901,7 @@ import {
 
         let html = `
             <div class="mediacion-cabecera-principal mb-2">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <span class="badge ${badgeClass} fw-600 py-2 px-3 text-12 shadow-sm">${statusText}</span>
                     <span class="text-muted fw-600 text-14">ID: #${item.id}</span>
                 </div>
@@ -1100,7 +1121,7 @@ import {
     };
 
     /**
-     * Renderiza las tarjetas y sus selectores visuales de pasos sin guardar cambios.
+     * Renderiza tarjetas con etiqueta y paso actual seleccionado y actualización en la tercera columna de escritorio.
      * @param {Array} items - Colección de objetos de mediación.
      */
     const renderizarLista = (items) => {
@@ -1121,10 +1142,6 @@ import {
 
         let html = '<div class="row mt-4">';
         const etiquetaSelector = trans["Seleccionar paso de mediación"] || "Seleccionar paso de mediación";
-        const avisoSelector = trans["La selección todavía no guarda cambios."] || "La selección todavía no guarda cambios.";
-        const opcionesPasos = obtenerPasosMediacion().map(paso =>
-            `<option value="${paso.valor}" ${paso.seleccionable ? '' : 'disabled'}>${paso.nombre}</option>`
-        ).join('');
         items.forEach(item => {
             // Prioridad con color
             let prioridadHtml = '';
@@ -1137,6 +1154,8 @@ import {
 
             const badgeClass = getStatusBadgeClass(item.estado);
             const statusText = formatStatusText(item.estado);
+            const actualizacionHtml = `<i class="far fa-clock me-1"></i> ${trans["Actualizado"] || "Actualizado"} <span class="text-dark">${item.actualizado_hace}</span>`;
+            const opcionesPasos = generarOpcionesPasos(item.paso_actual);
 
             html += `
                 <div class="col-md-12 px-3 mb-4 container-mediacion" data-id="${item.id}">
@@ -1152,22 +1171,21 @@ import {
                                 </div>
 
                                 <div class="col-md-4 p-4 border-end">
-                                    <div class="mb-1 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                        <div class="reda-estado-paso">
-                                            <span class="badge ${badgeClass}">${statusText}</span>
-                                            <select class="form-select form-select-sm reda-select-paso-mediacion" aria-label="${etiquetaSelector} #${item.id}" aria-describedby="aviso-paso-mediacion-${item.id}" data-disputa-id="${item.id}">
-                                                <option value="" selected disabled>${trans["Paso:"] || "Paso:"}</option>
-                                                ${opcionesPasos}
-                                            </select>
-                                        </div>
+                                    <div class="mb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <span class="badge ${badgeClass}">${statusText}</span>
                                         <span class="text-muted small fw-600">ID: #${item.id}</span>
                                     </div>
-                                    <p class="reda-aviso-paso text-muted mb-2" id="aviso-paso-mediacion-${item.id}">${avisoSelector}</p>
-
                                     <h5 class="text-18 fw-600 text-color mb-1 reda-motivo-clamped cursor-pointer reda-expandible"
                                         title="${item.motivo}">
                                         ${item.motivo}
                                     </h5>
+
+                                    <div class="mt-2">
+                                        <label class="text-muted text-12 mb-1 reda-etiqueta-paso" for="paso-mediacion-${item.id}">${trans["Paso actual:"] || "Paso actual:"}</label>
+                                        <select id="paso-mediacion-${item.id}" class="form-select form-select-sm reda-select-paso-mediacion" aria-label="${etiquetaSelector} #${item.id}" data-disputa-id="${item.id}">
+                                            ${opcionesPasos}
+                                        </select>
+                                    </div>
 
                                     <div class="mt-2 mb-3">
                                         <p class="text-12 text-muted mb-0 reda-property-name-clamped cursor-pointer reda-expandible" title="${item.propiedad_nombre}">
@@ -1181,14 +1199,17 @@ import {
                                         </div>
                                     ` : ''}
 
-                                    <div class="d-flex flex-column mt-3">
+                                    <div class="d-md-none mt-3">
                                         <div class="text-muted small">
-                                            <i class="far fa-clock me-1"></i> ${trans["Actualizado"] || "Actualizado"} <span class="text-dark">${item.actualizado_hace}</span>
+                                            ${actualizacionHtml}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-4 p-4 d-flex flex-column justify-content-center bg-light-soft">
+                                <div class="col-md-4 p-4 d-flex flex-column justify-content-center justify-content-md-start bg-light-soft">
+                                    <div class="d-none d-md-block text-muted small mb-3">
+                                        ${actualizacionHtml}
+                                    </div>
                                     ${generarBloquePersonasHtml(item)}
                                 </div>
                             </div>
@@ -1382,6 +1403,7 @@ import {
                     $(e.target).closest('.reda-viewer-trigger').length ||
                     $(e.target).closest('.select-asignar-agente-disputa').length ||
                     $(e.target).closest('.reda-select-paso-mediacion').length ||
+                    $(e.target).closest('.reda-etiqueta-paso').length ||
                     $(e.target).closest('.switch-tomar-mediacion').length ||
                     $(e.target).closest('.btn-cambiar-agente-asignado').length ||
                     $(e.target).closest('.btn-cancelar-cambio-agente').length ||
@@ -1576,7 +1598,7 @@ import {
             // -------------------------------------------------------------
 
             /**
-             * Sincroniza la tarjeta y las líneas de tiempo con la asignación guardada.
+             * Sincroniza el selector, la tarjeta y las líneas de tiempo con la asignación guardada.
              * @param {object} datos - Datos de asignación devueltos por el servidor.
              */
             const actualizarAsignacionMediacion = (datos) => {
@@ -1591,6 +1613,7 @@ import {
                     foto: datos.agente_foto
                 };
 
+                $(`#paso-mediacion-${datos.disputa_id}`).html(generarOpcionesPasos(item.paso_actual));
                 const nuevoBloqueHtml = generarBloqueAgenteAsignadoHtml(item, datos.agente_nombre, datos.agente_foto);
                 $(`.bloque-agente-${datos.disputa_id}`).replaceWith(nuevoBloqueHtml);
 

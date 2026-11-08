@@ -2,6 +2,41 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [08 de Noviembre, 2026] - Etiqueta del paso actual
+- **Interfaz:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` cambia la etiqueta del selector a «Paso actual:» y retira el aviso de que la selección no se guarda, junto a su referencia accesible. La selección manual sigue sin ejecutar acciones.
+- **Textos y estilos:** `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade la nueva etiqueta y retira el texto del aviso; `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` elimina la regla exclusiva del aviso.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. Quedan pendientes la compilación y prueba visual en Vesta.
+- **Validación estática:** Sintaxis JavaScript, lectura del JSON y `git diff --check` correctos; no quedan referencias al aviso en los recursos del plugin.
+
+## [08 de Noviembre, 2026] - Selector compacto y paso actual de mediación
+- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261107-1645.sql` (7 de noviembre a las 16:45): ocho mediaciones en «Caso creado» y `paso_actual` nullable. El listado administrativo ya devuelve el paso; no se añadieron consultas ni se modificaron datos.
+- **Interfaz:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` añade la etiqueta «Paso:», selecciona el paso actual de cada mediación y lo sincroniza tras asignar o tomarla. Conserva los dos primeros pasos deshabilitados y no guarda las selecciones manuales. Un paso nulo o desconocido muestra un aviso y queda registrado en consola.
+- **Estilos y textos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` limita la altura del select a 28 px y su letra a 12 px; `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade el aviso de paso no disponible.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba funcional y visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript, lectura del JSON y `git diff --check` correctos. No se realizó compilación ni prueba funcional local.
+
+## [08 de Noviembre, 2026] - Orden de estado e ID
+- **Tarjetas y detalles:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` muestra el estado antes del ID en cada tarjeta y en la cabecera compartida por el lateral de escritorio y la información adicional móvil. El selector y la ubicación de «Actualizado» permanecen sin cambios.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript y `git diff --check` correctos. No se realizó compilación ni prueba visual local.
+
+## [08 de Noviembre, 2026] - Actualización en la tercera columna
+- **Tarjetas:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` muestra «Actualizado» al inicio de la tercera columna, antes de los participantes, en escritorio; mantiene la ubicación anterior en móvil. Ambas ubicaciones usan el mismo contenido y son mutuamente excluyentes según el ancho de pantalla.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript y `git diff --check` correctos. No se realizó compilación ni prueba visual local.
+
+## [08 de Noviembre, 2026] - Reubicación de selector y actualización
+- **Tarjetas:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` coloca el selector y su aviso debajo del título. En escritorio muestra «Actualizado» al inicio de la segunda columna, correspondiente a los datos de mediación después de la imagen; en móvil conserva su ubicación anterior. Se mantiene el selector sin acciones de guardado y sin cambios de datos.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript y `git diff --check` correctos. No se realizó compilación ni prueba visual local.
+
+## [08 de Noviembre, 2026] - Diseño del selector de pasos de mediaciones
+- **Tarjetas:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` ordena primero el ID y luego el estado; sitúa el selector en la línea siguiente a todo el ancho. Conserva sus opciones, aviso y comportamiento exclusivamente visual.
+- **Detalles:** La misma función de cabecera muestra primero el ID y después el estado tanto en el lateral de escritorio como en la información adicional móvil.
+- **Estilos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` proporciona el ancho completo al selector y elimina la disposición horizontal anterior.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis JavaScript y `git diff --check` correctos. No se realizó compilación ni prueba visual local.
+
 ## [08 de Noviembre, 2026] - Selector visual de pasos en tarjetas de mediación
 - **Solicitud:** Mostrar el selector junto al estado de cada tarjeta, en escritorio y móvil; no en el panel lateral ni en la información adicional. La selección es únicamente visual y no ejecuta acciones.
 - **JavaScript:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` comparte los seis pasos entre línea de tiempo y selectores. En cada tarjeta, los dos primeros aparecen deshabilitados y los otros cuatro habilitados; un aviso indica que la selección no se guarda. Interactuar con el select no cambia la tarjeta seleccionada.
