@@ -217,7 +217,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js"
-    #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
+    "packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/reinicioMediaciones.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js"
@@ -268,7 +268,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     # --- PLUGIN REDA ALOJAMIENTO: CONTROLADORES admin ---
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Experiencia/ExperienciaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/General/SoporteTecnicoController.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/MensajeController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Alerta/AlertaController.php"
@@ -276,7 +276,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     # --- PLUGIN REDA ALOJAMIENTO: CONTROLADORES ---
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Administrativo/AdministrativoController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/BilleteraHuesped/BilleteraHuespedController.php"
-    #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php"
+    "packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/CalificacionController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/ExperienciaController.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Controllers/General/MediaController.php"

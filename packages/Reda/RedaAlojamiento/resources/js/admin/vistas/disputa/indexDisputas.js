@@ -4,7 +4,7 @@
  * permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo,
  * gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
  * Sincroniza el paso de asignación con las líneas de tiempo de escritorio y móvil
- * y muestra bajo el título un selector visual etiquetado «Paso actual» sin guardar las selecciones.
+ * y permite cambiar el paso a «En revisión» desde cada tarjeta.
  */
 import {
     todosSvg,
@@ -95,14 +95,15 @@ import {
      * Petición AJAX para obtener el listado de mediaciones paginado y filtrado (Admin).
      * @param {string} estatus - Filtro de estado.
      * @param {number} pagina - Número de página.
+     * @param {number|string|null} mostrarId - Mediación a localizar en el filtro de revisión.
      * @returns {Promise} Promesa con la respuesta del servidor.
      */
-    const obtenerMediacionesPaginadas = (estatus, pagina) => {
+    const obtenerMediacionesPaginadas = (estatus, pagina, mostrarId = null) => {
         return new Promise((resolve) => {
             $.ajax({
                 url: APP_URL + '/admin/reda/disputas/get-listado',
                 type: 'GET',
-                data: { status: estatus, page: pagina },
+                data: { status: estatus, page: pagina, mostrar_id: mostrarId },
                 success: (data) => resolve(data),
                 error: (x) => {
                     let respuestaServidor = {};
@@ -332,6 +333,36 @@ import {
                         'code': x.status !== 0 ? x.status : 504,
                     };
                     resolve(respuesta);
+                }
+            });
+        });
+    };
+
+    /**
+     * Solicita al servidor el cambio de estado y paso a «En revisión».
+     * @param {number|string} disputaId - ID de la mediación.
+     * @returns {Promise<object>} Respuesta REDA.
+     */
+    const ponerMediacionEnRevision = (disputaId) => {
+        return new Promise((resolve) => {
+            $.ajax({
+                url: APP_URL + '/admin/reda/disputas/poner-en-revision',
+                type: 'POST',
+                data: {
+                    disputa_id: disputaId,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: (data) => resolve(data),
+                error: (x) => {
+                    const servidor = x.responseJSON || {};
+                    const trans = window.RedaAlojamientoJson || {};
+                    resolve({
+                        success: false,
+                        message: servidor.message || (trans["Error al cambiar la mediación a revisión"] || "Error al cambiar la mediación a revisión"),
+                        mensaje_usuario: servidor.mensaje_usuario || (trans["No se pudo actualizar la mediación. Intente nuevamente."] || "No se pudo actualizar la mediación. Intente nuevamente."),
+                        respuesta: servidor.respuesta || '',
+                        code: x.status || 504
+                    });
                 }
             });
         });
@@ -1253,8 +1284,9 @@ import {
      * Carga las mediaciones filtradas por estatus y página, gestionando spinners de espera.
      * @param {string} estatus - Estado por el cual filtrar.
      * @param {number} pagina - Página a cargar.
+     * @param {number|string|null} mostrarId - Mediación a localizar y seleccionar.
      */
-    const cargarMediaciones = async (estatus, pagina = 1) => {
+    const cargarMediaciones = async (estatus, pagina = 1, mostrarId = null) => {
         const trans = window.RedaAlojamientoJson || {};
 
         // 1. Mostrar spinner inline en el contenedor principal para carga fluida
@@ -1273,7 +1305,7 @@ import {
         }
 
         try {
-            const data = await obtenerMediacionesPaginadas(estatus, pagina);
+            const data = await obtenerMediacionesPaginadas(estatus, pagina, mostrarId);
 
             if (data.success) {
                 if (data.respuesta.agentes && Array.isArray(data.respuesta.agentes)) {
@@ -1295,12 +1327,24 @@ import {
 
                 // Seleccionar la primera mediación por defecto
                 if (mediacionesCargadas.length > 0) {
-                    seleccionarMediacion(mediacionesCargadas[0].id, false);
+                    const objetivo = mostrarId === null ? null : mediacionesCargadas.find(m => m.id == mostrarId);
+                    if (mostrarId !== null && !objetivo) {
+                        $('#disputas-list-container').prepend($('<div class="alert alert-warning mt-3"></div>').text(
+                            trans["La mediación actualizada no está disponible en esta página. Actualice el listado."] || "La mediación actualizada no está disponible en esta página. Actualice el listado."
+                        ));
+                    }
+                    const seleccion = objetivo || mediacionesCargadas[0];
+                    seleccionarMediacion(seleccion.id, false);
                 } else {
                     $('#disputas-cabecera-lateral').addClass('d-none');
                     $('#reda-timeline-container').html(`<p class="text-center text-muted small w-100">${trans["Selecciona una mediación para ver su progreso."] || "Selecciona una mediación para ver su progreso."}</p>`);
                     $('#disputas-reservacion-sidebar').addClass('d-none');
                     $('#disputas-info-extra-content').html(`<p class="text-14 text-muted">${trans["Aquí aparecerá información relevante sobre el estado general de tus mediaciones."] || "Aquí aparecerá información relevante sobre el estado general de tus mediaciones."}</p>`);
+                    if (mostrarId !== null) {
+                        $('#disputas-list-container').prepend($('<div class="alert alert-warning mt-3"></div>').text(
+                            trans["La mediación actualizada no está disponible en esta página. Actualice el listado."] || "La mediación actualizada no está disponible en esta página. Actualice el listado."
+                        ));
+                    }
                 }
             } else {
                 $('#disputas-list-container').html(`
@@ -1393,6 +1437,53 @@ import {
 
                 const status = item.attr('data-status');
                 cargarMediaciones(status);
+            });
+
+            // Solo la transición a revisión está implementada por ahora.
+            $(document).on('change', '.reda-select-paso-mediacion', async function(e) {
+                e.stopPropagation();
+                const selector = $(this);
+                const disputaId = selector.data('disputa-id');
+                const item = mediacionesCargadas.find(m => m.id == disputaId);
+                const trans = window.RedaAlojamientoJson || {};
+                if (!item) {
+                    console.error('REDA Admin: No se encontró la mediación seleccionada:', disputaId);
+                    alert(trans["No se pudo actualizar la mediación. Intente nuevamente."] || "No se pudo actualizar la mediación. Intente nuevamente.");
+                    return;
+                }
+
+                if (selector.val() !== 'En revisión') {
+                    selector.html(generarOpcionesPasos(item.paso_actual));
+                    const mensaje = trans["Este paso todavía no está disponible."] || "Este paso todavía no está disponible.";
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        window.RedaNotificaciones.notificar(trans["Información"] || "Información", mensaje, 'info');
+                    } else {
+                        alert(mensaje);
+                    }
+                    return;
+                }
+
+                selector.prop('disabled', true);
+                if (window.RedaNotificaciones && typeof window.RedaNotificaciones.esperar === 'function') {
+                    window.RedaNotificaciones.esperar();
+                }
+                const respuesta = await ponerMediacionEnRevision(disputaId);
+                if (!respuesta.success) {
+                    selector.html(generarOpcionesPasos(item.paso_actual)).prop('disabled', false);
+                    if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                        window.RedaNotificaciones.notificar(trans["Error"] || "Error", respuesta.mensaje_usuario, 'error');
+                    } else {
+                        if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {
+                            window.RedaNotificaciones.ocultar();
+                        }
+                        alert(respuesta.mensaje_usuario);
+                    }
+                    return;
+                }
+
+                $('.disputa-tab-item').removeClass('active');
+                $('.disputa-tab-item[data-status="revision"]').addClass('active');
+                await cargarMediaciones('revision', 1, respuesta.respuesta.disputa_id);
             });
 
             // Manejo de clics en los items de la lista para seleccionar

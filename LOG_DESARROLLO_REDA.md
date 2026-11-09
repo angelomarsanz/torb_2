@@ -2,6 +2,14 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [09 de Noviembre, 2026] - Cambio de mediación a revisión
+- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261109-0523.sql`, generado hoy a las 05:23. Contiene dos mediaciones abiertas en «Asignación a agente», ambas asignadas; `disputas` tiene clave primaria `id`, `booking_id` relacionado con `bookings` y campos de estado y paso nullable. No se modificaron datos ni respaldo.
+- **Servidor:** `packages/Reda/RedaAlojamiento/routes/web.php` registra `POST /admin/reda/disputas/poner-en-revision`; `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php` valida roles y visibilidad, bloquea la fila y actualiza `estado` y `paso_actual` a «En revisión». El listado localiza el caso en la página de revisión y filtra el valor literal independientemente de la traducción. No se establecen restricciones adicionales sobre el estado anterior.
+- **Vista del usuario:** `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php` filtra revisión por el valor literal o traducido.
+- **Interfaz:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` gestiona petición, espera, errores y selección de la pestaña y del caso; las demás opciones aún no implementadas notifican y restauran el paso previo. `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade los mensajes correspondientes.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. No se ejecutó SQL ni compilación; las pruebas funcionales quedan pendientes en Vesta.
+- **Validación estática:** Sintaxis de los tres archivos PHP, del JavaScript, lectura del JSON y `git diff --check` correctos. No se ejecutaron pruebas HTTP ni operaciones de base de datos.
+
 ## [09 de Noviembre, 2026] - Texto largo en selector de paso actual
 - **Estilos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` reserva espacio a la derecha del selector de pasos y aplica truncamiento con puntos suspensivos, preservando la flecha y las opciones completas. No cambia la lógica ni los datos.
 - **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual en escritorio y móvil quedan pendientes en Vesta.

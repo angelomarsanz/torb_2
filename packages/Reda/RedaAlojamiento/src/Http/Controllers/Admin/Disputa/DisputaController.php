@@ -7,6 +7,7 @@
  * turistas y anfitriones en el backend de Torbian. Permite acceso y gestión tanto
  * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario),
  * actualiza el paso de asignación al asignar o tomar una mediación,
+ * permite pasar mediaciones visibles al estado y paso «En revisión»,
  * y proporciona la gestión de la configuración de límites de mediaciones
  * (primer aviso y segundo aviso con restricciones) exclusivamente para Rol 1.
  * 
@@ -115,7 +116,8 @@ class DisputaController extends Controller
 
     /**
      * Obtiene el listado de mediaciones paginado para el administrador.
-     * Permite visualización completa a rol 1 (Admin) y filtrada para rol 2 (Atención al usuario).
+     * Permite visualización completa a rol 1 y filtrada para rol 2.
+     * Puede localizar una mediación visible en la página de revisión correspondiente.
      */
     public function obtenerDisputasPaginadas(Request $request)
     {
@@ -164,11 +166,30 @@ class DisputaController extends Controller
             ];
             
             if (isset($mapeo[$estatus])) {
-                $consulta->where('estado', $mapeo[$estatus]);
+                if ($estatus === 'revision') {
+                    $consulta->whereIn('estado', array_unique(['En revisión', $mapeo[$estatus]]));
+                } else {
+                    $consulta->where('estado', $mapeo[$estatus]);
+                }
             }
         }
 
-        $disputas = $consulta->with(['booking.properties.property_address', 'agente', 'turista', 'anfitrion'])->orderBy('updated_at', 'desc')->paginate(10);
+        $pagina = max(1, (int) $request->get('page', 1));
+        if ($estatus === 'revision' && filter_var($request->get('mostrar_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
+            $objetivo = (clone $consulta)->whereKey($request->get('mostrar_id'))->first();
+            if ($objetivo && $objetivo->updated_at) {
+                $anteriores = (clone $consulta)->where(function ($q) use ($objetivo) {
+                    $q->where('updated_at', '>', $objetivo->updated_at)
+                      ->orWhere(function ($q) use ($objetivo) {
+                          $q->where('updated_at', $objetivo->updated_at)->where('id', '>', $objetivo->id);
+                      });
+                })->count();
+                $pagina = intdiv($anteriores, 10) + 1;
+            }
+        }
+
+        $disputas = $consulta->with(['booking.properties.property_address', 'agente', 'turista', 'anfitrion'])
+            ->orderBy('updated_at', 'desc')->orderBy('id', 'desc')->paginate(10, ['*'], 'page', $pagina);
 
         // Formatear los datos para el consumo del frontend via Javascript
         $elementos = $disputas->getCollection()->map(function($d) use ($adminId) {
@@ -302,7 +323,7 @@ class DisputaController extends Controller
             'mensaje_usuario' => __('Listado recuperado con éxito'),
             'respuesta' => [
                 'data' => $elementos,
-                'pagination' => (string) $disputas->appends(request()->except('page'))->links('reda-alojamiento::admin.general.paginacion'),
+                'pagination' => (string) $disputas->appends(request()->except(['page', 'mostrar_id']))->links('reda-alojamiento::admin.general.paginacion'),
                 'rol_admin' => $roleId,
                 'admin_id' => $adminId,
                 'agentes' => $agentesDisponibles
@@ -400,6 +421,83 @@ class DisputaController extends Controller
         ];
 
         return response()->json($respuesta, $respuesta['code']);
+    }
+
+    /**
+     * Cambia a revisión el estado y paso de una mediación visible para el administrador.
+     * El bloqueo de fila conserva la comprobación de asignación frente a cambios concurrentes.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ponerEnRevision(Request $request)
+    {
+        try {
+            $adminId = auth()->guard('admin')->id();
+            $rolData = $this->obtenerRolAdmin($adminId);
+            $rolId = $rolData ? (int) $rolData->role_id : null;
+            if (!$adminId || !in_array($rolId, [1, 2], true)) {
+                $code = $adminId ? 403 : 401;
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Acceso denegado'),
+                    'mensaje_usuario' => __('No tiene permisos para cambiar el paso de esta mediación.'),
+                    'respuesta' => '',
+                    'code' => $code
+                ], $code);
+            }
+
+            $disputaId = filter_var($request->input('disputa_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if (!$disputaId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('ID de mediación inválido'),
+                    'mensaje_usuario' => __('Debe especificar una mediación válida.'),
+                    'respuesta' => '',
+                    'code' => 422
+                ], 422);
+            }
+
+            $resultado = \DB::transaction(function () use ($disputaId, $adminId, $rolId) {
+                $disputa = Disputa::whereKey($disputaId)->lockForUpdate()->first();
+                if (!$disputa) {
+                    return [
+                        'success' => false, 'message' => __('Disputa no encontrada'),
+                        'mensaje_usuario' => __('La mediación indicada no existe.'),
+                        'respuesta' => '', 'code' => 404
+                    ];
+                }
+                if ($rolId === 2 && $disputa->id_usuario_agente_asignado && $disputa->id_usuario_agente_asignado != $adminId) {
+                    return [
+                        'success' => false, 'message' => __('Acceso denegado'),
+                        'mensaje_usuario' => __('No tiene permisos para cambiar el paso de esta mediación.'),
+                        'respuesta' => '', 'code' => 403
+                    ];
+                }
+
+                $disputa->estado = 'En revisión';
+                $disputa->paso_actual = 'En revisión';
+                $disputa->save();
+
+                return [
+                    'success' => true, 'message' => __('Mediación en revisión'),
+                    'mensaje_usuario' => __('La mediación se encuentra en revisión.'),
+                    'respuesta' => ['disputa_id' => $disputa->id, 'estado' => $disputa->estado, 'paso_actual' => $disputa->paso_actual],
+                    'code' => 200
+                ];
+            });
+
+            return response()->json($resultado, $resultado['code']);
+        } catch (\Exception $e) {
+            Log::error('Error al cambiar la mediación a revisión: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => __('Error al cambiar la mediación a revisión'),
+                'mensaje_usuario' => __('No se pudo actualizar la mediación. Intente nuevamente.'),
+                'respuesta' => $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
     }
 
     /**

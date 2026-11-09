@@ -90,6 +90,7 @@ Route::group(['prefix' => 'admin/reda', 'middleware' => ['web', 'guest:admin']],
             Route::get('count-activas', 'obtenerConteoDisputasActivas')->name('count_activas');
             Route::get('get-detail-modal/{id}', 'getDetailModal')->name('get_detail_modal');
             Route::post('asignar-agente', 'asignarAgente')->name('asignar_agente');
+            Route::post('poner-en-revision', 'ponerEnRevision')->name('poner_en_revision');
 
             // Configuración de Mediaciones (Exclusivo Rol 1: Admin)
             Route::get('configuracion', 'configuracion')->name('configuracion');

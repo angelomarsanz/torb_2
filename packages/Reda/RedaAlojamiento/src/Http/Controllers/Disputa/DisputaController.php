@@ -3,6 +3,7 @@
  * Resumen: Controlador para la gestión de disputas y mediaciones en el plugin Reda.
  * Este controlador maneja la lógica de visualización de listados filtrados por estado,
  * la carga de modales de solicitud y detalle, la verificación de mediaciones activas
+ * y el filtrado de estados persistidos independientemente del idioma de la interfaz,
  * para reservaciones y el almacenamiento de nuevas solicitudes con archivos adjuntos.
  */
 namespace Reda\RedaAlojamiento\Http\Controllers\Disputa;
@@ -33,7 +34,8 @@ class DisputaController extends Controller
     /**
      * Obtiene el listado de mediaciones paginado para el dashboard del usuario.
      * Aplica filtros por estado (abiertos, revisión, espera, resueltos, cerrados)
-     * e identifica mensajes no leídos para cada mediación.
+     * e identifica mensajes no leídos para cada mediación. El filtro de revisión
+     * acepta el valor persistido en español y su equivalente traducido.
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -58,7 +60,11 @@ class DisputaController extends Controller
             ];
             
             if (isset($mapeo[$status])) {
-                $query->where('estado', $mapeo[$status]);
+                if ($status === 'revision') {
+                    $query->whereIn('estado', array_unique(['En revisión', $mapeo[$status]]));
+                } else {
+                    $query->where('estado', $mapeo[$status]);
+                }
             }
         }
 
