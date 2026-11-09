@@ -2,6 +2,19 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [09 de Noviembre, 2026] - Texto largo en selector de paso actual
+- **Estilos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` reserva espacio a la derecha del selector de pasos y aplica truncamiento con puntos suspensivos, preservando la flecha y las opciones completas. No cambia la lógica ni los datos.
+- **Documentación:** `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. La compilación y prueba visual en escritorio y móvil quedan pendientes en Vesta.
+- **Validación estática:** `git diff --check` correcto. No se realizó compilación ni prueba visual local.
+
+## [09 de Noviembre, 2026] - Vigencia obligatoria del respaldo de base de datos
+- **Directrices:** `.github/copilot-instructions.md` exige comparar `AAAAMMDD` del respaldo más reciente con la fecha actual antes de iniciar una solicitud que consulte, busque, inserte, actualice o elimine datos. Si el respaldo es de un día anterior, se debe detener el trabajo y solicitar uno actualizado; no se continúa hasta confirmar un respaldo de la fecha actual o posterior.
+- **Punto de control:** `previo_cambios_realizados.md` registra esta tarea completada.
+- **Respaldo SQL:** No se inspeccionó ni modificó ningún archivo de respaldo; esta petición solo actualiza instrucciones.
+
+## [08 de Noviembre, 2026] - Consulta sobre facturación de Copilot
+- Se consultó la documentación oficial de GitHub sobre la renovación de la suscripción y el reinicio mensual de los créditos de IA. No se modificó código del proyecto.
+
 ## [08 de Noviembre, 2026] - Etiqueta del paso actual
 - **Interfaz:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` cambia la etiqueta del selector a «Paso actual:» y retira el aviso de que la selección no se guarda, junto a su referencia accesible. La selección manual sigue sin ejecutar acciones.
 - **Textos y estilos:** `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade la nueva etiqueta y retira el texto del aviso; `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` elimina la regla exclusiva del aviso.

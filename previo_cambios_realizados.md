@@ -1,8 +1,7 @@
 # Registro previo de cambios en curso
 
-- **Fecha:** 8 de noviembre de 2026.
-- **Tarea:** Cambiar la etiqueta a «Paso actual» y retirar el aviso de selección del selector de mediaciones.
-- **Código:** `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js` cambia la etiqueta y elimina el aviso y su referencia `aria-describedby`, sin cambiar la selección ni el guardado.
-- **Estilos y textos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` elimina la regla del aviso retirado; `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade «Paso actual:» y elimina el texto anterior.
+- **Fecha:** 9 de noviembre de 2026.
+- **Tarea:** Evitar que los textos largos del selector de paso actual se superpongan con la flecha.
+- **Estilos:** `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` reserva espacio a la derecha para la flecha y aplica recorte con puntos suspensivos al selector compacto, sin modificar sus opciones ni valores.
 - **Documentación:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
-- **Validación:** Sintaxis JavaScript, lectura del JSON y `git diff --check` correctos; pendientes subida, compilación y prueba visual en Vesta.
+- **Validación:** `git diff --check` correcto; pendientes subida, compilación y prueba visual en Vesta.

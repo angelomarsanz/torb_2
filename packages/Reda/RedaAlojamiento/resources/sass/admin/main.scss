@@ -1,4 +1,4 @@
-/* Estilos para el admin usando Bootstrap v5.2.3; incluye ajustes por módulo y el selector compacto de pasos. */
+/* Estilos para el admin usando Bootstrap v5.2.3; incluye ajustes por módulo y el selector compacto de pasos con texto truncado. */
 
 /* Estilos para el módulo de Soporte Técnico */
 .soporte-tecnico {
@@ -1128,8 +1128,12 @@
         height: 28px;
         padding-top: 2px;
         padding-bottom: 2px;
+        padding-right: 2.5rem;
         font-size: 12px;
         line-height: 1.4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .reda-reservacion-thumb-size {
