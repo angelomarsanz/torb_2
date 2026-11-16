@@ -35,7 +35,8 @@ class DisputaController extends Controller
      * Obtiene el listado de mediaciones paginado para el dashboard del usuario.
      * Aplica filtros por estado (abiertos, revisión, espera, resueltos, cerrados)
      * e identifica mensajes no leídos para cada mediación. El filtro de revisión
-     * acepta el valor persistido en español y su equivalente traducido.
+     * y el de espera aceptan el valor persistido en español y su equivalente traducido.
+     * Incluye solamente los documentos privados cargados por el usuario actual.
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -60,8 +61,8 @@ class DisputaController extends Controller
             ];
             
             if (isset($mapeo[$status])) {
-                if ($status === 'revision') {
-                    $query->whereIn('estado', array_unique(['En revisión', $mapeo[$status]]));
+                if (in_array($status, ['revision', 'espera'], true)) {
+                    $query->whereIn('estado', array_unique([$status === 'revision' ? 'En revisión' : 'Esperando respuesta', $mapeo[$status]]));
                 } else {
                     $query->where('estado', $mapeo[$status]);
                 }
@@ -95,6 +96,12 @@ class DisputaController extends Controller
                 $nuevosMensajes = \App\Models\Messages::where('property_id', $propertyId)
                     ->whereIn('booking_id', $sharedBookingIds)
                     ->where('read', 0)
+                    ->where(function ($q) use ($myUserId) {
+                        $q->whereNotExists(function ($consulta) {
+                            $consulta->select(DB::raw(1))->from('destinatarios_informacion_mediacion')
+                                ->whereColumn('destinatarios_informacion_mediacion.mensaje_id', 'messages.id');
+                        })->orWhere('receiver_id', $myUserId);
+                    })
                     ->where(function($q) use ($myUserId) {
                         // Un mensaje es un "nuevo mensaje" para el usuario si:
                         // 1. Fue enviado por un admin (metadata sender_type = admin)
@@ -127,6 +134,18 @@ class DisputaController extends Controller
                         ];
                     }
                 }
+            }
+            $archivosPrivados = \Reda\RedaAlojamiento\Models\Disputa\ArchivoInformacion::join(
+                'solicitudes_informacion_mediacion as s', 's.id', '=', 'archivos_informacion_mediacion.solicitud_id'
+            )->where('s.disputa_id', $d->id)->where('archivos_informacion_mediacion.tipo', 'respuesta')
+                ->where('archivos_informacion_mediacion.usuario_id', $myUserId)
+                ->select('archivos_informacion_mediacion.*')->get();
+            foreach ($archivosPrivados as $archivo) {
+                $adjuntos[] = [
+                    'nombre' => $archivo->nombre,
+                    'url' => url('reda/informacion-mediacion/archivo/' . $archivo->id),
+                    'es_imagen' => str_starts_with($archivo->mime ?? '', 'image/'),
+                ];
             }
 
             // Asegurar prefijo /public/ para la foto de la propiedad si es ruta relativa

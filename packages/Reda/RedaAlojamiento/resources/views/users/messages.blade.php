@@ -1,3 +1,4 @@
+{{-- Presenta mensajes del inbox y el acceso privado a solicitudes de información. --}}
 	<header class="d-flex align-items-center p-2 border-bottom">
 		@php 
 			$users = ($booking->host_id == Auth::id()) ? 'users' : 'host';
@@ -46,6 +47,9 @@
                             {{ $nombreParaMostrar }} @if($rolParaMostrar) ({{ $rolParaMostrar }}) @endif
                         </span>
                         <p class="m-0 text-13">{{ $message->message }}</p>
+                        @if ($message->solicitud_informacion_id ?? null)
+                            <button type="button" class="btn btn-sm btn-outline-success mt-2 reda-abrir-informacion" data-solicitud="{{ $message->solicitud_informacion_id }}">{{ __('Cargar archivos solicitados') }}</button>
+                        @endif
                     </div>			
                     <div class="time-reda text-10 mt-1 opacity-50">
                         {{ $message->created_at->diffForHumans() }}

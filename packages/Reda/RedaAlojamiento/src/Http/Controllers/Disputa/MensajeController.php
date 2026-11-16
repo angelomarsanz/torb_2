@@ -28,6 +28,7 @@ class MensajeController extends Controller
     /**
      * Obtiene el historial de una mediación, mostrando los avisos administrativos
      * privados únicamente a su destinatario y conservando los mensajes grupales.
+     * Solo los participantes de la reserva pueden consultar el historial.
      *
      * @param int|string $booking_id Identificador de la reserva vinculada a la mediación.
      * @return \Illuminate\Http\JsonResponse
@@ -41,6 +42,7 @@ class MensajeController extends Controller
                 'mensaje_usuario' => __('Reservación no encontrada')
             ], 404);
         }
+        abort_unless(in_array((int) Auth::id(), [(int) $booking->user_id, (int) $booking->host_id], true), 403);
 
         // Identificamos a los dos usuarios participantes de la mediación actual y la propiedad
         $usuarioA = $booking->user_id;

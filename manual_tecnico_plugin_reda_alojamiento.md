@@ -1,5 +1,79 @@
 # Documentación de Archivos del Plugin RedaAlojamiento
 
+## Información adicional en mediaciones
+
+Solo el agente actualmente asignado puede crear solicitudes y reintentar los correos pendientes de su mediación. Una solicitud acepta demandante, demandado o ambos, texto, plazo entero positivo y un complemento opcional JPG, PNG, WebP o PDF de hasta 10 MB. Al guardar, el estado pasa a `Esperando respuesta` y el paso a `Solicitud de información adicional`. Las solicitudes ya vencidas no se reactivan; las que siguen vigentes reciben el plazo de la nueva solicitud. Una carga admite hasta cinco archivos de 10 MB cada uno y el estado continúa en espera.
+
+Las rutas de los documentos se registran en tablas auxiliares; los archivos se almacenan en el disco `local`, bajo `storage/app/reda/mediaciones/informacion`, fuera de `storage/app/public`. Los complementos del agente son accesibles a los destinatarios de la solicitud; los documentos de respuesta solo a quien los cargó y al personal de soporte autorizado. La autorización se comprueba al descargar, y el plazo se verifica al abrir el formulario y nuevamente en la transacción de carga. El enlace por correo conduce al inbox después de autenticar al usuario. Se registra una alerta individual y un correo para el agente asignado en el momento de la carga.
+
+Los correos pendientes se guardan en la base de datos y el agente asignado puede reintentarlos desde la tarjeta. El envío es síncrono; no hay reintento automático. Si el servidor falla después de enviar un correo pero antes de registrar su éxito, un reintento podría duplicarlo. El reinicio de mediaciones queda bloqueado mientras existan estas solicitudes para no borrar referencias ni dejar archivos privados huérfanos: su eliminación requiere diseñar previamente una limpieza segura y autorizada.
+
+### `packages/Reda/RedaAlojamiento/database/migrations/2026_11_09_100000_crear_solicitudes_informacion_mediaciones.php`
+  `up()` crea las tablas de solicitudes, destinatarios, archivos y correos; sus columnas nuevas son nulas salvo las claves ID. `down()` se niega a revertir mientras existan registros y elimina solo tablas vacías.
+
+### `packages/Reda/RedaAlojamiento/src/Models/Disputa/SolicitudInformacion.php`
+  Modelo de solicitudes y conversión de `vence_en` a fecha.
+
+### `packages/Reda/RedaAlojamiento/src/Models/Disputa/DestinatarioInformacion.php`
+  Modelo de destinatarios y vínculo con el mensaje privado.
+
+### `packages/Reda/RedaAlojamiento/src/Models/Disputa/ArchivoInformacion.php`
+  Modelo de archivos complementarios y respuestas privadas.
+
+### `packages/Reda/RedaAlojamiento/src/Models/Disputa/CorreoInformacion.php`
+  Modelo de correos pendientes y enviados, incluyendo el usuario que originó una carga.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/InformacionAdicionalController.php`
+  `crear()` valida roles, participantes y archivos, bloquea la disputa, renueva plazos vigentes y crea solicitud, mensajes y correos en una transacción. `acceso()` conserva el destino tras el login. `consultar()` y `cargar()` autorizan al destinatario y comprueban el plazo; `cargar()` registra documentos, alerta y correo de manera transaccional. `archivo()` y `archivoAdmin()` entregan únicamente documentos autorizados con cabeceras privadas. `reintentar()` reprocesa los correos pendientes; `enviarCorreos()` los bloquea individualmente, registra errores y conserva pendientes. `guardarArchivo()` utiliza el disco local privado y registra rutas para su limpieza ante errores de transacción; `autorizarAdmin()`, `autorizarDestinatario()` y `responder()` centralizan permisos y respuestas.
+
+### `packages/Reda/RedaAlojamiento/resources/views/emails/informacion_mediacion.blade.php`
+  Correo para destinatarios de solicitudes o para el agente cuando recibe documentos; usa el enlace autenticado o la vista de alertas.
+
+### `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/informacionAdicional.js`
+  `abrirSolicitud()` consulta autorización y vencimiento, presenta el modal, valida cantidades y tamaños y envía los archivos; `mostrarError()` presenta errores sin interpretar HTML. El enlace desde correo abre el mismo modal.
+
+### `packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js`
+  Importa el módulo de información adicional y evita abrir simultáneamente el aviso de privacidad cuando se entra desde un correo.
+
+### `packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php`
+  Presenta el botón «Cargar archivos solicitados» solo cuando el controlador vincula el mensaje al destinatario autenticado.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`
+  `index()` y `message()` validan la reserva seleccionada, preservan la privacidad de mensajes y vinculan las solicitudes por destinatario con los mensajes correspondientes.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php`
+  `getMessages()` exige que el usuario participe en la reserva antes de entregar el historial.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/MensajeController.php`
+  `getMessages()` verifica el rol y acceso a la mediación, evita mezclar solicitudes privadas de otras mediaciones y no marca como leídos los avisos destinados a participantes.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php`
+  `obtenerDisputasPaginadas()` incorpora archivos privados autorizados, cantidad de correos pendientes y localización de la mediación en el filtro de espera.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php`
+  `obtenerDisputasPaginadas()` muestra los archivos privados propios, filtra avisos ajenos del contador y reconoce el estado persistido en español.
+
+### `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js`
+  `abrirSolicitudInformacion()` construye el formulario, controla asignación y muestra la confirmación y eventual renovación de plazos. Los manejadores cambian a la pestaña de espera y permiten reintentar correos. `generarListaAdjuntosHtml()` y `abrirMediaViewer()` reconocen y muestran archivos privados, y el chat escapa el texto de los mensajes.
+
+### `packages/Reda/RedaAlojamiento/resources/js/vistas/disputa/disputas/indexDisputas.js`
+  `generarListaAdjuntosHtml()` y `abrirMediaViewer()` muestran archivos propios, incluso PDF con rutas autenticadas; `renderizarMensajes()` escapa el contenido.
+
+### `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js`
+  `renderizarAlertas()` escapa textos y datos de usuario antes de insertarlos en el HTML.
+
+### `packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php`
+  `reiniciar()` detiene el reinicio antes de borrar si existen solicitudes de información.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php`
+  `reiniciar()` informa expresamente el bloqueo preventivo por solicitudes privadas.
+
+### `packages/Reda/RedaAlojamiento/routes/web.php`
+  Declara rutas de consulta, carga y lectura autenticadas, acceso desde correo, creación administrativa y reintento de correo.
+
+### `packages/Reda/RedaAlojamiento/resources/lang/es.json`
+  Agrega textos del flujo, validaciones, vencimiento, reintento y advertencia de conservación.
+
 ## Reinicio de mediaciones de prueba
 
 Herramienta destructiva y deshabilitada por defecto. Solo se muestra y ejecuta con `REDA_REINICIO_MEDIACIONES=true`, `APP_ENV` igual a `local`, `development` o `dev`, sesión administrativa y rol ID 1. No cambiar `APP_ENV` global de un servidor para forzar el acceso. El administrador debe disponer de un respaldo reciente y coordinar una ventana sin usuarios ni procesos de mediación o chat; no existe bloqueo automático de las demás operaciones. No elimina correos ya entregados.
@@ -11,7 +85,7 @@ Herramienta destructiva y deshabilitada por defecto. Solo se muestra y ejecuta c
 - **packages/Reda/RedaAlojamiento/src/Models/Disputa/AdjuntoMediacionPendiente.php**
   Modelo para rutas y huellas SHA-256 de archivos pendientes de eliminar tras confirmar la transacción.
 - **packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php**
-  `usuariosElegibles()` filtra cuentas inactivas, no borradas y con antecedentes de segundo aviso o restricción. `reiniciar()` usa un bloqueo de MySQL para impedir reinicios simultáneos, valida de nuevo la selección y en una transacción elimina disputas, alertas `primer_aviso`/`suspension`, avisos y mensajes con marcador inequívoco; reactiva solo cuentas seleccionadas y conserva reservas y ajustes. Los mensajes históricos sin marcador permanecen por su origen ambiguo. `normalizarRuta()` y `archivoSeguro()` limitan las rutas y rechazan enlaces simbólicos. `procesarAdjuntos()` elimina después del commit solo archivos con la misma huella, mantiene la cola si falla y registra el error. Si existe `disputas_respaldo`, conserva todos los adjuntos por precaución; informa el número conservado. El borrado de archivos no es atómico con la base de datos. Un reinicio posterior, durante mantenimiento, reintenta los pendientes; antes de reintentar revisar el registro y no sustituir archivos pendientes.
+  `usuariosElegibles()` filtra cuentas inactivas, no borradas y con antecedentes de segundo aviso o restricción. `reiniciar()` usa un bloqueo de MySQL para impedir reinicios simultáneos, valida de nuevo la selección y se detiene si existen solicitudes de información adicional; de lo contrario, en una transacción elimina disputas, alertas `primer_aviso`/`suspension`, avisos y mensajes con marcador inequívoco; reactiva solo cuentas seleccionadas y conserva reservas y ajustes. Los mensajes históricos sin marcador permanecen por su origen ambiguo. `normalizarRuta()` y `archivoSeguro()` limitan las rutas y rechazan enlaces simbólicos. `procesarAdjuntos()` elimina después del commit solo archivos con la misma huella, mantiene la cola si falla y registra el error. Si existe `disputas_respaldo`, conserva todos los adjuntos por precaución; informa el número conservado. El borrado de archivos no es atómico con la base de datos. Un reinicio posterior, durante mantenimiento, reintenta los pendientes; antes de reintentar revisar el registro y no sustituir archivos pendientes.
 - **packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php**
   `autorizar()` comprueba bandera, entorno y rol real en cada petición; `index()` presenta las cuentas elegibles y `reiniciar()` valida la frase exacta y selección, registra el resultado y devuelve el formato estándar. Un error posterior al commit puede dejar archivos pendientes.
 - **packages/Reda/RedaAlojamiento/resources/views/admin/disputa/reinicio_mediaciones.blade.php**

@@ -3,6 +3,7 @@
 /**
  * Reinicia datos inequívocos de mediación y conserva una cola durable de adjuntos pendientes.
  * Debe ejecutarse durante una ventana sin actividad de mediaciones ni de su chat.
+ * Bloquea el reinicio si existen solicitudes de información para preservar sus archivos privados.
  */
 
 namespace Reda\RedaAlojamiento\Services;
@@ -32,7 +33,7 @@ class ReinicioMediacionesService
 
     /**
      * Elimina datos en una transacción y procesa después la cola persistente de archivos.
-     * El bloqueo de MySQL impide que dos administradores ejecuten el reinicio simultáneamente.
+     * El bloqueo de MySQL impide reinicios simultáneos; las solicitudes privadas impiden borrar los datos.
      */
     public function reiniciar(array $usuarios): array
     {
@@ -50,6 +51,10 @@ class ReinicioMediacionesService
                 }
 
                 $disputas = DB::table('disputas')->lockForUpdate()->get();
+                if (Schema::hasTable('solicitudes_informacion_mediacion')
+                    && DB::table('solicitudes_informacion_mediacion')->exists()) {
+                    throw new RuntimeException('El reinicio está bloqueado: existen solicitudes de información y archivos privados que deben conservarse.');
+                }
                 $conservarAdjuntos = Schema::hasTable('disputas_respaldo');
                 $rutas = [];
                 foreach ($disputas as $disputa) {

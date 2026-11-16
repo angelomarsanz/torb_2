@@ -4,7 +4,7 @@
  * permitiendo filtrar por estados, visualizar el progreso en la línea de tiempo,
  * gestionar mensajes entre las partes y visualizar documentos adjuntos (fotos/PDFs).
  * Sincroniza el paso de asignación con las líneas de tiempo de escritorio y móvil
- * y permite cambiar el paso a «En revisión» desde cada tarjeta.
+ * permite cambiar el paso a «En revisión» y solicitar información con plazo y correos reintentables.
  */
 import {
     todosSvg,
@@ -616,7 +616,7 @@ import {
                     <div class="d-flex flex-column msg-bubble-container">
                         <div class="msg-admin p-2 px-3">
                             <span class="d-block text-10 fw-700 text-uppercase mb-1 opacity-75">${nombreSender} (${roleSender})</span>
-                            <p class="m-0 text-13">${m.message}</p>
+                            <p class="m-0 text-13">${$('<div>').text(m.message || '').html()}</p>
                         </div>
                         <div class="time-admin text-10 mt-1 opacity-50">
                             ${m.created_at_humans || m.created_time || ''}
@@ -737,7 +737,7 @@ import {
         });
         // ----------------------------------------------
 
-        const esPDF = esArchivoPDF(fullUrl);
+        const esPDF = esArchivoPDF(nombre) || esArchivoPDF(fullUrl);
 
         // Ocultar controles de zoom por defecto (Reset)
         $('.zoom-controls').addClass('d-none').removeClass('d-md-flex');
@@ -877,7 +877,7 @@ import {
     };
 
     /**
-     * Genera el listado de archivos adjuntos permitiendo disparar el visor para imágenes/PDF.
+     * Genera el listado de adjuntos y permite abrir imágenes o PDF privados autenticados.
      * @param {Array} adjuntos - Lista de adjuntos.
      * @returns {string} HTML de la lista.
      */
@@ -891,17 +891,18 @@ import {
         adjuntos.forEach(file => {
             const fullFileUrl = getFullUrl(file.url);
             const icon = file.es_imagen ? 'far fa-image' : 'far fa-file-alt';
-            const esPDF = esArchivoPDF(file.url);
+            const esPDF = esArchivoPDF(file.nombre);
             const esViewable = file.es_imagen || esPDF;
+            const nombreSeguro = $('<div>').text(file.nombre || '').html().replace(/"/g, '&quot;');
 
             if (esViewable) {
                 html += `
                     <div class="list-group-item list-group-item-action py-2 px-0 d-flex align-items-center border-0 bg-transparent pointer reda-viewer-trigger" 
-                         data-url="${fullFileUrl}" data-nombre="${file.nombre}" data-es-imagen="${file.es_imagen}">
+                         data-url="${fullFileUrl}" data-nombre="${nombreSeguro}" data-es-imagen="${file.es_imagen}">
                         <div class="me-2 bg-light-soft rounded d-flex align-items-center justify-content-center reda-adjunto-icon-box">
                             <i class="${icon} text-success text-10"></i>
                         </div>
-                        <span class="text-11 text-dark text-truncate" title="${file.nombre}">${file.nombre}</span>
+                        <span class="text-11 text-dark text-truncate" title="${nombreSeguro}">${nombreSeguro}</span>
                     </div>
                 `;
             } else {
@@ -910,7 +911,7 @@ import {
                         <div class="me-2 bg-light-soft rounded d-flex align-items-center justify-content-center reda-adjunto-icon-box">
                             <i class="${icon} text-success text-10"></i>
                         </div>
-                        <span class="text-11 text-dark text-truncate" title="${file.nombre}">${file.nombre}</span>
+                        <span class="text-11 text-dark text-truncate" title="${nombreSeguro}">${nombreSeguro}</span>
                     </a>
                 `;
             }
@@ -1152,7 +1153,7 @@ import {
     };
 
     /**
-     * Renderiza tarjetas con etiqueta y paso actual seleccionado y actualización en la tercera columna de escritorio.
+     * Renderiza tarjetas con el paso actual, solicitudes, correos pendientes y actualización en escritorio.
      * @param {Array} items - Colección de objetos de mediación.
      */
     const renderizarLista = (items) => {
@@ -1216,6 +1217,12 @@ import {
                                         <select id="paso-mediacion-${item.id}" class="form-select form-select-sm reda-select-paso-mediacion" aria-label="${etiquetaSelector} #${item.id}" data-disputa-id="${item.id}">
                                             ${opcionesPasos}
                                         </select>
+                                        ${item.paso_actual === 'Solicitud de información adicional' && Number(item.id_usuario_agente_asignado) === Number(adminIdActual) ? `
+                                            <button type="button" class="btn btn-link btn-sm p-0 mt-1 reda-solicitar-mas" data-id="${item.id}">${trans["Solicitar más información"] || "Solicitar más información"}</button>
+                                        ` : ''}
+                                        ${item.correos_informacion_pendientes && Number(item.id_usuario_agente_asignado) === Number(adminIdActual) ? `
+                                            <div><button type="button" class="btn btn-link btn-sm p-0 mt-1 reda-reintentar-correos" data-id="${item.id}">${trans["Reintentar correos pendientes"] || "Reintentar correos pendientes"} (${Number(item.correos_informacion_pendientes)})</button></div>
+                                        ` : ''}
                                     </div>
 
                                     <div class="mt-2 mb-3">
@@ -1439,7 +1446,97 @@ import {
                 cargarMediaciones(status);
             });
 
-            // Solo la transición a revisión está implementada por ahora.
+            /** Abre el formulario de solicitud y restaura el selector si se cancela. */
+            const abrirSolicitudInformacion = (item) => {
+                const trans = window.RedaAlojamientoJson || {};
+                if (!item.id_usuario_agente_asignado || Number(item.id_usuario_agente_asignado) !== Number(adminIdActual)) {
+                    $(`#paso-mediacion-${item.id}`).html(generarOpcionesPasos(item.paso_actual));
+                    window.RedaNotificaciones.notificar(trans["Información"] || "Información",
+                        trans["Solo el agente asignado puede solicitar información adicional."] || "Solo el agente asignado puede solicitar información adicional.", 'info');
+                    return;
+                }
+                const nombreDemandante = Number(item.id_usuario_inicial) === Number(item.id_usuario_turista) ? item.turista_nombre : item.anfitrion_nombre;
+                const nombreDemandado = Number(item.id_usuario_inicial) === Number(item.id_usuario_turista) ? item.anfitrion_nombre : item.turista_nombre;
+                const escapar = texto => $('<div>').text(texto || '').html().replace(/"/g, '&quot;');
+                $('#reda-modal-solicitud-informacion').remove();
+                $('body').append(`
+                    <div class="modal fade" id="reda-modal-solicitud-informacion" tabindex="-1" aria-labelledby="reda-titulo-solicitud" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+                        <form id="reda-form-solicitud">
+                          <div class="modal-header"><h5 class="modal-title" id="reda-titulo-solicitud">${trans["Solicitud de información adicional"] || "Solicitud de información adicional"}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                          <div class="modal-body">
+                            <label class="form-label" for="reda-destino-informacion">${trans["Solicitar a"] || "Solicitar a"}</label>
+                            <select class="form-select mb-3" id="reda-destino-informacion" name="destino" required>
+                              <option value="demandante">${escapar(nombreDemandante)} (${trans["demandante"] || "demandante"})</option>
+                              <option value="demandado">${escapar(nombreDemandado)} (${trans["demandado"] || "demandado"})</option>
+                              <option value="ambos">${trans["Ambos"] || "Ambos"}</option>
+                            </select>
+                            <label class="form-label" for="reda-texto-informacion">${trans["Solicitud"] || "Solicitud"}</label>
+                            <textarea class="form-control mb-3" id="reda-texto-informacion" name="solicitud" maxlength="10000" required></textarea>
+                            <label class="form-label" for="reda-horas-informacion">${trans["Plazo en horas"] || "Plazo en horas"}</label>
+                            <input class="form-control mb-3" type="number" id="reda-horas-informacion" name="horas" min="1" step="1" required>
+                            <label class="form-label" for="reda-archivo-informacion">${trans["Archivo complementario (opcional)"] || "Archivo complementario (opcional)"}</label>
+                            <input class="form-control" type="file" id="reda-archivo-informacion" name="archivo" accept=".jpg,.jpeg,.png,.webp,.pdf">
+                            <small class="text-muted">${trans["JPG, PNG, WebP o PDF; máximo 10 MB."] || "JPG, PNG, WebP o PDF; máximo 10 MB."}</small>
+                          </div>
+                          <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${trans["Cancelar"] || "Cancelar"}</button><button type="submit" class="btn btn-success">${trans["Enviar solicitud"] || "Enviar solicitud"}</button></div>
+                        </form>
+                      </div></div>
+                    </div>`);
+                const elemento = document.getElementById('reda-modal-solicitud-informacion');
+                const modal = bootstrap.Modal.getOrCreateInstance(elemento);
+                $(elemento).on('hidden.bs.modal', () => {
+                    $(`#paso-mediacion-${item.id}`).html(generarOpcionesPasos(item.paso_actual));
+                });
+                $('#reda-form-solicitud').on('submit', async function (evento) {
+                    evento.preventDefault();
+                    const datos = new FormData(this);
+                    datos.append('disputa_id', item.id);
+                    datos.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                    const boton = $(this).find('[type="submit"]').prop('disabled', true);
+                    window.RedaNotificaciones.esperar();
+                    try {
+                        const respuesta = await $.ajax({ url: APP_URL + '/admin/reda/disputas/informacion-adicional', type: 'POST', data: datos, processData: false, contentType: false });
+                        modal.hide();
+                        $('.disputa-tab-item').removeClass('active');
+                        $('.disputa-tab-item[data-status="espera"]').addClass('active');
+                        await cargarMediaciones('espera', 1, respuesta.respuesta.disputa_id);
+                        const renovadas = Number(respuesta.respuesta.renovadas);
+                        const pendientes = Number(respuesta.respuesta.correos_pendientes);
+                        let mensaje = trans["La solicitud de información ha sido enviada."] || "La solicitud de información ha sido enviada.";
+                        if (renovadas) mensaje += '<br>' + (trans["Las solicitudes anteriores vigentes ahora tienen el nuevo plazo."] || "Las solicitudes anteriores vigentes ahora tienen el nuevo plazo.");
+                        if (pendientes) mensaje += '<br>' + (trans["Hay correos pendientes de envío; puede reintentarlos desde la tarjeta."] || "Hay correos pendientes de envío; puede reintentarlos desde la tarjeta.");
+                        setTimeout(() => window.RedaNotificaciones.notificar(trans["Información"] || "Información", mensaje, 'exito'), 500);
+                    } catch (error) {
+                        window.RedaNotificaciones.notificar(trans["Error"] || "Error", error.responseJSON?.mensaje_usuario || (trans["No se pudo crear la solicitud de información."] || "No se pudo crear la solicitud de información."), 'error');
+                        boton.prop('disabled', false);
+                    }
+                });
+                modal.show();
+            };
+
+            $(document).on('click', '.reda-solicitar-mas', function (evento) {
+                evento.stopPropagation();
+                const item = mediacionesCargadas.find(m => m.id == $(this).data('id'));
+                if (item) abrirSolicitudInformacion(item);
+            });
+
+            $(document).on('click', '.reda-reintentar-correos', async function (evento) {
+                evento.stopPropagation();
+                const boton = $(this).prop('disabled', true);
+                const trans = window.RedaAlojamientoJson || {};
+                window.RedaNotificaciones.esperar();
+                try {
+                    const respuesta = await $.ajax({ url: APP_URL + '/admin/reda/disputas/informacion-adicional/' + boton.data('id') + '/reintentar', type: 'POST', data: { _token: $('meta[name="csrf-token"]').attr('content') } });
+                    boton.closest('div').remove();
+                    window.RedaNotificaciones.notificar(trans["Información"] || "Información", respuesta.mensaje_usuario, 'exito');
+                } catch (error) {
+                    boton.prop('disabled', false);
+                    window.RedaNotificaciones.notificar(trans["Error"] || "Error", error.responseJSON?.mensaje_usuario || (trans["No se pudieron enviar los correos."] || "No se pudieron enviar los correos."), 'error');
+                }
+            });
+
+            // Las transiciones disponibles actualizan la mediación o abren el formulario.
             $(document).on('change', '.reda-select-paso-mediacion', async function(e) {
                 e.stopPropagation();
                 const selector = $(this);
@@ -1452,6 +1549,10 @@ import {
                     return;
                 }
 
+                if (selector.val() === 'Solicitud de información adicional') {
+                    abrirSolicitudInformacion(item);
+                    return;
+                }
                 if (selector.val() !== 'En revisión') {
                     selector.html(generarOpcionesPasos(item.paso_actual));
                     const mensaje = trans["Este paso todavía no está disponible."] || "Este paso todavía no está disponible.";

@@ -3,7 +3,7 @@
  * Este archivo gestiona la lógica del dashboard de mediaciones, incluyendo la carga
  * paginada por estados, la renderización de la lista de casos, la línea de tiempo
  * de progreso, el visor de medios (imágenes/PDF) y el chat específico de la mediación.
- * Reconoce los pasos guardados en español aunque sus etiquetas estén traducidas.
+ * Reconoce los pasos guardados en español y muestra los archivos privados propios.
  */
 import {
     todosSvg,
@@ -375,7 +375,7 @@ import {
                     <div class="d-flex flex-column msg-bubble-container">
                         <div class="msg-reda shadow-sm p-2 px-3">
                             <span class="d-block text-10 font-weight-700 text-uppercase mb-1 opacity-75">${nombreSender} (${roleSender})</span>
-                            <p class="m-0 text-13">${m.message}</p>
+                            <p class="m-0 text-13">${$('<div>').text(m.message || '').html()}</p>
                         </div>
                         <div class="time-reda text-10 mt-1 opacity-50">
                             ${m.created_at_humans || m.created_time || ''}
@@ -526,7 +526,7 @@ import {
             return;
         }
 
-        const esPDF = esArchivoPDF(fullUrl);
+        const esPDF = esArchivoPDF(nombre) || esArchivoPDF(fullUrl);
 
         // Ocultar controles de zoom por defecto en todos los tamaños (Reset)
         $('.zoom-controls').addClass('d-none').removeClass('d-md-flex');
@@ -575,7 +575,7 @@ import {
     };
 
     /**
-     * Genera el HTML de la lista de adjuntos.
+     * Genera el HTML de adjuntos escapando nombres y reconociendo PDF privados.
      */
     const generarListaAdjuntosHtml = (adjuntos) => {
         const trans = window.RedaAlojamientoJson || {};
@@ -587,17 +587,18 @@ import {
         adjuntos.forEach(file => {
             const fullFileUrl = getFullUrl(file.url);
             const icon = file.es_imagen ? 'far fa-image' : 'far fa-file-alt';
-            const esPDF = esArchivoPDF(file.url);
+            const esPDF = esArchivoPDF(file.nombre);
             const esViewable = file.es_imagen || esPDF;
+            const nombreSeguro = $('<div>').text(file.nombre || '').html().replace(/"/g, '&quot;');
 
             if (esViewable) {
                 html += `
                     <div class="list-group-item list-group-item-action py-2 px-0 d-flex align-items-center border-0 bg-transparent pointer reda-viewer-trigger" 
-                         data-url="${fullFileUrl}" data-nombre="${file.nombre}" data-es-imagen="${file.es_imagen}">
+                         data-url="${fullFileUrl}" data-nombre="${nombreSeguro}" data-es-imagen="${file.es_imagen}">
                         <div class="mr-2 bg-light-soft rounded d-flex align-items-center justify-content-center reda-adjunto-icon-box">
                             <i class="${icon} text-success text-10"></i>
                         </div>
-                        <span class="text-11 text-dark text-truncate" title="${file.nombre}">${file.nombre}</span>
+                        <span class="text-11 text-dark text-truncate" title="${nombreSeguro}">${nombreSeguro}</span>
                     </div>
                 `;
             } else {
@@ -606,7 +607,7 @@ import {
                         <div class="mr-2 bg-light-soft rounded d-flex align-items-center justify-content-center reda-adjunto-icon-box">
                             <i class="${icon} text-success text-10"></i>
                         </div>
-                        <span class="text-11 text-dark text-truncate" title="${file.nombre}">${file.nombre}</span>
+                        <span class="text-11 text-dark text-truncate" title="${nombreSeguro}">${nombreSeguro}</span>
                     </a>
                 `;
             }

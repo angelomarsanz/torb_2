@@ -2,8 +2,10 @@
  * Resumen: Controlador Javascript para la vista de Inbox personalizada del plugin Reda.
  * Gestiona la carga dinámica de conversaciones, el envío de mensajes mediante AJAX,
  * la navegación optimizada para dispositivos móviles (estilo WhatsApp) y la
- * neutralización de scripts originales para evitar conflictos de eventos.
+ * neutralización de scripts originales para evitar conflictos de eventos. Integra
+ * solicitudes de información adicional desde mensajes y enlaces de correo.
  */
+import './informacionAdicional';
 "use strict";
 
 (function($) {
@@ -454,7 +456,7 @@
 
         // 4. Mostrar modal de advertencia de privacidad si no se ha mostrado en la sesión actual
         const advertenciaVista = sessionStorage.getItem('reda_aviso_privacidad_inbox_visto');
-        if ($('#modalAdvertenciaPrivacidadReda').length && !advertenciaVista) {
+        if ($('#modalAdvertenciaPrivacidadReda').length && !advertenciaVista && !window.RedaAbreSolicitudInformacion) {
             setTimeout(() => {
                 $('#modalAdvertenciaPrivacidadReda').modal({
                     backdrop: true,

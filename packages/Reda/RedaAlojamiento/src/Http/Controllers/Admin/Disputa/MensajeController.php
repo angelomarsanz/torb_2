@@ -1,6 +1,6 @@
 <?php
 
-/** Administra el historial y los mensajes exclusivos de los chats de mediación administrativos. */
+/** Administra los chats administrativos y protege las solicitudes privadas de otras mediaciones. */
 
 namespace Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa;
 
@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 class MensajeController extends Controller
 {
     /**
-     * Obtiene los mensajes de una mediación basada en el booking_id.
+     * Obtiene los mensajes de una mediación autorizada sin marcar como leídos los avisos privados a usuarios.
      */
     public function getMessages($booking_id)
     {
@@ -32,6 +32,11 @@ class MensajeController extends Controller
                 'mensaje_usuario' => __('Reservación no encontrada')
             ], 404);
         }
+        $adminId = Auth::guard('admin')->id();
+        $roles = DB::table('role_admin')->where('admin_id', $adminId)->whereIn('role_id', [1, 2])->pluck('role_id');
+        $disputaActual = Disputa::where('booking_id', $booking_id)->firstOrFail();
+        abort_unless($roles->isNotEmpty() && ($roles->contains(1)
+            || !$disputaActual->id_usuario_agente_asignado || (int) $disputaActual->id_usuario_agente_asignado === (int) $adminId), 403);
 
         // Identificamos a los dos usuarios participantes de la mediación actual y la propiedad
         $usuarioA = $booking->user_id;
@@ -67,6 +72,17 @@ class MensajeController extends Controller
                 // CRITERIO B: Intervenciones de Administradores (Agentes) en contextos comunes
                 ->orWhereIn('booking_id', $sharedBookingIds);
             })
+            ->where(function ($query) use ($disputaActual) {
+                $query->whereNotExists(function ($subconsulta) {
+                    $subconsulta->select(DB::raw(1))->from('destinatarios_informacion_mediacion')
+                        ->whereColumn('destinatarios_informacion_mediacion.mensaje_id', 'messages.id');
+                })->orWhereExists(function ($subconsulta) use ($disputaActual) {
+                    $subconsulta->select(DB::raw(1))->from('destinatarios_informacion_mediacion as destinatarios')
+                        ->join('solicitudes_informacion_mediacion as solicitudes', 'solicitudes.id', '=', 'destinatarios.solicitud_id')
+                        ->whereColumn('destinatarios.mensaje_id', 'messages.id')
+                        ->where('solicitudes.disputa_id', $disputaActual->id);
+                });
+            })
             ->orderBy('messages.created_at', 'asc') // Orden cronológico total
             ->get();
 
@@ -74,6 +90,10 @@ class MensajeController extends Controller
         $adminId = Auth::guard('admin')->id();
         Messages::where('property_id', $propertyId)
             ->whereIn('booking_id', $sharedBookingIds)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))->from('destinatarios_informacion_mediacion')
+                    ->whereColumn('destinatarios_informacion_mediacion.mensaje_id', 'messages.id');
+            })
             ->where(function($q) use ($adminId) {
                 // Mensajes que NO son del admin actual (considerando metadata)
                 $q->whereNotExists(function ($query) {
@@ -90,12 +110,20 @@ class MensajeController extends Controller
         // 2. LÓGICA DE SANEAMIENTO (HEURÍSTICA DE FLUJO):
         $lastMessage = Messages::where('property_id', $propertyId)
             ->whereIn('booking_id', $sharedBookingIds)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))->from('destinatarios_informacion_mediacion')
+                    ->whereColumn('destinatarios_informacion_mediacion.mensaje_id', 'messages.id');
+            })
             ->orderBy('created_at', 'desc')
             ->first();
         if ($lastMessage) {
             // Saneamos: si hay un mensaje posterior, todo lo anterior de otros autores se marca como leído.
             Messages::where('property_id', $propertyId)
                 ->whereIn('booking_id', $sharedBookingIds)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))->from('destinatarios_informacion_mediacion')
+                        ->whereColumn('destinatarios_informacion_mediacion.mensaje_id', 'messages.id');
+                })
                 ->where('created_at', '<', $lastMessage->created_at)
                 ->where('sender_id', '!=', $lastMessage->sender_id)
                 ->where('read', 0)

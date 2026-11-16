@@ -14,6 +14,7 @@ use Reda\RedaAlojamiento\Http\Controllers\General\MediaController;
 use Reda\RedaAlojamiento\Http\Controllers\Administrativo\AdministrativoController;
 use Reda\RedaAlojamiento\Http\Controllers\BilleteraHuesped\BilleteraHuespedController;
 use Reda\RedaAlojamiento\Http\Controllers\Disputa\DisputaController;
+use Reda\RedaAlojamiento\Http\Controllers\Disputa\InformacionAdicionalController;
 
 // Controladores del admin
 use Reda\RedaAlojamiento\Http\Controllers\Admin\Experiencia\ExperienciaController as AdminExperienciaController;
@@ -39,6 +40,9 @@ Route::get('reda/assets/chat-injection.js', function() {
     return response(file_get_contents($path), 200, ['Content-Type' => 'application/javascript']);
 });
 
+Route::middleware(['web', 'locale'])->get('reda/informacion-mediacion/acceso/{id}', [InformacionAdicionalController::class, 'acceso'])
+    ->whereNumber('id')->name('reda.informacion.acceso');
+
 /*
 |--------------------------------------------------------------------------
 | Rutas Web del Paquete RedaAlojamiento
@@ -51,6 +55,9 @@ Route::get('reda/assets/chat-injection.js', function() {
 
 // Sobrescribir Inbox original con la lógica de agrupación por participantes
 Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
+    Route::get('reda/informacion-mediacion/{id}', [InformacionAdicionalController::class, 'consultar'])->whereNumber('id');
+    Route::post('reda/informacion-mediacion/{id}/archivos', [InformacionAdicionalController::class, 'cargar'])->whereNumber('id');
+    Route::get('reda/informacion-mediacion/archivo/{id}', [InformacionAdicionalController::class, 'archivo'])->whereNumber('id');
     Route::match(['get', 'post'], 'inbox', [RedaInboxController::class, 'index'])->name('inbox');
     
     // Rutas exclusivas REDA para AJAX del Inbox
@@ -84,6 +91,9 @@ Route::group(['prefix' => 'admin/reda', 'middleware' => ['web', 'guest:admin']],
 
     // Subgrupo para Disputas (Admin)
     Route::prefix('disputas')->as('reda.admin.disputas.')->group(function () {
+        Route::post('informacion-adicional', [InformacionAdicionalController::class, 'crear'])->name('informacion.crear');
+        Route::post('informacion-adicional/{id}/reintentar', [InformacionAdicionalController::class, 'reintentar'])->whereNumber('id')->name('informacion.reintentar');
+        Route::get('informacion-adicional/archivo/{id}', [InformacionAdicionalController::class, 'archivoAdmin'])->whereNumber('id')->name('informacion.archivo');
         Route::controller(AdminDisputaController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('get-listado', 'obtenerDisputasPaginadas')->name('paginadas');

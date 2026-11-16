@@ -5,7 +5,8 @@
  * visualizar conversaciones entre huéspedes, anfitriones y agentes de mediación.
  * Implementa una historia unificada filtrada por propiedad y contexto compartido,
  * limita los mensajes administrativos privados a su destinatario y maneja el estado
- * de lectura y la virtualización de datos para el frontend.
+ * de lectura y la virtualización de datos para el frontend. Vincula las solicitudes
+ * privadas con su mensaje para ofrecer el formulario al destinatario autorizado.
  */
 namespace Reda\RedaAlojamiento\Http\Controllers\General;
 
@@ -13,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{Currency, Messages, Bookings};
 use App\Models\Admin;
 use Reda\RedaAlojamiento\Models\Disputa\Disputa;
+use Reda\RedaAlojamiento\Models\Disputa\DestinatarioInformacion;
 use Auth;
 use Illuminate\Http\Request;
 use Validator;
@@ -65,6 +67,7 @@ class RedaInboxController extends Controller
      * el historial unificado inicial para la conversación seleccionada. Omite del
      * sidebar mensajes sin una reserva vigente, ya que no se puede abrir su contexto.
      * Los mensajes administrativos privados solo se incluyen para su destinatario;
+     * incorpora el identificador de solicitud en los mensajes correspondientes.
      * los grupales permanecen visibles para ambas partes.
      * Implementa un ordenamiento por prioridad: las conversaciones con mensajes 
      * no leídos aparecen al inicio de la lista.
@@ -163,7 +166,7 @@ class RedaInboxController extends Controller
 
             if ($targetBookingId) {
                 $targetBooking = Bookings::find($targetBookingId);
-                if ($targetBooking) {
+                if ($targetBooking && in_array((int) $userId, [(int) $targetBooking->user_id, (int) $targetBooking->host_id], true)) {
                     $selectedPartnerId = ($targetBooking->user_id == $userId) ? $targetBooking->host_id : $targetBooking->user_id;
                     $selectedPropertyId = $targetBooking->property_id;
                     $data['booking'] = $targetBooking->load('users', 'host', 'properties');
@@ -287,7 +290,12 @@ class RedaInboxController extends Controller
                 $msg->booking_id = (int) $targetBookingId;
             });
 
-            $data['messages'] = $unifiedHistory; 
+            $solicitudesPorMensaje = DestinatarioInformacion::where('usuario_id', $userId)
+                ->whereIn('mensaje_id', $unifiedHistory->pluck('id'))->pluck('solicitud_id', 'mensaje_id');
+            $unifiedHistory->each(function ($mensaje) use ($solicitudesPorMensaje) {
+                $mensaje->solicitud_informacion_id = $solicitudesPorMensaje->get($mensaje->id);
+            });
+            $data['messages'] = $unifiedHistory;
             $data['conversation'] = $unifiedHistory;
             
             Log::info("REDA Inbox: Historia unificada virtualizada para Partner $selectedPartnerId. Total: " . $unifiedHistory->count());
@@ -316,6 +324,7 @@ class RedaInboxController extends Controller
      * Sanea el historial de mensajes, marca mensajes como leídos y retorna el HTML 
      * renderizado para el Inbox y el panel lateral de reserva. Excluye mensajes privados
      * dirigidos a la contraparte, incluso de las actualizaciones automáticas de lectura.
+     * Solo los participantes pueden abrir el contexto y sus solicitudes privadas.
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -324,6 +333,7 @@ class RedaInboxController extends Controller
         $userId = Auth::id();
         $booking_id = $request->id;
         $targetBooking = Bookings::findOrFail($booking_id);
+        abort_unless(in_array((int) $userId, [(int) $targetBooking->user_id, (int) $targetBooking->host_id], true), 403);
         $partnerId = ($targetBooking->user_id == $userId) ? $targetBooking->host_id : $targetBooking->user_id;
         $propertyId = $targetBooking->property_id;
 
@@ -463,6 +473,11 @@ class RedaInboxController extends Controller
             $msg->booking_id = (int) $booking_id;
         });
 
+        $solicitudesPorMensaje = DestinatarioInformacion::where('usuario_id', $userId)
+            ->whereIn('mensaje_id', $unifiedHistory->pluck('id'))->pluck('solicitud_id', 'mensaje_id');
+        $unifiedHistory->each(function ($mensaje) use ($solicitudesPorMensaje) {
+            $mensaje->solicitud_informacion_id = $solicitudesPorMensaje->get($mensaje->id);
+        });
         $data['messages'] = $unifiedHistory;
         $data['conversation'] = $unifiedHistory;
         $data['booking'] = $targetBooking->load('host', 'users', 'properties');

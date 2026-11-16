@@ -7,7 +7,8 @@
  * turistas y anfitriones en el backend de Torbian. Permite acceso y gestión tanto
  * a administradores con Rol 1 (Admin) como con Rol 2 (Atención al usuario),
  * actualiza el paso de asignación al asignar o tomar una mediación,
- * permite pasar mediaciones visibles al estado y paso «En revisión»,
+ * permite pasar mediaciones visibles al estado y paso «En revisión», muestra documentos
+ * privados autorizados y correos pendientes de solicitudes de información,
  * y proporciona la gestión de la configuración de límites de mediaciones
  * (primer aviso y segundo aviso con restricciones) exclusivamente para Rol 1.
  * 
@@ -117,7 +118,7 @@ class DisputaController extends Controller
     /**
      * Obtiene el listado de mediaciones paginado para el administrador.
      * Permite visualización completa a rol 1 y filtrada para rol 2.
-     * Puede localizar una mediación visible en la página de revisión correspondiente.
+     * Puede localizar una mediación visible en la página de revisión o espera correspondiente.
      */
     public function obtenerDisputasPaginadas(Request $request)
     {
@@ -166,8 +167,8 @@ class DisputaController extends Controller
             ];
             
             if (isset($mapeo[$estatus])) {
-                if ($estatus === 'revision') {
-                    $consulta->whereIn('estado', array_unique(['En revisión', $mapeo[$estatus]]));
+                if (in_array($estatus, ['revision', 'espera'], true)) {
+                    $consulta->whereIn('estado', array_unique([$estatus === 'revision' ? 'En revisión' : 'Esperando respuesta', $mapeo[$estatus]]));
                 } else {
                     $consulta->where('estado', $mapeo[$estatus]);
                 }
@@ -175,7 +176,7 @@ class DisputaController extends Controller
         }
 
         $pagina = max(1, (int) $request->get('page', 1));
-        if ($estatus === 'revision' && filter_var($request->get('mostrar_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
+        if (in_array($estatus, ['revision', 'espera'], true) && filter_var($request->get('mostrar_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
             $objetivo = (clone $consulta)->whereKey($request->get('mostrar_id'))->first();
             if ($objetivo && $objetivo->updated_at) {
                 $anteriores = (clone $consulta)->where(function ($q) use ($objetivo) {
@@ -259,7 +260,20 @@ class DisputaController extends Controller
             }
 
             // Combinar adjuntos para el resumen general del admin (o mostrar por separado)
-            $adjuntos = array_merge($adjuntosTurista, $adjuntosAnfitrion);
+            $archivosPrivados = \Reda\RedaAlojamiento\Models\Disputa\ArchivoInformacion::join(
+                'solicitudes_informacion_mediacion as s', 's.id', '=', 'archivos_informacion_mediacion.solicitud_id'
+            )->where('s.disputa_id', $d->id)->where('archivos_informacion_mediacion.tipo', 'respuesta')
+                ->select('archivos_informacion_mediacion.*')->get()->map(function ($archivo) {
+                    return [
+                        'nombre' => $archivo->nombre,
+                        'url' => route('reda.admin.disputas.informacion.archivo', ['id' => $archivo->id]),
+                        'es_imagen' => str_starts_with($archivo->mime ?? '', 'image/'),
+                    ];
+                })->all();
+            $adjuntos = array_merge($adjuntosTurista, $adjuntosAnfitrion, $archivosPrivados);
+            $correosPendientes = \Reda\RedaAlojamiento\Models\Disputa\CorreoInformacion::join(
+                'solicitudes_informacion_mediacion as s', 's.id', '=', 'correos_informacion_mediacion.solicitud_id'
+            )->where('s.disputa_id', $d->id)->where('correos_informacion_mediacion.estado', 'pendiente')->count();
 
             // Asegurar prefijo /public/ para la foto de la propiedad si es ruta relativa
             $propiedadFoto = $d->booking && $d->booking->properties ? $d->booking->properties->cover_photo : '/public/img/unnamed.png';
@@ -278,6 +292,7 @@ class DisputaController extends Controller
                 'id' => $d->id,
                 'estado' => $d->estado,
                 'paso_actual' => $d->paso_actual,
+                'correos_informacion_pendientes' => $correosPendientes,
                 'motivo' => $d->motivo,
                 'prioridad' => $d->prioridad,
                 'descripcion' => $d->descripcion,

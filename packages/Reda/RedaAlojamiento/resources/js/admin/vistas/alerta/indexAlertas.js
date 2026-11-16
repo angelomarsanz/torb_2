@@ -4,6 +4,7 @@
  * filtrado por estado (todas, no leídas, leídas),
  * marcado de alertas como leídas de forma individual o masiva, y la sincronización reactiva de los contadores
  * de insignias (badges) en la campanita del header y en el menú lateral.
+ * Escapa los textos de las alertas antes de insertarlos en la página.
  *
  * @package    Reda\RedaAlojamiento
  * @subpackage Resources\Js\Admin\Vistas\Alerta
@@ -71,7 +72,7 @@
             };
 
             /**
-             * Renderiza las tarjetas de alertas en el contenedor principal.
+             * Renderiza las tarjetas de alertas escapando los textos del servidor.
              *
              * @param {Array} alertas
              */
@@ -93,6 +94,7 @@
                 alertas.forEach((alerta) => {
                     const esLeida = Boolean(alerta.leido);
                     const bgClass = esLeida ? 'bg-white' : 'bg-light border-start border-4 border-warning shadow-sm';
+                    const escaparTexto = texto => $('<div>').text(texto || '').html();
                     
                     // Icono temático
                     let iconoHtml = '<i class="fa fa-bell text-primary f-20"></i>';
@@ -133,7 +135,7 @@
                     if (alerta.usuario_nombre) {
                         infoUsuarioHtml = `
                             <div class="mt-2 text-muted f-12">
-                                <i class="fa fa-user me-1"></i> <strong>${alerta.usuario_nombre}</strong> (${alerta.usuario_email || ''})
+                                <i class="fa fa-user me-1"></i> <strong>${escaparTexto(alerta.usuario_nombre)}</strong> (${escaparTexto(alerta.usuario_email)})
                             </div>
                         `;
                     }
@@ -150,7 +152,7 @@
                                     <div class="flex-grow-1">
                                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-1">
                                             <div class="d-flex align-items-center gap-2">
-                                                <h6 class="fw-bold mb-0 text-dark f-15">${alerta.titulo || ''}</h6>
+                                                <h6 class="fw-bold mb-0 text-dark f-15">${escaparTexto(alerta.titulo)}</h6>
                                                 ${badgeTipoHtml}
                                             </div>
                                             <span class="text-muted f-12 ms-auto" title="${alerta.fecha}">
@@ -159,7 +161,7 @@
                                         </div>
 
                                         <p class="text-secondary f-13 mb-2 mt-1 lh-sm">
-                                            ${alerta.mensaje || ''}
+                                            ${escaparTexto(alerta.mensaje)}
                                         </p>
 
                                         ${infoUsuarioHtml}

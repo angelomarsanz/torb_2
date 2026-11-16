@@ -1,6 +1,6 @@
 <?php
 
-/** Expone la herramienta de reinicio exclusivamente a administradores autorizados en desarrollo. */
+/** Expone el reinicio en desarrollo e informa si las solicitudes privadas impiden ejecutarlo. */
 
 namespace Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa;
 
@@ -33,7 +33,7 @@ class ReinicioMediacionesController extends Controller
         return view('reda-alojamiento::admin.disputa.reinicio_mediaciones', compact('usuarios'));
     }
 
-    /** Valida la confirmación y ejecuta el reinicio, comunicando fallos y archivos pendientes. */
+    /** Valida la confirmación y comunica fallos, archivos pendientes o solicitudes que impiden el reinicio. */
     public function reiniciar(Request $solicitud, ReinicioMediacionesService $servicio)
     {
         $this->autorizar();
@@ -71,10 +71,14 @@ class ReinicioMediacionesController extends Controller
             ], $pendientes ? 500 : 200);
         } catch (Throwable $error) {
             Log::error('Error en reinicio de mediaciones: ' . $error->getMessage());
+            $bloqueadoPorSolicitudes = $error instanceof \RuntimeException
+                && $error->getMessage() === 'El reinicio está bloqueado: existen solicitudes de información y archivos privados que deben conservarse.';
             return response()->json([
                 'success' => false,
                 'message' => __('Error al reiniciar mediaciones'),
-                'mensaje_usuario' => __('No se pudo completar el reinicio. Revise el registro y actualice la página antes de volver a intentarlo; los datos podrían haberse reiniciado parcialmente.'),
+                'mensaje_usuario' => $bloqueadoPorSolicitudes
+                    ? __('El reinicio está bloqueado porque existen solicitudes de información y archivos privados que deben conservarse.')
+                    : __('No se pudo completar el reinicio. Revise el registro y actualice la página antes de volver a intentarlo; los datos podrían haberse reiniciado parcialmente.'),
                 'respuesta' => $error->getMessage(),
                 'code' => 500,
             ], 500);
