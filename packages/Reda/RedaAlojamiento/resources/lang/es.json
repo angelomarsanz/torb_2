@@ -1,4 +1,8 @@
 {
+    "El reinicio se completó, pero algunos archivos adjuntos no pudieron eliminarse. Revise los permisos y el registro del servidor; los archivos pendientes se conservan para su revisión.": "El reinicio se completó, pero algunos archivos adjuntos no pudieron eliminarse. Revise los permisos y el registro del servidor; los archivos pendientes se conservan para su revisión.",
+    "Solicitudes de información eliminadas": "Solicitudes de información eliminadas",
+    "Adjuntos pendientes de eliminar": "Adjuntos pendientes de eliminar",
+    "También se eliminarán las solicitudes de información y sus adjuntos, incluso en mediaciones que estén en curso. Los archivos que no se puedan eliminar quedarán pendientes de revisión.": "También se eliminarán las solicitudes de información y sus adjuntos, incluso en mediaciones que estén en curso. Los archivos que no se puedan eliminar quedarán pendientes de revisión.",
     "Solicitar más información": "Solicitar más información",
     "Reintentar correos pendientes": "Reintentar correos pendientes",
     "Solo el agente asignado puede solicitar información adicional.": "Solo el agente asignado puede solicitar información adicional.",

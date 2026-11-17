@@ -1,6 +1,7 @@
 {{--
     Herramienta de pruebas para reiniciar mediaciones con confirmación y selección de cuentas.
     La autorización, la validación y la eliminación se ejecutan en el servidor.
+    Advierte sobre solicitudes y adjuntos, incluso si hay mediaciones en curso.
 --}}
 @extends('admin.template')
 
@@ -17,6 +18,7 @@
                     {{ __('Esta operación es destructiva e irreversible. Haga un respaldo actualizado y realícela únicamente durante una ventana sin usuarios ni procesos de mediación o chat.') }}
                 </div>
                 <p>{{ __('Se eliminarán mediaciones, avisos, alertas y mensajes identificados con certeza. Se conservarán la configuración, las reservas y los mensajes históricos de origen ambiguo.') }}</p>
+                <p>{{ __('También se eliminarán las solicitudes de información y sus adjuntos, incluso en mediaciones que estén en curso. Los archivos que no se puedan eliminar quedarán pendientes de revisión.') }}</p>
                 <p>{{ __('Los correos ya enviados no pueden retirarse. Si existe una tabla histórica de respaldo, sus registros y los adjuntos se conservarán por precaución.') }}</p>
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-reinicio-mediaciones">{{ __('Reiniciar mediaciones') }}</button>
                 <div id="resultado-reinicio" class="mt-3" role="status" aria-live="polite"></div>

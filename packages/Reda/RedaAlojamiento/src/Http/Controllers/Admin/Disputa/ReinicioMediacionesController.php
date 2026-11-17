@@ -1,6 +1,6 @@
 <?php
 
-/** Expone el reinicio en desarrollo e informa si las solicitudes privadas impiden ejecutarlo. */
+/** Expone el reinicio en desarrollo e informa sobre adjuntos pendientes de eliminar. */
 
 namespace Reda\RedaAlojamiento\Http\Controllers\Admin\Disputa;
 
@@ -33,7 +33,7 @@ class ReinicioMediacionesController extends Controller
         return view('reda-alojamiento::admin.disputa.reinicio_mediaciones', compact('usuarios'));
     }
 
-    /** Valida la confirmación y comunica fallos, archivos pendientes o solicitudes que impiden el reinicio. */
+    /** Valida la confirmación y distingue los datos reiniciados de los adjuntos pendientes. */
     public function reiniciar(Request $solicitud, ReinicioMediacionesService $servicio)
     {
         $this->autorizar();
@@ -61,24 +61,20 @@ class ReinicioMediacionesController extends Controller
             $pendientes = $resultado['adjuntosPendientes'];
             Log::warning('Reinicio de mediaciones ejecutado por administrador ID ' . Auth::guard('admin')->id() . ': ' . print_r($resultado, true));
             return response()->json([
-                'success' => $pendientes === 0,
+                'success' => true,
                 'message' => $pendientes ? __('Hay adjuntos pendientes') : __('Reinicio completado'),
                 'mensaje_usuario' => $pendientes
-                    ? __('Los datos se reiniciaron, pero hay adjuntos pendientes. Revise el registro y repita el reinicio durante mantenimiento.')
+                    ? __('El reinicio se completó, pero algunos archivos adjuntos no pudieron eliminarse. Revise los permisos y el registro del servidor; los archivos pendientes se conservan para su revisión.')
                     : __('El reinicio terminó. Los mensajes históricos ambiguos se conservaron.'),
                 'respuesta' => $resultado,
-                'code' => $pendientes ? 500 : 200,
-            ], $pendientes ? 500 : 200);
+                'code' => 200,
+            ], 200);
         } catch (Throwable $error) {
             Log::error('Error en reinicio de mediaciones: ' . $error->getMessage());
-            $bloqueadoPorSolicitudes = $error instanceof \RuntimeException
-                && $error->getMessage() === 'El reinicio está bloqueado: existen solicitudes de información y archivos privados que deben conservarse.';
             return response()->json([
                 'success' => false,
                 'message' => __('Error al reiniciar mediaciones'),
-                'mensaje_usuario' => $bloqueadoPorSolicitudes
-                    ? __('El reinicio está bloqueado porque existen solicitudes de información y archivos privados que deben conservarse.')
-                    : __('No se pudo completar el reinicio. Revise el registro y actualice la página antes de volver a intentarlo; los datos podrían haberse reiniciado parcialmente.'),
+                'mensaje_usuario' => __('No se pudo completar el reinicio. Revise el registro y actualice la página antes de volver a intentarlo; los datos podrían haberse reiniciado parcialmente.'),
                 'respuesta' => $error->getMessage(),
                 'code' => 500,
             ], 500);

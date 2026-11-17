@@ -3,7 +3,7 @@
 /**
  * Reinicia datos inequívocos de mediación y conserva una cola durable de adjuntos pendientes.
  * Debe ejecutarse durante una ventana sin actividad de mediaciones ni de su chat.
- * Bloquea el reinicio si existen solicitudes de información para preservar sus archivos privados.
+ * Incluye solicitudes de información y archivos privados; conserva los fallos en la cola.
  */
 
 namespace Reda\RedaAlojamiento\Services;
@@ -11,6 +11,7 @@ namespace Reda\RedaAlojamiento\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Reda\RedaAlojamiento\Models\Disputa\AdjuntoMediacionPendiente;
 use RuntimeException;
 use Throwable;
@@ -33,7 +34,7 @@ class ReinicioMediacionesService
 
     /**
      * Elimina datos en una transacción y procesa después la cola persistente de archivos.
-     * El bloqueo de MySQL impide reinicios simultáneos; las solicitudes privadas impiden borrar los datos.
+     * El bloqueo de MySQL impide reinicios simultáneos. Los archivos pendientes sobreviven al commit.
      */
     public function reiniciar(array $usuarios): array
     {
@@ -51,10 +52,6 @@ class ReinicioMediacionesService
                 }
 
                 $disputas = DB::table('disputas')->lockForUpdate()->get();
-                if (Schema::hasTable('solicitudes_informacion_mediacion')
-                    && DB::table('solicitudes_informacion_mediacion')->exists()) {
-                    throw new RuntimeException('El reinicio está bloqueado: existen solicitudes de información y archivos privados que deben conservarse.');
-                }
                 $conservarAdjuntos = Schema::hasTable('disputas_respaldo');
                 $rutas = [];
                 foreach ($disputas as $disputa) {
@@ -82,22 +79,30 @@ class ReinicioMediacionesService
                 $adjuntosConservados = $conservarAdjuntos ? count($rutas) : 0;
                 if (!$conservarAdjuntos) {
                     foreach (array_keys($rutas) as $ruta) {
-                        $archivo = $this->archivoSeguro($ruta);
-                        if ($archivo !== null) {
-                            $hash = hash_file('sha256', $archivo);
-                            if ($hash === false) {
-                                throw new RuntimeException('No se pudo verificar un adjunto antes del reinicio.');
-                            }
-                            AdjuntoMediacionPendiente::create(['ruta' => $ruta, 'hash' => $hash]);
-                        }
+                        $this->encolarAdjunto($ruta);
                     }
                 }
 
-                $mensajes = DB::table('mensajes_de_mediacion')->whereNotNull('mensaje_id')->pluck('mensaje_id');
+                $archivosPrivados = DB::table('archivos_informacion_mediacion')->lockForUpdate()->get(['solicitud_id', 'ruta']);
+                foreach ($archivosPrivados as $archivo) {
+                    if (!is_string($archivo->ruta) || !$archivo->solicitud_id
+                        || !preg_match('#^reda/mediaciones/informacion/' . (int) $archivo->solicitud_id . '/[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$#D', $archivo->ruta)) {
+                        throw new RuntimeException('Se encontró una ruta privada de mediación no reconocida.');
+                    }
+                    $this->encolarAdjunto('privado:' . $archivo->ruta);
+                }
+
+                $mensajes = DB::table('mensajes_de_mediacion')->whereNotNull('mensaje_id')->pluck('mensaje_id')
+                    ->merge(DB::table('destinatarios_informacion_mediacion')->whereNotNull('mensaje_id')->pluck('mensaje_id'))
+                    ->unique()->values();
+                DB::table('correos_informacion_mediacion')->delete();
+                DB::table('archivos_informacion_mediacion')->delete();
+                DB::table('destinatarios_informacion_mediacion')->delete();
+                $solicitudes = DB::table('solicitudes_informacion_mediacion')->delete();
                 DB::table('reda_mensajes_metadata')->whereIn('message_id', $mensajes)->delete();
                 $cantidadMensajes = DB::table('messages')->whereIn('id', $mensajes)->delete();
                 DB::table('mensajes_de_mediacion')->delete();
-                $alertas = DB::table('alertas_admin')->whereIn('tipo', ['primer_aviso', 'suspension'])->delete();
+                $alertas = DB::table('alertas_admin')->whereIn('tipo', ['primer_aviso', 'suspension', 'archivos_informacion'])->delete();
                 $reactivados = $usuarios ? $this->usuariosElegibles()->whereIn('users.id', $usuarios)
                     ->update(['status' => 'Active', 'updated_at' => now()]) : 0;
                 if ($reactivados !== count($usuarios)) {
@@ -106,7 +111,7 @@ class ReinicioMediacionesService
                 $avisos = DB::table('usuarios_avisos_mediaciones')->delete();
                 $cantidadDisputas = DB::table('disputas')->delete();
 
-                return compact('cantidadDisputas', 'cantidadMensajes', 'alertas', 'avisos', 'reactivados', 'adjuntosConservados');
+                return compact('cantidadDisputas', 'cantidadMensajes', 'alertas', 'avisos', 'reactivados', 'adjuntosConservados', 'solicitudes');
             });
 
             $resultado['adjuntosPendientes'] = $this->procesarAdjuntos();
@@ -127,12 +132,44 @@ class ReinicioMediacionesService
         return $ruta;
     }
 
-    /** Rechaza enlaces simbólicos en cada componente y devuelve null si el archivo no existe. */
+    /** Registra la ruta aunque no se pueda calcular su huella por falta de acceso. */
+    private function encolarAdjunto(string $ruta): void
+    {
+        $hash = null;
+        try {
+            $archivo = $this->archivoSeguro($ruta);
+            if ($archivo !== null) {
+                $hash = hash_file('sha256', $archivo);
+                if ($hash === false) {
+                    throw new RuntimeException('No se pudo calcular la huella del adjunto.');
+                }
+            }
+        } catch (Throwable $error) {
+            Log::warning('No se pudo verificar un adjunto de mediación; queda pendiente: ' . $error->getMessage());
+        }
+        AdjuntoMediacionPendiente::create(['ruta' => $ruta, 'hash' => $hash]);
+    }
+
+    /** Rechaza rutas fuera de las áreas previstas y enlaces simbólicos en sus componentes. */
     private function archivoSeguro(string $ruta): ?string
     {
-        $ruta = $this->normalizarRuta($ruta);
-        $actual = rtrim(public_path(), DIRECTORY_SEPARATOR);
+        if (str_starts_with($ruta, 'privado:')) {
+            $ruta = substr($ruta, strlen('privado:'));
+            if (!preg_match('#^reda/mediaciones/informacion/[0-9]+/[A-Za-z0-9_-]+\\.[A-Za-z0-9]+$#D', $ruta)) {
+                throw new RuntimeException('Ruta privada de adjunto no válida.');
+            }
+            $actual = rtrim(Storage::disk('local')->path(''), DIRECTORY_SEPARATOR);
+        } else {
+            $ruta = $this->normalizarRuta($ruta);
+            $actual = rtrim(public_path(), DIRECTORY_SEPARATOR);
+        }
         foreach (explode('/', $ruta) as $parte) {
+            if (is_link($actual)) {
+                throw new RuntimeException('La ruta del adjunto contiene un enlace simbólico.');
+            }
+            if (is_dir($actual) && !is_executable($actual)) {
+                throw new RuntimeException('No hay permisos para inspeccionar el directorio de un adjunto.');
+            }
             $actual .= DIRECTORY_SEPARATOR . $parte;
             if (is_link($actual)) {
                 throw new RuntimeException('La ruta del adjunto contiene un enlace simbólico.');
@@ -152,11 +189,14 @@ class ReinicioMediacionesService
     {
         foreach (AdjuntoMediacionPendiente::orderBy('id')->get() as $pendiente) {
             try {
-                if (Schema::hasTable('disputas_respaldo')) {
+                if (!str_starts_with($pendiente->ruta, 'privado:') && Schema::hasTable('disputas_respaldo')) {
                     throw new RuntimeException('Existe disputas_respaldo; se conservan los adjuntos por precaución.');
                 }
                 $archivo = $this->archivoSeguro($pendiente->ruta);
                 if ($archivo !== null) {
+                    if (!$pendiente->hash) {
+                        throw new RuntimeException('No hay huella verificable para eliminar el adjunto con seguridad.');
+                    }
                     if (hash_file('sha256', $archivo) !== $pendiente->hash) {
                         throw new RuntimeException('El adjunto cambió desde que se programó su eliminación.');
                     }

@@ -1,5 +1,5 @@
 /**
- * Controla la confirmación y el estado de espera del reinicio de mediaciones en el panel admin.
+ * Controla la confirmación, la espera y los avisos de adjuntos pendientes del reinicio.
  */
 (( $ ) => {
     'use strict';
@@ -25,7 +25,7 @@
         });
     });
 
-    /** Envía la confirmación y muestra el resultado sin cerrar la pantalla durante la operación. */
+    /** Muestra el resultado y los adjuntos pendientes sin cerrar el modal durante la operación. */
     $(function () {
         const $formulario = $('#form-reinicio-mediaciones');
         if (!$formulario.length) return;
@@ -63,7 +63,9 @@
                     `${traducciones['Mensajes identificados'] || 'Mensajes identificados'}: ${resultado.cantidadMensajes}`,
                     `${traducciones['Alertas'] || 'Alertas'}: ${resultado.alertas}`,
                     `${traducciones['Avisos'] || 'Avisos'}: ${resultado.avisos}`,
+                    `${traducciones['Solicitudes de información eliminadas'] || 'Solicitudes de información eliminadas'}: ${resultado.solicitudes}`,
                     `${traducciones['Cuentas reactivadas'] || 'Cuentas reactivadas'}: ${resultado.reactivados}`,
+                    `${traducciones['Adjuntos pendientes de eliminar'] || 'Adjuntos pendientes de eliminar'}: ${resultado.adjuntosPendientes}`,
                     `${traducciones['Adjuntos conservados por respaldo histórico'] || 'Adjuntos conservados por respaldo histórico'}: ${resultado.adjuntosConservados}`
                 ];
                 $('#resultado-reinicio').text(`${respuesta.mensaje_usuario} ${resumen.join('; ')}.`);
