@@ -14,6 +14,7 @@
  * - Consulta las fechas ocupadas de la propiedad antes de mostrar el calendario de reservas.
  * - Sincroniza las fechas seleccionadas en formato ISO con el cálculo de precios original.
  * - Evita que respuestas de cálculos anteriores muestren avisos para fechas no seleccionadas.
+ * - Restablece el botón de envío al volver a la página desde el flujo de pago usando la caché del navegador.
  */
 
 (function( $ ) {
@@ -48,6 +49,7 @@
             this.handleHash();
             this.bindEvents();
             this.vigilarRespuestasPrecio();
+            this.restablecerEnvioAlRegresar();
         },
 
         /**
@@ -615,6 +617,24 @@
                     self.recargarPrecios();
                 } else {
                     self.limpiarEstadoPrecios();
+                }
+            });
+        },
+
+        /**
+         * Reactiva el botón y oculta el spinner cuando el navegador restaura la página desde BFCache.
+         */
+        restablecerEnvioAlRegresar: function() {
+            const botonEnviar = document.querySelector(this.config.saveBtnId);
+            if (!botonEnviar) return;
+
+            window.addEventListener('pageshow', function(evento) {
+                if (!evento.persisted) return;
+
+                botonEnviar.disabled = false;
+                const indicadorEspera = botonEnviar.querySelector('.spinner');
+                if (indicadorEspera) {
+                    indicadorEspera.classList.add('d-none');
                 }
             });
         },

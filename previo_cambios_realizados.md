@@ -1,9 +1,10 @@
-# Registro previo de cambios en curso
+# Registro Previo de Cambios en Curso
 
-- **Fecha:** 17 de noviembre de 2026.
-- **Tarea:** Permitir reiniciar mediaciones con solicitudes de información abiertas y procesar sus archivos públicos y privados, comunicando los adjuntos pendientes sin impedir el reinicio por permisos.
-- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261117-1740.sql`, nombre 17/11/2026 17:40; cabecera 16:40:06. Revisado solo en lectura.
-- **Datos:** Dos mediaciones (una esperando respuesta), tres solicitudes, cuatro destinatarios, nueve archivos privados, nueve correos y cinco alertas de archivos; no se detectaron referencias huérfanas en las tablas de información ni rutas privadas duplicadas. Hay ocho mensajes marcados y todos los mensajes de destinatarios están marcados. Las dos mediaciones tienen adjuntos iniciales; no existe `disputas_respaldo` en el respaldo.
-- **Servidor en curso:** `packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php` retira el bloqueo, incorpora solicitudes, destinatarios, correos, alertas y rutas privadas en el reinicio; conserva en cola archivos que no pueda verificar. Pendiente completar respuesta, validación y documentación. No se han ejecutado operaciones de base de datos ni eliminado archivos.
-- **Interfaz:** `src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php` informa éxito con advertencia si hay archivos pendientes; `resources/js/admin/vistas/disputa/reinicioMediaciones.js`, `resources/views/admin/disputa/reinicio_mediaciones.blade.php` y `resources/lang/es.json` muestran el alcance y los contadores.
-- **Documentación y validación:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`; sintaxis PHP y JavaScript, JSON, rutas privadas del respaldo y `git diff --check` correctos. Quedan pendientes en Vesta pruebas funcionales de permisos, transacciones y eliminación; no se necesita migración nueva.
+## Estado final
+- **Fecha:** 18 de noviembre de 2026
+- **Tarea:** Restablecer el botón «Enviar» y ocultar su spinner al regresar con Atrás a la página de la propiedad desde la selección del método de pago.
+- **Respaldo revisado:** `documentacion-torbian-2/BD/appvac_torbDev2-20261118-1140.sql`, generado hoy a las 11:40. Los bookings 77–79 tienen sus noches correspondientes bloqueadas en `property_dates`; no se detectó una incongruencia de disponibilidad relacionada con el síntoma.
+- **Archivo de lógica actualizado:** `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`. El evento `pageshow` restablece el botón y oculta el spinner únicamente cuando la página se restaura desde BFCache; conserva los datos del formulario.
+- **Documentación actualizada:** `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
+- **Validación local:** `node --check` y `git diff --check` pendientes.
+- **Pendiente del usuario:** subir el JavaScript y la documentación al servidor Vesta, compilar con `./compilar.sh` y probar el flujo de regreso desde la página de pago. No se ejecutó SQL, Artisan, compilación ni subida desde este entorno.
