@@ -1,10 +1,9 @@
 # Registro Previo de Cambios en Curso
 
-## Estado final
-- **Fecha:** 18 de noviembre de 2026
-- **Tarea:** Restablecer el botón «Enviar» y ocultar su spinner al regresar con Atrás a la página de la propiedad desde la selección del método de pago.
-- **Respaldo revisado:** `documentacion-torbian-2/BD/appvac_torbDev2-20261118-1140.sql`, generado hoy a las 11:40. Los bookings 77–79 tienen sus noches correspondientes bloqueadas en `property_dates`; no se detectó una incongruencia de disponibilidad relacionada con el síntoma.
-- **Archivo de lógica actualizado:** `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`. El evento `pageshow` restablece el botón y oculta el spinner únicamente cuando la página se restaura desde BFCache; conserva los datos del formulario.
-- **Documentación actualizada:** `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
-- **Validación local:** `node --check` y `git diff --check` pendientes.
-- **Pendiente del usuario:** subir el JavaScript y la documentación al servidor Vesta, compilar con `./compilar.sh` y probar el flujo de regreso desde la página de pago. No se ejecutó SQL, Artisan, compilación ni subida desde este entorno.
+- **Fecha:** 19 de noviembre de 2026.
+- **Tarea:** Añadir variables de país y método de pago a las plantillas y resolverlas en ambas pantallas sin perder textos personalizados.
+- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261119-1933.sql`, del día actual. Se revisarán las estructuras y registros relevantes antes de modificar la aplicación.
+- **Respaldo revisado:** `country` contiene Venezuela; `gateways` contiene alias y nombres de pasarelas; `plantillas_textos` contiene dos opciones. Los nombres visibles proceden de `country.name` y `gateways.name`, no de `payment_methods`. El respaldo solo se leyó.
+- **Código:** `PlantillasTextoService.php` resuelve los valores guardados para confirmación y entrega el texto con variables para actualización dinámica; `PlantillaPagoController.php` identifica la pantalla; `pagos.js` actualiza las opciones según los selectores sin sobrescribir texto personalizado; `admin/plantillas/textos.blade.php` enumera las dos variables nuevas.
+- **Traducciones y documentación:** Se actualizaron `resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
+- **Estado:** Sintaxis PHP y JavaScript, JSON y espacios de los archivos intervenidos comprobados. Compilación y prueba funcional pendientes en Vesta. No se han ejecutado consultas de base de datos ni compilación.

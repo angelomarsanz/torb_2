@@ -1,5 +1,70 @@
 # Documentación de Archivos del Plugin RedaAlojamiento
 
+## Plantillas de textos y mensaje de pago por transferencia
+
+El permiso `manage_email_template` controla tanto la visibilidad del menú como todas las operaciones administrativas. Las opciones de «Mensaje al anfitrión» se ordenan por `orden` e ID; la primera se selecciona si el huésped no tiene una nota previa. El editor guarda HTML, pero el huésped recibe y envía texto plano: se conservan saltos y viñetas, no los estilos visuales. Se sustituyen `{anfitrion}`, `{huesped}`, `{alojamiento}`, `{llegada}`, `{salida}`, `{adultos}`, `{ninos}`, `{pais}` y `{metodo_pago}`. El país y el método corresponden a los valores elegidos en la pantalla inicial y, en confirmación, a los datos guardados en sesión; si no existen se muestra «No seleccionado». En una solicitud sin selectores tampoco se reutilizan datos anteriores. Cuando el huésped modifica el texto, se considera personalizado y los cambios de selección no lo sobrescriben. Para una reserva existente se usa su desglose persistido; el helper preexistente considera a todos adultos si no existe dicho desglose. La nota admite hasta 10.000 caracteres.
+
+El formulario inicial `payments/book/{id?}` también utiliza estas opciones: su campo `message_to_host` se envía por el flujo habitual de creación o actualización de la reserva y aparece en el inbox como mensaje de reserva. La nota de transferencia genera un mensaje separado vinculado a los comprobantes de ese pago; ambas pantallas comparten las mismas plantillas, por lo que su redacción debe ser adecuada para las dos. `bookings.note` conserva hasta 191 caracteres para compatibilidad, y el texto íntegro de la nota de transferencia se almacena en `mensajes_pagos` y `messages`. El historial anterior no se reescribe. El inbox usa el ID real del mensaje, no el ID de reserva virtualizado, y autoriza cada enlace comprobando los participantes.
+
+El procesador original coloca las imágenes en `public/uploads/booking`: el nuevo enlace verifica permisos, pero **los archivos siguen en almacenamiento público preexistente**, por lo que su URL original no queda protegida por este cambio. Asimismo, el procesador mueve archivos y el controlador original puede enviar correos antes del cierre de la transacción: una reversión de base de datos no puede deshacer esos efectos externos. Deben revisarse los archivos y correos si se produce un error de pago.
+
+### `packages/Reda/RedaAlojamiento/database/migrations/2026_11_18_133000_crear_plantillas_y_mensajes_de_pago.php`
+  `up()` crea las tablas auxiliares `plantillas_textos` y `mensajes_pagos`; sus campos son nulos salvo ID. `down()` impide la reversión si cualquiera contiene registros.
+
+### `packages/Reda/RedaAlojamiento/src/Models/PlantillaTexto.php`
+  Modelo de nombre, contenido HTML, contexto y orden de las opciones.
+
+### `packages/Reda/RedaAlojamiento/src/Models/MensajePago.php`
+  Modelo del mensaje íntegro, reserva real, identificador del mensaje y nombres de comprobantes.
+
+### `packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php`
+  `opcionesPago($usarDatosPago)` verifica la reserva existente cuando corresponde, obtiene el desglose y sustituye variables. Para confirmación obtiene el nombre del país y de la pasarela desde las selecciones guardadas en sesión; devuelve además el texto con las variables de pago para que el selector inicial pueda actualizarlas. `textoPlano()` elimina etiquetas y conserva saltos y viñetas.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/PlantillaTextoController.php`
+  `autorizar()` comprueba el permiso; `index()` pagina diez opciones y permite seleccionar una; `guardar()` valida y persiste; `eliminar()` elimina únicamente la opción elegida.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/PlantillaPagoController.php`
+  `opciones()` devuelve las opciones mediante la estructura JSON del plugin, sin caché; el parámetro `pantalla=confirmacion` solicita los datos de pago de sesión. Informa y registra errores.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/PasarelaPagoController.php`
+  `makePayment()` valida la nota y las imágenes antes de subirlas; `getAllData()` captura los identificadores y datos de sesión antes de invocar la pasarela original, que los elimina al finalizar. Limita la nota de compatibilidad a 191 caracteres, identifica de forma inequívoca la reserva con los identificadores capturados y registra transaccionalmente el mensaje y los comprobantes. Si falla la transacción, restaura el contexto de la sesión para permitir volver al formulario; en caso de éxito conserva la limpieza original. Otras pasarelas conservan el comportamiento original.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ComprobantePagoController.php`
+  `mostrar()` verifica el mensaje, la reserva, sus participantes y la ruta real antes de entregar un archivo, con cabeceras sin caché.
+
+### `packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php`
+  Vista adaptable con listado paginado, selección y edición de opciones, orden y referencia de variables, incluidos `{pais}` y `{metodo_pago}`; comunica que el mensaje se enviará en texto plano y advierte cuando el pago aún no tiene selección.
+
+### `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/plantillas/textos.js`
+  `iniciarEditor()` configura CKEditor con negritas, cursivas, listas y alineación. El archivo gestiona confirmación de eliminación y espera al navegar o enviar.
+
+### `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`
+  `menuLateralAdmin()` transforma el acceso autorizado a correos en «Plantillas» con «Correos» y «Textos», conservando la URL original y el estado activo.
+
+### `packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js`
+  `cargarPlantillas($campo, $boton)` consulta las opciones con animación de espera para `message_to_host` en `#checkout-form` y para `note` en el formulario de transferencia. Elige la primera cuando el campo está vacío, conserva los textos recuperados o escritos mientras carga y permite volver al personalizado. Las opciones se recalculan al cambiar país o método de pago; solo se actualiza el campo si coincide con la opción seleccionada sin editar. Si falla la consulta muestra el error y deja disponible la escritura manual. `validarFormularioPago()` comprueba exclusivamente el comprobante y la longitud de la nota de transferencia; el formulario inicial conserva su validación original.
+
+### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`
+  `adjuntarComprobantes()` vincula los comprobantes por ID de mensaje. `index()` y `message()` incorporan el vínculo al render inicial y a la carga dinámica.
+
+### `packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php`
+  Muestra la nota escapada con saltos y enlaces a los comprobantes asociados al mensaje nuevo.
+
+### `packages/Reda/RedaAlojamiento/routes/web.php`
+  Registra las rutas administrativas, de opciones para el pago y de comprobantes autenticados.
+
+### `packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php`
+  En `boot()` sustituye únicamente las acciones de finalización y callback de pasarela por el controlador extendido del plugin.
+
+### `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` y `packages/Reda/RedaAlojamiento/resources/sass/main.scss`
+  Definen respectivamente la distribución adaptable de tres columnas del editor y el ajuste de saltos y palabras del mensaje en inbox. El segundo es el SCSS frontend realmente compilado en este proyecto.
+
+### `packages/Reda/RedaAlojamiento/resources/lang/es.json`
+  Agrega los textos en español de la interfaz y los errores de plantillas y pago.
+
+### `webpack.mix.js`
+  Integra el nuevo JavaScript administrativo en la compilación del plugin. La migración, compilación y pruebas funcionales se realizan exclusivamente en Vesta.
+
 ## Información adicional en mediaciones
 
 Solo el agente actualmente asignado puede crear solicitudes y reintentar los correos pendientes de su mediación. Una solicitud acepta demandante, demandado o ambos, texto, plazo entero positivo y un complemento opcional JPG, PNG, WebP o PDF de hasta 10 MB. Al guardar, el estado pasa a `Esperando respuesta` y el paso a `Solicitud de información adicional`. Las solicitudes ya vencidas no se reactivan; las que siguen vigentes reciben el plazo de la nueva solicitud. Una carga admite hasta cinco archivos de 10 MB cada uno y el estado continúa en espera.
@@ -313,7 +378,7 @@ Herramienta destructiva y deshabilitada por defecto. Solo se muestra y ejecuta c
 
 ### JavaScript (Vistas)
 - **packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js**
-  Controlador JavaScript del lado del cliente para el formulario de confirmación de pago (`#payment-form`). Implementa validación estricta y reactiva en el cliente cuando aplica la carga de comprobante de pago (`attachment[]`) y nota/mensaje al anfitrión (`note`), como ocurre en pasarelas de Transferencia Bancaria Directa (`DirectBankTransfer`). Utiliza intercepción en fase de captura del DOM (Capture Phase) en el botón de confirmación (`#payment-form-submit`) y en el evento `submit` del formulario para adelantarse a scripts de terceros que deshabilitan el botón de manera prematura. Si falta alguno de los campos obligatorios, cancela la propagación del evento, previene el envío, restaura el estado interactivo del botón y el spinner, y muestra mensajes de error en español estilizados en los contenedores correspondientes (`span.text-danger`), evitando la recarga del navegador y garantizando que el usuario no pierda el archivo del comprobante adjunto. Incluye limpiadores de errores en tiempo real en los eventos `change` e `input`, enfoca y desplaza la vista hacia el primer campo inválido, y activa la animación de espera ("Su reserva está siendo procesada") únicamente cuando el formulario es 100% válido.
+  Controlador JavaScript del lado del cliente para el formulario inicial (`#checkout-form`) y el de confirmación (`#payment-form`). Comparte `cargarPlantillas()` para insertar el selector en el campo de mensaje de cada formulario, sin sustituir el texto ya escrito y sin cambiar la validación original del formulario inicial. Implementa validación estricta y reactiva en el cliente cuando aplica la carga de comprobante de pago (`attachment[]`) y nota/mensaje al anfitrión (`note`), como ocurre en pasarelas de Transferencia Bancaria Directa (`DirectBankTransfer`). Utiliza intercepción en fase de captura del DOM (Capture Phase) en el botón de confirmación (`#payment-form-submit`) y en el evento `submit` del formulario para adelantarse a scripts de terceros que deshabilitan el botón de manera prematura. Si falta alguno de los campos obligatorios, cancela la propagación del evento, previene el envío, restaura el estado interactivo del botón y el spinner, y muestra mensajes de error en español estilizados en los contenedores correspondientes (`span.text-danger`), evitando la recarga del navegador y garantizando que el usuario no pierda el archivo del comprobante adjunto. Incluye limpiadores de errores en tiempo real en los eventos `change` e `input`, enfoca y desplaza la vista hacia el primer campo inválido, y activa la animación de espera ("Su reserva está siendo procesada") únicamente cuando el formulario es 100% válido.
 
 ## Administración y Menú Lateral (Backend)
 

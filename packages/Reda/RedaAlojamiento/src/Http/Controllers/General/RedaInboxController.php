@@ -7,6 +7,7 @@
  * limita los mensajes administrativos privados a su destinatario y maneja el estado
  * de lectura y la virtualización de datos para el frontend. Vincula las solicitudes
  * privadas con su mensaje para ofrecer el formulario al destinatario autorizado.
+ * Vincula comprobantes de pagos nuevos con su mensaje real, incluso al agrupar reservas.
  */
 namespace Reda\RedaAlojamiento\Http\Controllers\General;
 
@@ -15,6 +16,8 @@ use App\Models\{Currency, Messages, Bookings};
 use App\Models\Admin;
 use Reda\RedaAlojamiento\Models\Disputa\Disputa;
 use Reda\RedaAlojamiento\Models\Disputa\DestinatarioInformacion;
+use Reda\RedaAlojamiento\Models\MensajePago;
+use Illuminate\Support\Collection;
 use Auth;
 use Illuminate\Http\Request;
 use Validator;
@@ -23,6 +26,16 @@ use Illuminate\Support\Facades\DB;
 
 class RedaInboxController extends Controller
 {
+    /** Agrega a cada mensaje la cantidad de comprobantes asociados antes de renderizarlo. */
+    private function adjuntarComprobantes(Collection $mensajes): void
+    {
+        $pagos = MensajePago::whereIn('mensaje_id', $mensajes->pluck('id'))->get()->keyBy('mensaje_id');
+        $mensajes->each(function ($mensaje) use ($pagos) {
+            $pago = $pagos->get($mensaje->id);
+            $mensaje->cantidad_comprobantes_pago = $pago ? count($pago->comprobantes ?? []) : 0;
+        });
+    }
+
     /**
      * Obtiene el conteo de mensajes no leídos para el usuario autenticado.
      * Retorna un JSON con el total, siguiendo la estructura de respuesta de REDA.
@@ -70,7 +83,7 @@ class RedaInboxController extends Controller
      * incorpora el identificador de solicitud en los mensajes correspondientes.
      * los grupales permanecen visibles para ambas partes.
      * Implementa un ordenamiento por prioridad: las conversaciones con mensajes 
-     * no leídos aparecen al inicio de la lista.
+     * no leídos aparecen al inicio de la lista y muestra los comprobantes de pagos nuevos.
      * 
      * @param Request $request
      * @return \Illuminate\View\View
@@ -295,6 +308,7 @@ class RedaInboxController extends Controller
             $unifiedHistory->each(function ($mensaje) use ($solicitudesPorMensaje) {
                 $mensaje->solicitud_informacion_id = $solicitudesPorMensaje->get($mensaje->id);
             });
+            $this->adjuntarComprobantes($unifiedHistory);
             $data['messages'] = $unifiedHistory;
             $data['conversation'] = $unifiedHistory;
             
@@ -324,7 +338,8 @@ class RedaInboxController extends Controller
      * Sanea el historial de mensajes, marca mensajes como leídos y retorna el HTML 
      * renderizado para el Inbox y el panel lateral de reserva. Excluye mensajes privados
      * dirigidos a la contraparte, incluso de las actualizaciones automáticas de lectura.
-     * Solo los participantes pueden abrir el contexto y sus solicitudes privadas.
+     * Solo los participantes pueden abrir el contexto y sus solicitudes privadas;
+     * incorpora los comprobantes vinculados a los mensajes originales.
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -478,6 +493,7 @@ class RedaInboxController extends Controller
         $unifiedHistory->each(function ($mensaje) use ($solicitudesPorMensaje) {
             $mensaje->solicitud_informacion_id = $solicitudesPorMensaje->get($mensaje->id);
         });
+        $this->adjuntarComprobantes($unifiedHistory);
         $data['messages'] = $unifiedHistory;
         $data['conversation'] = $unifiedHistory;
         $data['booking'] = $targetBooking->load('host', 'users', 'properties');

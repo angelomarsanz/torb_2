@@ -2,7 +2,7 @@
 
 /**
  * Registra los servicios, rutas, vistas y middlewares del plugin Reda Alojamiento.
- * Integra la protección de acciones por mediaciones después del inicio de la sesión web.
+ * Integra la protección de mediaciones y la entrega del mensaje de pago por transferencia.
  */
 
 // CAMBIO 1: Nuevo namespace del paquete
@@ -13,6 +13,7 @@ use Reda\RedaAlojamiento\Http\Controllers\General\RedaInboxController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaPaymentController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaUsuarioController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaLoginController;
+use Reda\RedaAlojamiento\Http\Controllers\General\PasarelaPagoController;
 use Illuminate\Support\Facades\Route;
 
 // CAMBIO 2: Nuevo nombre de la clase
@@ -36,7 +37,7 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap (arranque) de los servicios de la aplicación.
+     * Registra servicios, rutas y observadores; integra la pasarela sin modificar el núcleo.
      */
     public function boot(): void
     {
@@ -96,6 +97,12 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
 
             // 1. Sobrescribir Inbox y Mensajería (Búsqueda por URI o Acción)
             foreach ($routes as $route) {
+                if ($route->uri() === 'gateway/pay/{gateway}/complete') {
+                    $route->uses([PasarelaPagoController::class, 'makePayment']);
+                }
+                if ($route->uri() === 'gateway/pay/{gateway}/callback') {
+                    $route->uses([PasarelaPagoController::class, 'paymentCallback']);
+                }
                 // Sobrescribir por URI específica
                 if ($route->uri() === 'inbox') {
                     $route->uses([RedaInboxController::class, 'index']);

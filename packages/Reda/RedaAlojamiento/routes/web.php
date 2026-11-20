@@ -1,10 +1,15 @@
 <?php
 
+/** Registra las rutas del plugin, incluidas las plantillas y los comprobantes autorizados de pago. */
+
 use Illuminate\Support\Facades\Route;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaInboxController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaPaymentController;
 use Reda\RedaAlojamiento\Http\Controllers\General\RedaBookingController;
 use Reda\RedaAlojamiento\Http\Controllers\General\VerificacionCorreoController;
+use Reda\RedaAlojamiento\Http\Controllers\General\PlantillaPagoController;
+use Reda\RedaAlojamiento\Http\Controllers\General\ComprobantePagoController;
+use Reda\RedaAlojamiento\Http\Controllers\Admin\PlantillaTextoController;
 
 // ----------------------------------------------------------------------
 // IMPORTACIÓN DE CONTROLADORES
@@ -55,6 +60,9 @@ Route::middleware(['web', 'locale'])->get('reda/informacion-mediacion/acceso/{id
 
 // Sobrescribir Inbox original con la lógica de agrupación por participantes
 Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
+    Route::get('reda/pago/plantillas', [PlantillaPagoController::class, 'opciones'])->name('reda.pago.plantillas');
+    Route::get('reda/pago/comprobante/{idMensaje}/{indice}', [ComprobantePagoController::class, 'mostrar'])
+        ->whereNumber('idMensaje')->whereNumber('indice')->name('reda.pago.comprobante');
     Route::get('reda/informacion-mediacion/{id}', [InformacionAdicionalController::class, 'consultar'])->whereNumber('id');
     Route::post('reda/informacion-mediacion/{id}/archivos', [InformacionAdicionalController::class, 'cargar'])->whereNumber('id');
     Route::get('reda/informacion-mediacion/archivo/{id}', [InformacionAdicionalController::class, 'archivo'])->whereNumber('id');
@@ -86,6 +94,9 @@ Route::group(['middleware' => ['web', 'locale', 'auth']], function () {
 // y protege el acceso mediante el middleware 'admin' del proyecto original.
 Route::group(['prefix' => 'admin/reda', 'middleware' => ['web', 'guest:admin']], function () {
 
+    Route::get('plantillas/textos', [PlantillaTextoController::class, 'index'])->name('reda.admin.plantillas.textos');
+    Route::post('plantillas/textos', [PlantillaTextoController::class, 'guardar'])->name('reda.admin.plantillas.guardar');
+    Route::delete('plantillas/textos/{id}', [PlantillaTextoController::class, 'eliminar'])->whereNumber('id')->name('reda.admin.plantillas.eliminar');
     Route::get('pruebas/reiniciar-mediaciones', [ReinicioMediacionesController::class, 'index'])->name('reda.admin.pruebas.mediaciones');
     Route::post('pruebas/reiniciar-mediaciones', [ReinicioMediacionesController::class, 'reiniciar'])->name('reda.admin.pruebas.mediaciones.reiniciar');
 

@@ -1,4 +1,4 @@
-/* Estilos para el admin usando Bootstrap v5.2.3; incluye ajustes por módulo y el selector compacto de pasos con texto truncado. */
+/* Estilos para el admin con Bootstrap 5.2.3, incluidos el editor de plantillas y el selector de pasos. */
 
 /* Estilos para el módulo de Soporte Técnico */
 .soporte-tecnico {
@@ -1544,4 +1544,21 @@
 /* Corrección para que el autocompletado de Google Places sea visible en modales */
 .pac-container {
     z-index: 110000000 !important;
+}
+.reda-plantillas-disposicion {
+    display: grid;
+    grid-template-columns: minmax(210px, 1fr) minmax(320px, 2fr) minmax(210px, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.reda-plantillas-variables li {
+    margin-bottom: .65rem;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 991px) {
+    .reda-plantillas-disposicion {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

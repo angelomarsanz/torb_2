@@ -7,6 +7,7 @@
  * garantizando que "Configuración" solo esté visible y disponible para administradores con Rol 1.
  * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
  * para el rol 2, e inserta el submenú en un anclaje alternativo en ese caso.
+ * Convierte las plantillas de correo en un submenú de correos y textos.
  * Actualiza dinámicamente los contadores del menú.
  * Incluye el acceso a pruebas de mediaciones cuando el servidor lo habilita para el rol 1
  * y desplaza la barra lateral si la subopción queda fuera del área visible.
@@ -16,7 +17,7 @@ import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMe
 
 /**
  * Función principal que orquesta la inyección y el comportamiento de los menús del plugin en el panel admin.
- * Incluye "Atención al comercio" dentro de "Negocios" y mantiene visible el submenú de pruebas al abrirlo.
+ * Incluye "Atención al comercio", el submenú de plantillas y el acceso a pruebas.
  */
 export const menuLateralAdmin = () =>
 {
@@ -29,6 +30,48 @@ export const menuLateralAdmin = () =>
 
             $(function() {
                 const baseUrl = window.location.origin;
+
+                const $plantillasOriginal = $('.sidebar-menu a[href*="admin/email-template/1"]').closest('li');
+                if ($plantillasOriginal.length && !$('#menu-plantillas').length) {
+                    const traducciones = window.RedaAlojamientoJson || {};
+                    const enlaceCorreos = $plantillasOriginal.find('a').attr('href');
+                    const enlaceTextos = enlaceCorreos.replace(/admin\/email-template\/1(?:\/)?$/, 'admin/reda/plantillas/textos');
+                    const esCorreos = window.location.pathname.includes('/admin/email-template/');
+                    const esTextos = window.location.pathname.includes('/admin/reda/plantillas/textos');
+                    const abierto = esCorreos || esTextos;
+                    const $menu = $('<li class="nav-item treeview" id="menu-plantillas"></li>');
+                    const $titulo = $('<a href="#" class="nav-link" aria-controls="submenu-plantillas"></a>')
+                        .attr('aria-expanded', abierto ? 'true' : 'false')
+                        .append('<i class="nav-icon fa fa-envelope-o"></i>')
+                        .append($('<p></p>').text(traducciones['Plantillas'] || 'Plantillas')
+                            .append('<i class="fa nav-arrow pull-right"></i>'));
+                    const $lista = $('<ul id="submenu-plantillas" class="nav nav-treeview treeview-menu"></ul>');
+                    [
+                        { enlace: enlaceCorreos, texto: traducciones['Correos'] || 'Correos', activo: esCorreos },
+                        { enlace: enlaceTextos, texto: traducciones['Textos'] || 'Textos', activo: esTextos }
+                    ].forEach((opcion) => {
+                        const $enlace = $('<a class="nav-link"></a>').attr('href', opcion.enlace)
+                            .toggleClass('active', opcion.activo)
+                            .append('<i class="nav-icon far fa-circle"></i>')
+                            .append($('<p></p>').text(opcion.texto));
+                        $lista.append($('<li class="nav-item"></li>').append($enlace));
+                    });
+                    $menu.toggleClass('active menu-open', abierto);
+                    $titulo.toggleClass('active', abierto).find('.nav-arrow')
+                        .addClass(abierto ? 'fa-angle-down' : 'fa-angle-left');
+                    $lista.toggleClass('reda-admin-menu-hidden', !abierto).toggle(abierto);
+                    $menu.append($titulo, $lista);
+                    $plantillasOriginal.replaceWith($menu);
+                    $titulo.on('click', function (evento) {
+                        evento.preventDefault();
+                        evento.stopImmediatePropagation();
+                        const abrir = !$menu.hasClass('menu-open');
+                        $menu.toggleClass('active menu-open', abrir);
+                        $titulo.attr('aria-expanded', abrir ? 'true' : 'false');
+                        $titulo.find('.nav-arrow').toggleClass('fa-angle-down', abrir).toggleClass('fa-angle-left', !abrir);
+                        $lista.stop(true, true).slideToggle('fast');
+                    });
+                }
 
                 if (window.RedaAdminUser && window.RedaAdminUser.reinicioMediacionesHabilitado && !$('#menu-pruebas-aplicacion').length) {
                     const traducciones = window.RedaAlojamientoJson || {};

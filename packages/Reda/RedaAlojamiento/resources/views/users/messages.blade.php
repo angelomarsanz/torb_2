@@ -1,4 +1,4 @@
-{{-- Presenta mensajes del inbox y el acceso privado a solicitudes de información. --}}
+{{-- Presenta mensajes, comprobantes nuevos de pago y acceso privado a solicitudes de información. --}}
 	<header class="d-flex align-items-center p-2 border-bottom">
 		@php 
 			$users = ($booking->host_id == Auth::id()) ? 'users' : 'host';
@@ -46,7 +46,12 @@
                         <span class="d-block text-10 font-weight-700 text-uppercase mb-1 opacity-75">
                             {{ $nombreParaMostrar }} @if($rolParaMostrar) ({{ $rolParaMostrar }}) @endif
                         </span>
-                        <p class="m-0 text-13">{{ $message->message }}</p>
+                        <p class="m-0 text-13 reda-mensaje-texto">{{ $message->message }}</p>
+                        @for ($indice = 0; $indice < ($message->cantidad_comprobantes_pago ?? 0); $indice++)
+                            <a class="d-block mt-2" href="{{ route('reda.pago.comprobante', ['idMensaje' => $message->id, 'indice' => $indice]) }}" target="_blank" rel="noopener noreferrer">
+                                <i class="fa fa-paperclip" aria-hidden="true"></i> {{ __('Comprobante de pago') }} {{ $indice + 1 }}
+                            </a>
+                        @endfor
                         @if ($message->solicitud_informacion_id ?? null)
                             <button type="button" class="btn btn-sm btn-outline-success mt-2 reda-abrir-informacion" data-solicitud="{{ $message->solicitud_informacion_id }}">{{ __('Cargar archivos solicitados') }}</button>
                         @endif

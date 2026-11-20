@@ -35,6 +35,7 @@ if (buildAlojamiento) {
 
     // Js Admin para uso general
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js', 'public/js/reda/admin/general/reda-admin-general-main.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/plantillas/textos.js', 'public/js/reda/admin/vistas/plantillas/textos.min.js');
 
     // Js Admin por vistas
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js',
