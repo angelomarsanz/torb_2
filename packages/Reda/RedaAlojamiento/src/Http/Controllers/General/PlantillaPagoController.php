@@ -10,7 +10,7 @@ use Throwable;
 
 class PlantillaPagoController extends Controller
 {
-    /** Devuelve plantillas y datos del pago en confirmación, o un error explícito. */
+    /** Devuelve las plantillas correspondientes a la pantalla de reserva o de confirmación. */
     public function opciones(PlantillasTextoService $servicio)
     {
         try {

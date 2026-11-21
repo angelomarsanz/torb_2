@@ -13,7 +13,7 @@ use Reda\RedaAlojamiento\Models\PlantillaTexto;
 class PlantillasTextoService
 {
     /**
-     * Resuelve la reserva y, en confirmación, los datos de pago de sesión.
+     * Resuelve la reserva y selecciona sus plantillas o las de confirmación de pago.
      * También entrega el texto con variables de pago para actualizarlo en la pantalla inicial.
      */
     public function opcionesPago(bool $usarDatosPago = false): array
@@ -39,6 +39,7 @@ class PlantillasTextoService
             '{salida}' => (string) session('payment_checkout'),
             '{adultos}' => (string) $adultos,
             '{ninos}' => (string) $ninos,
+            '{total_personas}' => (string) ((int) $adultos + (int) $ninos),
         ];
 
         $pais = __('No seleccionado');
@@ -51,7 +52,8 @@ class PlantillasTextoService
         }
         $variablesPago = ['{pais}' => $pais, '{metodo_pago}' => $metodoPago];
 
-        return PlantillaTexto::where('contexto', 'mensaje_anfitrion')
+        $contexto = $usarDatosPago ? PlantillaTexto::CONTEXTO_PAGO : PlantillaTexto::CONTEXTO_RESERVA;
+        return PlantillaTexto::where('contexto', $contexto)
             ->orderBy('orden')->orderBy('id')->get()
             ->map(function (PlantillaTexto $plantilla) use ($variables, $variablesPago) {
                 $texto = strtr($this->textoPlano($plantilla->contenido), $variables);

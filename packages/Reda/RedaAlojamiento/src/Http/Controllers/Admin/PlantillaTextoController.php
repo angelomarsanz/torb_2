@@ -1,6 +1,6 @@
 <?php
 
-/** Administra las opciones de texto predefinido respetando el permiso de plantillas de correo. */
+/** Administra por pantalla las opciones de texto con el permiso de plantillas de correo. */
 namespace Reda\RedaAlojamiento\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -18,24 +18,27 @@ class PlantillaTextoController extends Controller
         abort_unless($admin && \Helpers::has_permission($admin->id, 'manage_email_template'), 403);
     }
 
-    /** Presenta las opciones paginadas y la opción seleccionada para edición. */
+    /** Presenta las opciones paginadas y la opción seleccionada del contexto elegido. */
     public function index(Request $solicitud)
     {
         $this->autorizar();
-        $plantillas = PlantillaTexto::where('contexto', 'mensaje_anfitrion')
+        $solicitud->validate(['contexto' => ['sometimes', 'required', 'in:' . PlantillaTexto::CONTEXTO_PAGO . ',' . PlantillaTexto::CONTEXTO_RESERVA]]);
+        $contexto = $solicitud->query('contexto', PlantillaTexto::CONTEXTO_PAGO);
+        $plantillas = PlantillaTexto::where('contexto', $contexto)
             ->orderBy('orden')->orderBy('id')->paginate(10)->withQueryString();
         $seleccionada = $solicitud->filled('editar')
-            ? PlantillaTexto::where('contexto', 'mensaje_anfitrion')->findOrFail($solicitud->query('editar'))
+            ? PlantillaTexto::where('contexto', $contexto)->findOrFail($solicitud->query('editar'))
             : null;
-        return view('reda-alojamiento::admin.plantillas.textos', compact('plantillas', 'seleccionada'));
+        return view('reda-alojamiento::admin.plantillas.textos', compact('plantillas', 'seleccionada', 'contexto'));
     }
 
-    /** Valida y guarda una opción nueva o existente, conservando su orden explícito. */
+    /** Valida y guarda una opción en su contexto, conservando su orden explícito. */
     public function guardar(Request $solicitud, PlantillasTextoService $servicio)
     {
         $this->autorizar();
         $datos = $solicitud->validate([
             'id' => ['nullable', 'integer', 'min:1'],
+            'contexto' => ['required', 'in:' . PlantillaTexto::CONTEXTO_PAGO . ',' . PlantillaTexto::CONTEXTO_RESERVA],
             'nombre' => ['required', 'string', 'max:191'],
             'contenido' => ['required', 'string', 'max:100000'],
             'orden' => ['required', 'integer', 'min:0', 'max:999999'],
@@ -44,21 +47,23 @@ class PlantillaTextoController extends Controller
             return back()->withErrors(['contenido' => __('Escriba el texto de la plantilla.')])->withInput();
         }
         $plantilla = !empty($datos['id'])
-            ? PlantillaTexto::where('contexto', 'mensaje_anfitrion')->findOrFail($datos['id'])
+            ? PlantillaTexto::where('contexto', $datos['contexto'])->findOrFail($datos['id'])
             : new PlantillaTexto();
         $plantilla->fill($datos);
-        $plantilla->contexto = 'mensaje_anfitrion';
         $plantilla->save();
-        return redirect()->route('reda.admin.plantillas.textos', ['editar' => $plantilla->id])
+        return redirect()->route('reda.admin.plantillas.textos', ['contexto' => $plantilla->contexto, 'editar' => $plantilla->id])
             ->with('estado_plantilla', __('Plantilla guardada correctamente.'));
     }
 
-    /** Elimina una opción sin modificar los mensajes ya enviados. */
-    public function eliminar(int $id)
+    /** Elimina una opción del contexto indicado sin modificar mensajes ya enviados. */
+    public function eliminar(Request $solicitud, int $id)
     {
         $this->autorizar();
-        PlantillaTexto::where('contexto', 'mensaje_anfitrion')->findOrFail($id)->delete();
-        return redirect()->route('reda.admin.plantillas.textos')
+        $datos = $solicitud->validate([
+            'contexto' => ['required', 'in:' . PlantillaTexto::CONTEXTO_PAGO . ',' . PlantillaTexto::CONTEXTO_RESERVA],
+        ]);
+        PlantillaTexto::where('contexto', $datos['contexto'])->findOrFail($id)->delete();
+        return redirect()->route('reda.admin.plantillas.textos', ['contexto' => $datos['contexto']])
             ->with('estado_plantilla', __('Plantilla eliminada correctamente.'));
     }
 }

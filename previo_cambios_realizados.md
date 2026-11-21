@@ -1,9 +1,8 @@
-# Registro Previo de Cambios en Curso
+# Registro previo de cambios en curso
 
-- **Fecha:** 19 de noviembre de 2026.
-- **Tarea:** Añadir variables de país y método de pago a las plantillas y resolverlas en ambas pantallas sin perder textos personalizados.
-- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261119-1933.sql`, del día actual. Se revisarán las estructuras y registros relevantes antes de modificar la aplicación.
-- **Respaldo revisado:** `country` contiene Venezuela; `gateways` contiene alias y nombres de pasarelas; `plantillas_textos` contiene dos opciones. Los nombres visibles proceden de `country.name` y `gateways.name`, no de `payment_methods`. El respaldo solo se leyó.
-- **Código:** `PlantillasTextoService.php` resuelve los valores guardados para confirmación y entrega el texto con variables para actualización dinámica; `PlantillaPagoController.php` identifica la pantalla; `pagos.js` actualiza las opciones según los selectores sin sobrescribir texto personalizado; `admin/plantillas/textos.blade.php` enumera las dos variables nuevas.
-- **Traducciones y documentación:** Se actualizaron `resources/lang/es.json`, `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`.
-- **Estado:** Sintaxis PHP y JavaScript, JSON y espacios de los archivos intervenidos comprobados. Compilación y prueba funcional pendientes en Vesta. No se han ejecutado consultas de base de datos ni compilación.
+- **Fecha:** 20 de noviembre de 2026.
+- **Tarea:** Separar las plantillas de la reserva inicial de las de confirmación de pago y añadir la variable de total de huéspedes.
+- **Respaldo revisado:** `documentacion-torbian-2/BD/appvac_torbDev2-20261120-1857.sql`, generado el 20 de noviembre (cabecera 17:56:20). Hay tres plantillas existentes en `mensaje_anfitrion`, ninguna en el nuevo contexto; `reserva_huespedes` está vacía y el helper usa `booking_details` o `bookings.guest` como respaldo. No se modifican registros históricos.
+- **Código:** `PlantillaTexto.php` define contextos; `PlantillaTextoController.php` administra cada contexto por separado; `textos.blade.php` permite elegirlo; `PlantillasTextoService.php` filtra por pantalla y resuelve `{total_personas}`; `PlantillaPagoController.php` documenta el filtro y `es.json` incorpora textos.
+- **Documentación:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md` y `LOG_DESARROLLO_REDA.md`. La segunda mención a fecha desde se interpretó como fecha de salida; se conserva `{salida}`.
+- **Estado:** Sintaxis PHP y JSON comprobadas; pruebas funcionales pendientes en Vesta. No se ejecutó SQL ni compilación.

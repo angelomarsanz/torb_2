@@ -1,6 +1,7 @@
 {
     "Alojamiento": "Alojamiento",
     "Comprobante de pago": "Comprobante de pago",
+    "Confirmación de pago": "Confirmación de pago",
     "Copie las variables en el texto; se sustituirán con los datos de la reserva.": "Copie las variables en el texto; se sustituirán con los datos de la reserva.",
     "Correos": "Correos",
     "Editar opción": "Editar opción",
@@ -27,6 +28,7 @@
     "Nueva opción": "Nueva opción",
     "Otros textos predefinidos": "Otros textos predefinidos",
     "Personalizado": "Personalizado",
+    "Reserva inicial": "Reserva inicial",
     "Plantilla eliminada correctamente.": "Plantilla eliminada correctamente.",
     "Plantilla guardada correctamente.": "Plantilla guardada correctamente.",
     "Plantillas": "Plantillas",
@@ -35,6 +37,7 @@
     "Texto": "Texto",
     "Textos": "Textos",
     "Todavía no hay opciones de texto.": "Todavía no hay opciones de texto.",
+    "Total de personas": "Total de personas",
     "Variables disponibles": "Variables disponibles",
     "¿Eliminar esta opción de texto?": "¿Eliminar esta opción de texto?",
     "El reinicio se completó, pero algunos archivos adjuntos no pudieron eliminarse. Revise los permisos y el registro del servidor; los archivos pendientes se conservan para su revisión.": "El reinicio se completó, pero algunos archivos adjuntos no pudieron eliminarse. Revise los permisos y el registro del servidor; los archivos pendientes se conservan para su revisión.",

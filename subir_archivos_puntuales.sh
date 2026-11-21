@@ -43,7 +43,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     "packages/Reda/RedaAlojamiento/resources/lang/es.json"
     "packages/Reda/RedaAlojamiento/resources/lang/es/messages.php"
     "packages/Reda/RedaAlojamiento/routes/web.php"
-    "packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php"
+    #"packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php"
     #$"packages/Reda/RedaAlojamiento/src/Helpers/helpers.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Middleware/CheckPluginAuth.php"
     #"packages/Reda/RedaAlojamiento/src/Http/Middleware/InjectPluginAssets.php"
@@ -51,7 +51,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php"
     #"packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php"
     #"packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php"
-    "packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php"
+    #"packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php"
 
     "packages/Reda/RedaAlojamiento/resources/sass/main.scss"
     "packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss"
@@ -85,8 +85,8 @@ ARCHIVOS_PHP_PUNTUALES=(
 
     #"packages/Reda/RedaAlojamiento/src/Models/Reserva/ReservaHuesped.php"
     #"packages/Reda/RedaAlojamiento/src/Models/Alerta/AlertaAdmin.php"
-    "packages/Reda/RedaAlojamiento/src/Models/MensajePago.php"
-    "packages/Reda/RedaAlojamiento/src/Models/PlantillaTexto.php"
+    #"packages/Reda/RedaAlojamiento/src/Models/MensajePago.php"
+    #"packages/Reda/RedaAlojamiento/src/Models/PlantillaTexto.php"
     
     #"packages/Reda/RedaAlojamiento/src/Models/Admin/SoporteTecnico.php"
 
@@ -152,7 +152,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/database/migrations/2026_10_18_000002_habilitar_mensajes_para_rol_atencion_usuario.php"
     #"packages/Reda/RedaAlojamiento/database/migrations/2026_11_07_000000_crear_tablas_reinicio_mediaciones.php"
     #"packages/Reda/RedaAlojamiento/database/migrations/2026_11_09_100000_crear_solicitudes_informacion_mediaciones.php"
-    "packages/Reda/RedaAlojamiento/database/migrations/2026_11_18_133000_crear_plantillas_y_mensajes_de_pago.php"
+    #"packages/Reda/RedaAlojamiento/database/migrations/2026_11_18_133000_crear_plantillas_y_mensajes_de_pago.php"
 
     # --- PLUGIN REDA ALOJAMIENTO: VISTAS (ADMIN) ---
     #"packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php"
@@ -170,7 +170,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/configuracion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/disputa/reinicio_mediaciones.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php"
-    "packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php"
 
     # --- PLANTILLAS EMAIL ADMIN --
     #"packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php"
@@ -219,7 +219,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/anfitrion.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/precio.blade.php"
     #"packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php"
-    "packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php"
+    #"packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php"
 
     # --- PLANTILLAS EMAIL USUARIO ---
     #"packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php"
@@ -229,7 +229,7 @@ ARCHIVOS_PHP_PUNTUALES=(
     # --- Archivos Javascript admin ---
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/notificaciones.js"
-    "packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js"
+    #"packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js"
     #"packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js"

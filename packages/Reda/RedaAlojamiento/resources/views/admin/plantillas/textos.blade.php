@@ -1,4 +1,4 @@
-{{-- Editor de opciones de mensaje al anfitrión; los pagos envían siempre texto plano. --}}
+{{-- Editor de opciones independientes para reserva y pago; los mensajes se envían en texto plano. --}}
 @extends('admin.template')
 
 @section('main')
@@ -19,11 +19,16 @@
             <aside class="card reda-plantillas-lista">
                 <div class="card-body">
                     <h2 class="h5">{{ __('Mensaje al anfitrión') }}</h2>
-                    <a class="btn btn-outline-primary btn-sm mb-3" href="{{ route('reda.admin.plantillas.textos') }}">{{ __('Nueva opción') }}</a>
+                    <div class="list-group mb-3">
+                        <a class="list-group-item list-group-item-action {{ $contexto === \Reda\RedaAlojamiento\Models\PlantillaTexto::CONTEXTO_RESERVA ? 'active' : '' }}" href="{{ route('reda.admin.plantillas.textos', ['contexto' => \Reda\RedaAlojamiento\Models\PlantillaTexto::CONTEXTO_RESERVA]) }}">{{ __('Reserva inicial') }}</a>
+                        <a class="list-group-item list-group-item-action {{ $contexto === \Reda\RedaAlojamiento\Models\PlantillaTexto::CONTEXTO_PAGO ? 'active' : '' }}" href="{{ route('reda.admin.plantillas.textos', ['contexto' => \Reda\RedaAlojamiento\Models\PlantillaTexto::CONTEXTO_PAGO]) }}">{{ __('Confirmación de pago') }}</a>
+                    </div>
+                    <h3 class="h6">{{ $contexto === \Reda\RedaAlojamiento\Models\PlantillaTexto::CONTEXTO_RESERVA ? __('Reserva inicial') : __('Confirmación de pago') }}</h3>
+                    <a class="btn btn-outline-primary btn-sm mb-3" href="{{ route('reda.admin.plantillas.textos', ['contexto' => $contexto]) }}">{{ __('Nueva opción') }}</a>
                     <div class="list-group">
                         @forelse ($plantillas as $plantilla)
                             <a class="list-group-item list-group-item-action {{ $seleccionada && $seleccionada->id === $plantilla->id ? 'active' : '' }}"
-                               href="{{ route('reda.admin.plantillas.textos', ['editar' => $plantilla->id, 'page' => $plantillas->currentPage()]) }}">
+                               href="{{ route('reda.admin.plantillas.textos', ['contexto' => $contexto, 'editar' => $plantilla->id, 'page' => $plantillas->currentPage()]) }}">
                                 {{ $plantilla->nombre }} <small>({{ $plantilla->orden }})</small>
                             </a>
                         @empty
@@ -39,6 +44,7 @@
                     <p class="text-muted">{{ __('El huésped recibirá texto plano; los estilos no se enviarán.') }}</p>
                     <form id="form-plantilla-texto" action="{{ route('reda.admin.plantillas.guardar') }}" method="POST">
                         @csrf
+                        <input type="hidden" name="contexto" value="{{ $contexto }}">
                         <input type="hidden" name="id" value="{{ old('id', $seleccionada->id ?? '') }}">
                         <label class="form-label" for="nombre-plantilla">{{ __('Nombre de la opción') }}</label>
                         <input class="form-control mb-3" id="nombre-plantilla" name="nombre" maxlength="191" required value="{{ old('nombre', $seleccionada->nombre ?? '') }}">
@@ -52,6 +58,7 @@
                     @if ($seleccionada)
                         <form class="mt-2 reda-eliminar-plantilla" action="{{ route('reda.admin.plantillas.eliminar', $seleccionada->id) }}" method="POST">
                             @csrf @method('DELETE')
+                            <input type="hidden" name="contexto" value="{{ $contexto }}">
                             <button class="btn btn-outline-danger" type="submit">{{ __('Eliminar opción') }}</button>
                         </form>
                     @endif
@@ -69,6 +76,7 @@
                         <li><code>{salida}</code> — {{ __('Fecha de salida') }}</li>
                         <li><code>{adultos}</code> — {{ __('Adultos') }}</li>
                         <li><code>{ninos}</code> — {{ __('Niños') }}</li>
+                        <li><code>{total_personas}</code> — {{ __('Total de personas') }}</li>
                         <li><code>{pais}</code> — {{ __('País') }}</li>
                         <li><code>{metodo_pago}</code> — {{ __('Método de pago') }}</li>
                     </ul>

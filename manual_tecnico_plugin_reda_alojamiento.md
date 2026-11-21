@@ -2,9 +2,11 @@
 
 ## Plantillas de textos y mensaje de pago por transferencia
 
-El permiso `manage_email_template` controla tanto la visibilidad del menú como todas las operaciones administrativas. Las opciones de «Mensaje al anfitrión» se ordenan por `orden` e ID; la primera se selecciona si el huésped no tiene una nota previa. El editor guarda HTML, pero el huésped recibe y envía texto plano: se conservan saltos y viñetas, no los estilos visuales. Se sustituyen `{anfitrion}`, `{huesped}`, `{alojamiento}`, `{llegada}`, `{salida}`, `{adultos}`, `{ninos}`, `{pais}` y `{metodo_pago}`. El país y el método corresponden a los valores elegidos en la pantalla inicial y, en confirmación, a los datos guardados en sesión; si no existen se muestra «No seleccionado». En una solicitud sin selectores tampoco se reutilizan datos anteriores. Cuando el huésped modifica el texto, se considera personalizado y los cambios de selección no lo sobrescriben. Para una reserva existente se usa su desglose persistido; el helper preexistente considera a todos adultos si no existe dicho desglose. La nota admite hasta 10.000 caracteres.
+El permiso `manage_email_template` controla tanto la visibilidad del menú como todas las operaciones administrativas. «Mensaje al anfitrión» contiene dos grupos independientes: **Reserva inicial** (`mensaje_reserva`) y **Confirmación de pago** (`mensaje_anfitrion`). Las opciones se ordenan por `orden` e ID dentro de cada grupo; la primera se selecciona si el huésped no tiene una nota previa. Las plantillas ya existentes permanecen en confirmación. El nuevo grupo empieza vacío y, hasta que el administrador cree opciones, el huésped escribe su mensaje manualmente.
 
-El formulario inicial `payments/book/{id?}` también utiliza estas opciones: su campo `message_to_host` se envía por el flujo habitual de creación o actualización de la reserva y aparece en el inbox como mensaje de reserva. La nota de transferencia genera un mensaje separado vinculado a los comprobantes de ese pago; ambas pantallas comparten las mismas plantillas, por lo que su redacción debe ser adecuada para las dos. `bookings.note` conserva hasta 191 caracteres para compatibilidad, y el texto íntegro de la nota de transferencia se almacena en `mensajes_pagos` y `messages`. El historial anterior no se reescribe. El inbox usa el ID real del mensaje, no el ID de reserva virtualizado, y autoriza cada enlace comprobando los participantes.
+El editor guarda HTML, pero el huésped recibe y envía texto plano: se conservan saltos y viñetas, no los estilos visuales. Las variables son `{anfitrion}`, `{huesped}`, `{alojamiento}`, `{llegada}`, `{salida}`, `{adultos}`, `{ninos}`, `{total_personas}`, `{pais}` y `{metodo_pago}`. El total es la suma del mismo desglose de adultos y niños utilizado en el mensaje. El país y el método corresponden a los valores elegidos en la pantalla inicial y, en confirmación, a los datos guardados en sesión; si no existen se muestra «No seleccionado». En una solicitud sin selectores tampoco se reutilizan datos anteriores. Cuando el huésped modifica el texto, se considera personalizado y los cambios de selección no lo sobrescriben. Para una reserva existente se usa su desglose persistido; el helper preexistente considera a todos adultos si no existe dicho desglose. La nota admite hasta 10.000 caracteres.
+
+El formulario inicial `payments/book/{id?}` usa únicamente el grupo de reserva: su campo `message_to_host` se envía por el flujo habitual de creación o actualización de la reserva y aparece en el inbox como mensaje de reserva. La nota de transferencia usa el grupo de confirmación y genera un mensaje separado vinculado a los comprobantes de ese pago. `bookings.note` conserva hasta 191 caracteres para compatibilidad, y el texto íntegro de la nota de transferencia se almacena en `mensajes_pagos` y `messages`. El historial anterior no se reescribe. El inbox usa el ID real del mensaje, no el ID de reserva virtualizado, y autoriza cada enlace comprobando los participantes.
 
 El procesador original coloca las imágenes en `public/uploads/booking`: el nuevo enlace verifica permisos, pero **los archivos siguen en almacenamiento público preexistente**, por lo que su URL original no queda protegida por este cambio. Asimismo, el procesador mueve archivos y el controlador original puede enviar correos antes del cierre de la transacción: una reversión de base de datos no puede deshacer esos efectos externos. Deben revisarse los archivos y correos si se produce un error de pago.
 
@@ -12,19 +14,19 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
   `up()` crea las tablas auxiliares `plantillas_textos` y `mensajes_pagos`; sus campos son nulos salvo ID. `down()` impide la reversión si cualquiera contiene registros.
 
 ### `packages/Reda/RedaAlojamiento/src/Models/PlantillaTexto.php`
-  Modelo de nombre, contenido HTML, contexto y orden de las opciones.
+  Modelo de nombre, contenido HTML, contexto y orden de las opciones. Las constantes `CONTEXTO_RESERVA` y `CONTEXTO_PAGO` identifican los grupos sin cambiar tablas existentes.
 
 ### `packages/Reda/RedaAlojamiento/src/Models/MensajePago.php`
   Modelo del mensaje íntegro, reserva real, identificador del mensaje y nombres de comprobantes.
 
 ### `packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php`
-  `opcionesPago($usarDatosPago)` verifica la reserva existente cuando corresponde, obtiene el desglose y sustituye variables. Para confirmación obtiene el nombre del país y de la pasarela desde las selecciones guardadas en sesión; devuelve además el texto con las variables de pago para que el selector inicial pueda actualizarlas. `textoPlano()` elimina etiquetas y conserva saltos y viñetas.
+  `opcionesPago($usarDatosPago)` verifica la reserva existente cuando corresponde, obtiene el desglose, suma adultos y niños para `{total_personas}` y filtra las plantillas según la pantalla. Para confirmación obtiene el nombre del país y de la pasarela desde las selecciones guardadas en sesión; devuelve además el texto con las variables de pago para que el selector inicial pueda actualizarlas. `textoPlano()` elimina etiquetas y conserva saltos y viñetas.
 
 ### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/PlantillaTextoController.php`
-  `autorizar()` comprueba el permiso; `index()` pagina diez opciones y permite seleccionar una; `guardar()` valida y persiste; `eliminar()` elimina únicamente la opción elegida.
+  `autorizar()` comprueba el permiso; `index()` valida el contexto, pagina diez opciones y permite seleccionar una; `guardar()` valida y persiste dentro del contexto elegido; `eliminar()` valida el contexto y elimina únicamente la opción de ese grupo.
 
 ### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/PlantillaPagoController.php`
-  `opciones()` devuelve las opciones mediante la estructura JSON del plugin, sin caché; el parámetro `pantalla=confirmacion` solicita los datos de pago de sesión. Informa y registra errores.
+  `opciones()` devuelve las opciones mediante la estructura JSON del plugin, sin caché; el parámetro `pantalla=confirmacion` selecciona las plantillas de pago y los datos de sesión; la pantalla inicial usa las de reserva. Informa y registra errores.
 
 ### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/PasarelaPagoController.php`
   `makePayment()` valida la nota y las imágenes antes de subirlas; `getAllData()` captura los identificadores y datos de sesión antes de invocar la pasarela original, que los elimina al finalizar. Limita la nota de compatibilidad a 191 caracteres, identifica de forma inequívoca la reserva con los identificadores capturados y registra transaccionalmente el mensaje y los comprobantes. Si falla la transacción, restaura el contexto de la sesión para permitir volver al formulario; en caso de éxito conserva la limpieza original. Otras pasarelas conservan el comportamiento original.
@@ -33,7 +35,7 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
   `mostrar()` verifica el mensaje, la reserva, sus participantes y la ruta real antes de entregar un archivo, con cabeceras sin caché.
 
 ### `packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php`
-  Vista adaptable con listado paginado, selección y edición de opciones, orden y referencia de variables, incluidos `{pais}` y `{metodo_pago}`; comunica que el mensaje se enviará en texto plano y advierte cuando el pago aún no tiene selección.
+  Vista adaptable con enlaces a los dos grupos independientes, listado paginado, selección y edición de opciones, orden y referencia de variables, incluidos `{pais}`, `{metodo_pago}` y `{total_personas}`; comunica que el mensaje se enviará en texto plano y advierte cuando el pago aún no tiene selección.
 
 ### `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/plantillas/textos.js`
   `iniciarEditor()` configura CKEditor con negritas, cursivas, listas y alineación. El archivo gestiona confirmación de eliminación y espera al navegar o enviar.
@@ -42,7 +44,7 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
   `menuLateralAdmin()` transforma el acceso autorizado a correos en «Plantillas» con «Correos» y «Textos», conservando la URL original y el estado activo.
 
 ### `packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js`
-  `cargarPlantillas($campo, $boton)` consulta las opciones con animación de espera para `message_to_host` en `#checkout-form` y para `note` en el formulario de transferencia. Elige la primera cuando el campo está vacío, conserva los textos recuperados o escritos mientras carga y permite volver al personalizado. Las opciones se recalculan al cambiar país o método de pago; solo se actualiza el campo si coincide con la opción seleccionada sin editar. Si falla la consulta muestra el error y deja disponible la escritura manual. `validarFormularioPago()` comprueba exclusivamente el comprobante y la longitud de la nota de transferencia; el formulario inicial conserva su validación original.
+  `cargarPlantillas($campo, $boton)` consulta el grupo correspondiente con animación de espera para `message_to_host` en `#checkout-form` y para `note` en el formulario de transferencia. Elige la primera cuando el campo está vacío, conserva los textos recuperados o escritos mientras carga y permite volver al personalizado. Las opciones se recalculan al cambiar país o método de pago; solo se actualiza el campo si coincide con la opción seleccionada sin editar. Si falla la consulta muestra el error y deja disponible la escritura manual. `validarFormularioPago()` comprueba exclusivamente el comprobante y la longitud de la nota de transferencia; el formulario inicial conserva su validación original.
 
 ### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`
   `adjuntarComprobantes()` vincula los comprobantes por ID de mensaje. `index()` y `message()` incorporan el vínculo al render inicial y a la carga dinámica.
