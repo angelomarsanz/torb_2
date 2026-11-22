@@ -1,0 +1,300 @@
+ARCHIVOS DEL PROYECTO ORIGINAL MODIFICADOS 
+    composer.json
+    config/app.php
+    config/pdf.php
+    package.json
+    
+    webpack.mix.js
+    resources/views/admin/common/foot.blade.php
+    resources/views/admin/common/head.blade.php
+    resources/views/common/foot.blade.php
+    resources/views/common/head.blade.php
+    app/Http/Middleware/RedirectIfAuthenticated.php
+    app/Http/Controllers/EmailController.php
+    app/Http/Controllers/UserController.php
+    app/Http/Controllers/Admin/SettingsController.php
+    app/Providers/AppServiceProvider.php
+    config/mail.php
+    resources/views/admin/settings/email.blade.php
+
+ARCHIVOS PARA LAS DIRECTRICES Y DOCUMENTACIÓN DEL PROYECTO 
+
+    .github/copilot-instructions.md
+    manual_tecnico_plugin_reda_alojamiento.md
+    LOG_DESARROLLO_REDA.md
+    registrar_sesion.sh
+
+ARCHIVOS PARA SUBIR LOS CAMBIOS AL SERVIDOR Y COMPILAR 
+
+    subir.sh
+    subir_archivos_puntuales.sh
+    compilar.sh
+
+PLUGIN REDA ALOJAMIENTO: GENERAL 
+    packages/Reda/RedaAlojamiento/composer.json
+    packages/Reda/RedaAlojamiento/config/reda-alojamiento.php
+    packages/Reda/RedaAlojamiento/resources/lang/es.json
+    packages/Reda/RedaAlojamiento/resources/lang/es/messages.php
+    packages/Reda/RedaAlojamiento/routes/web.php
+    packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php
+    $packages/Reda/RedaAlojamiento/src/Helpers/helpers.php
+    packages/Reda/RedaAlojamiento/src/Http/Middleware/CheckPluginAuth.php
+    packages/Reda/RedaAlojamiento/src/Http/Middleware/InjectPluginAssets.php
+    packages/Reda/RedaAlojamiento/src/Http/Middleware/RestringirAccionesPorMediaciones.php
+    packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php
+    packages/Reda/RedaAlojamiento/src/Services/MediacionAlertaService.php
+    packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php
+    packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php
+
+    packages/Reda/RedaAlojamiento/resources/sass/main.scss
+    packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss
+
+PLUGIN REDA ALOJAMIENTO: MODELOS 
+    packages/Reda/RedaAlojamiento/src/Models/Administrativo/Administrativo.php   
+    packages/Reda/RedaAlojamiento/src/Models/BilleteraHuesped/BilleteraHuesped.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/Disputa.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/MensajeMetadata.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/AdjuntoMediacionPendiente.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/MensajeDeMediacion.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/UsuarioAvisoMediacion.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/ArchivoInformacion.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/CorreoInformacion.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/DestinatarioInformacion.php
+    packages/Reda/RedaAlojamiento/src/Models/Disputa/SolicitudInformacion.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/ActividadExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/AnfitrionExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/CalificacionExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/Experiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/FotoExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/HorarioExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/InformacionExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/ReservacionExperiencia.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/PlanNegocio.php
+    packages/Reda/RedaAlojamiento/src/Models/Experiencia/FavoritoComercio.php
+    packages/Reda/RedaAlojamiento/src/Models/Reserva/ReservaHuesped.php
+    packages/Reda/RedaAlojamiento/src/Models/Alerta/AlertaAdmin.php
+    packages/Reda/RedaAlojamiento/src/Models/MensajePago.php
+    packages/Reda/RedaAlojamiento/src/Models/PlantillaTexto.php
+    packages/Reda/RedaAlojamiento/src/Models/Admin/SoporteTecnico.php
+
+PLUGIN REDA ALOJAMIENTO: MIGRACIONES 
+    packages/Reda/RedaAlojamiento/database/migrations/2025_10_26_225134_create_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_10_26_225134_create_horarios_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_02_100000_remove_fields_from_horarios_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_04_000000_create_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_04_000001_update_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_04_000002_update_horarios_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_08_120000_remove_cupos_from_horarios_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_15_000001_create_informacion_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_16_173000_create_reservacion_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_17_000000_create_anfitrion_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_17_000000_update_reservacion_experiencias_add_fk_user.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_17_000001_fix_anfitrion_experiencias_add_fk_user.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_11_17_000001_update_reservacion_experiencias_add_fk_horario.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_12_12_000000_rename_anfitrion_experiencias_to_anfitriones_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_12_12_000001_rename_informacion_experiencias_to_informaciones_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_12_12_000002_rename_reservacion_experiencias_to_reservaciones_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_12_12_000003_fix_anfitriones_experiencias_add_fk_user.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_12_12_000004_fix_informaciones_experiencias_add_fk_experiencia.php
+    packages/Reda/RedaAlojamiento/database/migrations/2025_12_12_000005_fix_reservaciones_experiencias_add_fks.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_01_27_000000_add_experiencia_id_to_anfitriones_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_01_27_000002_add_user_id_to_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_01_27_223125_create_fotos_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_02_05_233110_add_orden_actividad_to_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_02_24_223956_add_columns_to_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_03_08_202105_rename_nombre_experiencia_to_nombre_actividad_in_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_04_01_125540_add_categoria_negocio_to_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_04_01_135608_add_tipo_producto_servicio_to_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_04_02_110149_make_columns_nullable_in_actividades_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_04_02_125219_change_experiencia_id_nullable_in_actividades_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_04_02_131434_make_all_columns_nullable_in_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_05_26_080651_agregar_campos_a_actividades_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_05_26_091600_agregar_horario_a_tabla_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_05_26_120903_cambios_columnas_precio_moneda.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_05_26_130425_mover_precios_monedas_complementarios.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_05_28_000000_agregar_ubicacion_a_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_06_01_100000_agregar_foto_anfitrion_a_anfitriones_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_06_08_100000_crear_tabla_calificaciones_experiencias.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_06_22_000000_create_soportes_tecnicos_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_06_24_100000_cambiar_link_error_a_text_en_soportes_tecnicos.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_06_26_150000_agregar_resultado_gestion_a_soportes_tecnicos.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_01_100000_crear_tabla_planes_negocios.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_02_100000_modificar_tabla_planes_negocios_multiplanes.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_03_100000_add_plan_negocios_to_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_06_100000_renombrar_asignado_a_en_soportes_tecnicos.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_06_110000_renombrar_id_usuario_gestor_a_admin_id.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_07_120000_agregar_visitas_a_experiencias_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_07_130000_crear_tabla_favoritos_comercios.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_07_130000_crear_tabla_favoritos_comercios.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_18_000000_create_diputas_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_19_100000_add_paso_actual_to_diputas_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_19_110000_add_document_columns_to_diputas_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_19_120000_rename_diputas_to_disputas_table.php
+    database/migrations/2026_07_20_000000_add_initial_user_columns_to_disputas_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_29_100000_create_reda_mensajes_metadata_table.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_07_29_110000_add_disputas_message_type.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_09_25_000000_crear_tabla_reserva_huespedes.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000000_crear_tabla_alertas_admin.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_10_04_000001_crear_tabla_usuarios_avisos_mediaciones.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_10_18_000002_habilitar_mensajes_para_rol_atencion_usuario.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_07_000000_crear_tablas_reinicio_mediaciones.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_09_100000_crear_solicitudes_informacion_mediaciones.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_18_133000_crear_plantillas_y_mensajes_de_pago.php
+
+PLUGIN REDA ALOJAMIENTO: VISTAS (ADMIN) 
+    packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/general/main_footer.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/general/main_head.blade.php
+    packages/Reda/RedaAlojamiento/rmodal_reesources/views/admin/general/modal_confirmacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/general/modal_notificaciones.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/general/soporte_tecnico/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/general/soporte_tecnico/show.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/general/paginacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/configuracion_planes.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/partials/tabla_planes.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/disputa/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/disputa/modal_detalle.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/disputa/configuracion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/disputa/reinicio_mediaciones.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php
+
+PLANTILLAS EMAIL ADMIN --
+    packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/emails/suspension_admin.blade.php
+
+PLUGIN REDA ALOJAMIENTO: VISTAS (FRONTEND - CARPETAS FRONTEND) 
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/calificacion_experiencia_frontend.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/listado_experiencias.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/productos_servicios_encontrados.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/listado_productos_servicios.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/lista_cards.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/card_ver_todos_negocios.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/card_reseña.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/card_producto_servicio.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/detalle_actividad_inline.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/partials/lista_favoritos_comercios.blade.php
+
+PLUGIN REDA ALOJAMIENTO: VISTAS (FUERA DE CARPETAS FRONTEND) 
+    packages/Reda/RedaAlojamiento/resources/views/general/main_footer.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/main_head.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/modal_confirmacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/modal_crop.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/modal_notificaciones.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/modal_listado_infinito.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/paginacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/modal_reservar.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/general/modal_verificacion_correo.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/administrativo/administrativos/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/billetera_huesped/billeteras_huespedes/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/modal_mediacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/modal_detalle.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/disputa/disputas/show.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/calificacion_experiencia.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/cartel_calificacion_pdf.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/create.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/listado_calificaciones.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/detalle_calificaciones.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/descripcion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/actividades.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/ubicacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/fotos.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/horario.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/anfitrion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/formularios_de_pasos/precio.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/users/inbox.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/users/messages.blade.php
+
+PLANTILLAS EMAIL USUARIO 
+    packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/emails/suspension_usuario.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/emails/informacion_mediacion.blade.php
+
+ARCHIVOS JAVASCRIPT ADMIN 
+    packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/general/notificaciones.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/indexSoporteTecnico.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/general/soporte_tecnico/showSoporteTecnico.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/configuracionDisputas.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/indexDisputas.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/disputa/reinicioMediaciones.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/configuracionPlanes.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/plantillas/textos.js
+
+ARCHIVOS JAVASCRIPT CARPETA FRONTEND 
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoProductosServicios.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoExperiencias.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/productosServiciosEncontrados.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/calificacionExperienciaFrontend.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/toggleFavoritoComercio.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verDetalleReservaModal.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/desgloseHuespedes.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js
+
+ARCHIVOS JAVASCRIPT FUERA DE LA CARPETA FRONTEND 
+    packages/Reda/RedaAlojamiento/resources/js/general/main.js
+    packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js
+    packages/Reda/RedaAlojamiento/resources/js/general/iconos/index.js
+    packages/Reda/RedaAlojamiento/resources/js/general/iconos/mediacionSvg.js
+    packages/Reda/RedaAlojamiento/resources/js/general/iconos/estatusDisputaSvg.js
+    packages/Reda/RedaAlojamiento/resources/js/general/iconos/notificacionesSvg.js
+    packages/Reda/RedaAlojamiento/resources/js/general/menus/menuPrincipal.js
+    packages/Reda/RedaAlojamiento/resources/js/general/menus/menuLateralUsuario.js
+    packages/Reda/RedaAlojamiento/resources/js/general/menus/obtenerConteoMediaciones.js
+    packages/Reda/RedaAlojamiento/resources/js/general/menus/obtenerConteoViajes.js
+    packages/Reda/RedaAlojamiento/resources/js/general/utilidades/listadoInfinito.js
+    packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.js
+    packages/Reda/RedaAlojamiento/resources/js/general/ajax/index.js
+    packages/Reda/RedaAlojamiento/resources/js/general/ajax/obtenerConteoNoLeidos.js
+    packages/Reda/RedaAlojamiento/resources/js/general/iniciarChat.js
+    packages/Reda/RedaAlojamiento/resources/js/general/menus/addPublicaExperienciaBtn.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/disputa/disputas/indexDisputas.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/formularioDePasosExperiencias.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/indexExperiencias.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/calificacionExperiencia.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/listadoCalificaciones.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/detalleCalificaciones.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/inbox.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/inbox/informacionAdicional.js
+    packages/Reda/RedaAlojamiento/resources/js/chat-injection.js
+    packages/Reda/RedaAlojamiento/resources/js/reserve-injection.js
+    packages/Reda/RedaAlojamiento/resources/js/ocultar-consultas.js
+
+PLUGIN REDA ALOJAMIENTO: CONTROLADORES ADMIN 
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Experiencia/ExperienciaController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/General/SoporteTecnicoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/DisputaController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/MensajeController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Alerta/AlertaController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/PlantillaTextoController.php
+
+PLUGIN REDA ALOJAMIENTO: CONTROLADORES 
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Administrativo/AdministrativoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/BilleteraHuesped/BilleteraHuespedController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/DisputaController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/MensajeController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Disputa/InformacionAdicionalController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/CalificacionController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/ExperienciaController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/MediaController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/SoporteTecnicoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Experiencia/FavoritoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ChatController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaPaymentController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaBookingController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaLoginController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaUsuarioController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/VerificacionCorreoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/ComprobantePagoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/PasarelaPagoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/General/PlantillaPagoController.php

@@ -250,9 +250,10 @@ Cuando se modifique un código existente y se encuentre con una traducción que 
   - En el servidor Vesta es donde se ejecutan las migraciones y comandos artisan:
     `sudo -u appvac php8.2 artisan migrate`
   - La IA no tiene acceso al servidor Vesta. Es el usuario quien accede remotamente a Vesta para subir archivos, compilar, migrar y realizar las pruebas de funcionamiento.
-- **ESTRICTAMENTE PROHIBIDO MODIFICAR O EJECUTAR LOS SCRIPTS DE SUBIDA:**
+- **PROHIBIDO EJECUTAR LOS SCRIPTS DE SUBIDA:**
   - La IA NUNCA debe ejecutar `./subir.sh` ni `./subir_archivos_puntuales.sh`.
-  - La IA NUNCA debe modificar el archivo `subir.sh` ni el archivo `subir_archivos_puntuales.sh`. Estos archivos son de gestión exclusiva y manual del usuario.
+  - La IA NUNCA debe modificar `subir.sh`.
+  - Se permite modificar exclusivamente la lista de rutas de `subir_archivos_puntuales.sh`, siguiendo la regla mandatoria de sincronización indicada en «Subida de archivos al servidor Vesta y Manejo de Scripts». No se debe alterar la lógica restante del script.
 - **PROTOCOLO MANDATORIO PARA EJECUCIÓN DE COMANDOS (SUGERIR Y DETENER):**
   - La IA NUNCA debe ejecutar directamente comandos como `php artisan ...`, `npm run ...`, `./compilar.sh`, `composer ...` ni comandos de sistema en el servidor.
   - La IA SIEMPRE debe **sugerir al usuario por escrito** el comando exacto que debe ejecutar (por ejemplo: *"Por favor, ejecute en el servidor Vesta: `sudo -u appvac php8.2 artisan migrate`"* o *"Por favor ejecute `./compilar.sh`"*).
@@ -325,7 +326,15 @@ Se debe usar packages/Reda/RedaAlojamiento/resources/js/general/notificaciones.j
 
 ## Subida de archivos al servidor Vesta de Desarrollo y Manejo de Scripts (REGLA MANDATORIA)
 - Los archivos se suben vía FTP al servidor Vesta de Desarrollo para sus respectivas pruebas mediante los scripts `subir.sh` y `subir_archivos_puntuales.sh`.
-- **PROHIBIDO MODIFICAR Y PROHIBIDO EJECUTAR ESTOS SCRIPTS:** La IA NUNCA debe ejecutar `./subir.sh` ni `./subir_archivos_puntuales.sh`. Tampoco debe modificar el archivo `subir.sh` ni el archivo `subir_archivos_puntuales.sh`. Esos archivos solo los puede modificar y ejecutar el usuario de manera manual cuando corresponda.
+- **PROHIBIDO EJECUTAR LOS SCRIPTS:** La IA NUNCA debe ejecutar `./subir.sh` ni `./subir_archivos_puntuales.sh`, y nunca debe modificar `subir.sh`. En `subir_archivos_puntuales.sh` solo se permite actualizar la lista de rutas descrita a continuación; no se debe cambiar ninguna otra parte del script.
+- **Sincronización obligatoria de `subir_archivos_puntuales.sh`:**
+  - En cada solicitud que produzca cambios de archivos, actualizar la lista para que contenga únicamente las rutas relativas de los archivos creados o modificados en esa solicitud que deban subirse a Vesta. Eliminar las rutas de solicitudes anteriores y agregar todas las rutas aplicables de la solicitud actual.
+  - Si la solicitud no produce archivos que deban subirse a Vesta, indicar `Ninguno` según el formato que ya admite el script. No incluir archivos locales de documentación o control que no se desplieguen en el servidor.
+  - Mantener intactos el resto del script y su formato. Antes de finalizar, comprobar que cada ruta incluida corresponde a un archivo realmente creado o modificado en la solicitud actual.
+- **Actualización obligatoria de `lista_archivos_aplicacion.md`:**
+  - Cada vez que se cree un archivo dentro de `packages/Reda/RedaAlojamiento` o se modifique un archivo del proyecto original, agregar su ruta relativa en la sección que corresponda a su clasificación existente.
+  - Conservar las categorías y el formato actuales, evitar duplicados y verificar que cada ruta nueva o modificada aparezca en la categoría correcta. Se debe evitar modificar archivos originales, pero si es necesario hacerlo, su ruta debe registrarse.
+- Estas dos actualizaciones son prioritarias y obligatorias al finalizar cada solicitud de cambios: el manifiesto identifica los archivos que se subirán a Vesta y el inventario debe reflejar la estructura vigente de la aplicación.
 - **SUGERIR COMANDOS Y PAUSAR LA RESPUESTA:** Cuando se requiera ejecutar algún comando (`php artisan ...`, `npm run ...`, `./compilar.sh`, migraciones, etc.):
   - La IA NUNCA debe ejecutarlos directamente.
   - La IA debe escribir en la respuesta la sugerencia explícita para que el usuario lo ejecute (por ejemplo: "Por favor ejecute en el servidor Vesta: `sudo -u appvac php8.2 artisan migrate`" o "Por favor ejecute `./compilar.sh`").

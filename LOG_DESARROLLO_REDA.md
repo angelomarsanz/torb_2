@@ -2,6 +2,11 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [22 de Noviembre, 2026] - Sincronización del manifiesto de subida y del inventario
+- **Solicitud:** Establecer como obligatoria la actualización de `subir_archivos_puntuales.sh` y `lista_archivos_aplicacion.md` en las instrucciones de Copilot.
+- **Cambios:** `.github/copilot-instructions.md` ahora permite modificar únicamente la lista de rutas del script puntual (sin ejecutarlo ni alterar su lógica), exige reemplazar las rutas de solicitudes previas por los archivos desplegables de la solicitud actual y documenta el uso de `Ninguno` cuando no haya archivos que subir. También exige registrar en `lista_archivos_aplicacion.md` cada archivo nuevo del plugin y cada archivo original modificado, respetando la clasificación existente y evitando duplicados.
+- **Alcance de esta solicitud:** No se modificaron archivos de la aplicación ni se sincronizaron el script o el inventario; la solicitud solo actualiza directrices y ambos archivos tienen cambios locales preexistentes que se conservaron.
+
 ## [20 de Noviembre, 2026] - Plantillas separadas para reserva y pago
 - **Solicitud:** Administrar opciones independientes para el mensaje de la primera pantalla de reserva, conservando las de confirmación de pago y añadiendo el total de personas a las variables existentes de reserva y pago.
 - **Respaldo:** Se revisó `documentacion-torbian-2/BD/appvac_torbDev2-20261120-1857.sql`, del día actual, cabecera 17:56:20. Las tres plantillas existentes usan `mensaje_anfitrion`, una de ellas contiene país y método de pago; se conservan sin cambios en confirmación. `reserva_huespedes` y los desgloses de adultos/niños en `booking_details` no contienen registros; el helper utiliza `bookings.guest` para reservas históricas sin desglose. `country` contiene Venezuela. No se ejecutó SQL ni se modificó el respaldo.
