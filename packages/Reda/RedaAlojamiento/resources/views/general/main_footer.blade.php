@@ -35,6 +35,11 @@
 <script src="{{ asset('public/js/reda/vistas/frontend/desgloseHuespedes.min.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('public/js/reda/vistas/frontend/verificacionCorreo.min.js') }}?v={{ time() }}"></script>
 
+{{-- Verificación de identidad (KYC): solo en la pantalla "Verificaciones" del usuario --}}
+@if(request()->is('users/edit-verification'))
+    <script src="{{ asset('public/js/reda/vistas/frontend/kyc/verificacionIdentidad.min.js') }}?v={{ time() }}"></script>
+@endif
+
 @if(Route::currentRouteName() == 'property.single')
     <script src="{{ asset('public/js/reda/vistas/frontend/propiedad_detalle.min.js') }}?v={{ time() }}"></script>
 @endif

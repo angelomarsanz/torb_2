@@ -34,6 +34,38 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__.'/../config/reda-alojamiento.php', 'reda-alojamiento'
         );
+
+        // Configuración del sistema KYC (verificación de identidad)
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/kyc.php', 'kyc'
+        );
+
+        // Credenciales de Didit en config('services.didit') (valores desde .env), sin editar config/services.php
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/didit.php', 'services.didit'
+        );
+
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\DiditService::class);
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\KycDocumentoService::class);
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\ValidadorKycManual::class);
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\KycService::class);
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\BloqueoKyc::class);
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\ClasificadorOperacionKyc::class);
+
+        // Disco privado de documentos de identidad (sin URL pública, permisos restrictivos). Solo se define si
+        // el proyecto no lo configuró. Con KYC_RUTA_PRIVADA puede ubicarse fuera de la raíz web.
+        if (!$this->app['config']->has('filesystems.disks.kyc_privado')) {
+            $this->app['config']->set('filesystems.disks.kyc_privado', [
+                'driver'      => 'local',
+                'root'        => config('kyc.documentos.ruta') ?: storage_path('app/private/kyc'),
+                'visibility'  => 'private',
+                'throw'       => true,
+                'permissions' => [
+                    'file' => ['public' => 0600, 'private' => 0600],
+                    'dir'  => ['public' => 0700, 'private' => 0700],
+                ],
+            ]);
+        }
     }
 
     /**
@@ -50,6 +82,16 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
         // Esto registra tu middleware con una prioridad alta
         $router->aliasMiddleware('reda.auth', \Reda\RedaAlojamiento\Http\Middleware\CheckPluginAuth::class);
 
+        // Bloqueo KYC (Fase 6): middleware por acción y observadores de modelo como última barrera
+        $router->aliasMiddleware(\Reda\RedaAlojamiento\Services\Kyc\AplicadorMiddlewareKyc::ALIAS, \Reda\RedaAlojamiento\Http\Middleware\EnsureKycVerified::class);
+        \App\Models\Properties::observe(\Reda\RedaAlojamiento\Observers\BloqueoKycObserver::class);
+        \App\Models\Bookings::observe(\Reda\RedaAlojamiento\Observers\BloqueoKycObserver::class);
+        \Reda\RedaAlojamiento\Models\Experiencia\Experiencia::observe(\Reda\RedaAlojamiento\Observers\BloqueoKycObserver::class);
+        \Reda\RedaAlojamiento\Models\Experiencia\ActividadExperiencia::observe(\Reda\RedaAlojamiento\Observers\BloqueoKycObserver::class);
+
+        // Consulta reutilizable en vistas y políticas: @can('kyc-verificado')
+        \Illuminate\Support\Facades\Gate::define('kyc-verificado', fn ($usuario) => $this->app->make(\Reda\RedaAlojamiento\Services\Kyc\KycService::class)->estaVerificado((int) $usuario->getAuthIdentifier()));
+
         // Inyectar assets y proteger las acciones restringidas después de iniciar la sesión web.
         if (!$this->app->runningInConsole()) {
             $this->app->make(\Illuminate\Contracts\Http\Kernel::class)->prependMiddlewareToGroup('web', \Reda\RedaAlojamiento\Http\Middleware\InjectPluginAssets::class);
@@ -58,6 +100,27 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
 
         // Carga las rutas base
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
+        // Rutas del KYC (webhook de Didit y endpoints del usuario)
+        $this->loadRoutesFrom(__DIR__.'/../routes/kyc.php');
+
+        // Políticas de autorización del KYC (propietario o administrador con manage_kyc)
+        \Illuminate\Support\Facades\Gate::policy(\Reda\RedaAlojamiento\Models\Kyc\DocumentoKyc::class, \Reda\RedaAlojamiento\Policies\KycPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\Reda\RedaAlojamiento\Models\Kyc\SolicitudKyc::class, \Reda\RedaAlojamiento\Policies\KycPolicy::class);
+
+        // Comando de consulta de respaldo del KYC y su programación cada 10 minutos
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Reda\RedaAlojamiento\Console\Commands\KycSincronizarCommand::class,
+                \Reda\RedaAlojamiento\Console\Commands\KycDepurarCommand::class,
+                \Reda\RedaAlojamiento\Console\Commands\KycAuditarRutasCommand::class,
+            ]);
+        }
+
+        $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($programador) {
+            $programador->command('reda:kyc-sincronizar')->everyTenMinutes()->withoutOverlapping();
+            $programador->command('reda:kyc-depurar')->dailyAt('03:30')->withoutOverlapping();
+        });
 
         // Carga las vistas con el nuevo namespace 'reda-alojamiento'
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'reda-alojamiento');
@@ -152,6 +215,13 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
                     $route->name('admin.login');
                 }
             }
+        });
+
+        // Bloqueo KYC por acción. Se registra al final de boot() para que su callback "booted" se ejecute DESPUÉS
+        // de las sobrescrituras de rutas de arriba (p. ej. PaymentController@index -> RedaPaymentController@index)
+        // y proteja la acción definitiva de cada ruta.
+        $this->app->booted(function () {
+            $this->app->make(\Reda\RedaAlojamiento\Services\Kyc\AplicadorMiddlewareKyc::class)->aplicar($this->app['router']);
         });
     }
 }

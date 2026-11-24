@@ -110,6 +110,9 @@
 																		'Site Content' => [
 																			'permissions' => ['Manage Pages', 'Manage Banners', 'Manage Testimonial', 'Add Testimonial', 'Edit Testimonial', 'Delete Testimonial', 'Manage Metas', 'Starting Cities Settings']
 																		],
+																		'Identity Verification' => [
+																			'permissions' => ['Manage KYC']
+																		],
 																		'Reports & Analytics' => [
 																			'permissions' => ['View Reports']
 																		],

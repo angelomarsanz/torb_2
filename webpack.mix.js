@@ -37,6 +37,9 @@ if (buildAlojamiento) {
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js', 'public/js/reda/admin/general/reda-admin-general-main.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/plantillas/textos.js', 'public/js/reda/admin/vistas/plantillas/textos.min.js');
 
+    // Js Admin KYC (verificación de identidad)
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/indexKyc.js', 'public/js/reda/admin/vistas/kyc/indexKyc.min.js');
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/detalleKyc.js', 'public/js/reda/admin/vistas/kyc/detalleKyc.min.js');
     // Js Admin por vistas
     mix.js('packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js',
         'public/js/reda/admin/vistas/experiencia/opcionesTipoDeNegocios.min.js');
@@ -111,6 +114,8 @@ if (buildAlojamiento) {
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js', 'public/js/reda/vistas/frontend/busquedaPropiedades.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/desgloseHuespedes.js', 'public/js/reda/vistas/frontend/desgloseHuespedes.min.js');
     mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js', 'public/js/reda/vistas/frontend/verificacionCorreo.min.js');
+    // Js Frontend KYC (verificación de identidad del usuario)
+    mix.js('packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/verificacionIdentidad.js', 'public/js/reda/vistas/frontend/kyc/verificacionIdentidad.min.js');
 }
 
 mix.options({

@@ -514,6 +514,200 @@ Herramienta destructiva y deshabilitada por defecto. Solo se muestra y ejecuta c
   - Marcado masivo interactivo con spinner mediante `#btn-marcar-todas-leidas`.
   - Disparo del evento global `reda:actualizar-contador-alertas` que sincroniza de inmediato la campanita superior y el submenú lateral.
 
+## Verificación de Identidad (KYC) con Didit — Fase 2: Base de datos, enum y modelos
+
+Estado: en implementación por fases. Esta fase solo crea la base de datos, el enum, la configuración y los modelos; el bloqueo de operaciones, Didit, los controladores y las interfaces llegan en fases posteriores. La tabla `users_verification` (verificación social) no se modifica ni se elimina porque otros controladores dependen de ella; el nuevo KYC es el único mecanismo que autorizará publicaciones, negocios y reservas nuevas.
+
+### Configuración y enums
+- **packages/Reda/RedaAlojamiento/config/kyc.php**
+  Configuración del KYC cargada con `mergeConfigFrom` como `config('kyc.*')`. Contiene el interruptor de emergencia `bloqueo_habilitado` (`KYC_ENFORCEMENT`), la decisión D1 `bloquear_edicion_publicados`, el país predeterminado `VE`, los parámetros de Didit (tolerancia de 300 s del webhook, confirmación por API antes de aprobar, `vendor_data_por_intento`, intervalo de consulta de respaldo) y la **tabla de equivalencia única** entre estados de Didit (comparación estricta) y estados internos. Define los tipos de documento (cédula de identidad, pasaporte, licencia de conducir, permiso de residencia y documento extranjero) con su código de Didit y si exigen reverso y selfie, los límites de archivos (JPG, JPEG, PNG y PDF, 5 MB, cifrado), los límites diarios de intentos y la **retención** de documentos (90 días tras aprobar, 30 tras rechazo, fallo o expiración, configurable e independiente de la aprobación, sin borrar si hay procesos pendientes). Las credenciales de Didit no se guardan aquí.
+- **packages/Reda/RedaAlojamiento/src/Enums/EstadoKyc.php**
+  Enum con los estados `not_started`, `pending`, `in_progress`, `manual_review`, `verified`, `rejected`, `failed` y `expired` (valores en inglés, casos en español). Es la única definición de estados y transiciones: `transicionesPermitidas()`, `puedePasarA()`, `esAbierto()`, `autorizaOperaciones()` (solo `verified`) y `permitenNuevoIntento()`. Un fallo automático (`failed`) nunca se confunde con un rechazo manual (`rejected`); desde ambos se puede iniciar una verificación manual o un nuevo intento. Como Didit permite que un revisor cambie una decisión, `failed` puede pasar a `verified` y `verified` puede pasar a `failed`, `in_progress` o `expired` (revocación); estas reglas generales no autorizan acciones administrativas, que KycService restringe por método.
+- **packages/Reda/RedaAlojamiento/src/Enums/MetodoKyc.php**
+  Enum con los métodos `didit` y `manual`.
+
+### Base de Datos y Migraciones (aditivas; solo se crean, no se ejecutan desde el IDE)
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100000_crear_tabla_solicitudes_kyc.php**
+  Tabla `solicitudes_kyc`: un registro por intento (historial; nunca se sobrescribe). Guarda método, estado, número de intento, datos de Didit (`didit_session_id` único, `didit_estado_original` literal, `didit_resultado` saneado, `didit_ultimo_timestamp`), datos personales (documento, fecha de nacimiento y dirección cifrados), fechas, decisión administrativa y control de retención. `clave_abierta` (UNIQUE) vale `user_id` mientras la solicitud está abierta y `NULL` al cerrarse: impide dos solicitudes abiertas por usuario a nivel de base de datos.
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100100_crear_tabla_usuarios_kyc.php**
+  Tabla `usuarios_kyc`: estado efectivo de autorización de cada usuario (una fila por usuario, `user_id` UNIQUE). Es la única tabla que consultará el bloqueo. Un usuario sin fila equivale a `not_started`. Incluye `solicitud_activa_id`, `verificado_en`, `verificado_por_admin_id`, `expira_en` y `version`.
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100200_crear_tabla_documentos_kyc.php**
+  Tabla `documentos_kyc`: metadatos del archivo (tipo, ruta en el disco privado, MIME detectado, tamaño, `sha256`, cifrado, estado vigente/reemplazado/eliminado). No guarda el archivo.
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100300_crear_tabla_eventos_kyc.php**
+  Tabla `eventos_kyc`: auditoría inmutable. `clave_idempotencia` (UNIQUE) evita reprocesar eventos de Didit.
+- **packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100400_crear_permiso_manage_kyc.php**
+  Migración de datos idempotente: crea el permiso `manage_kyc` si no existe y lo asigna solo al rol llamado `admin` que ya posee `manage_admin` (no asume que el id sea 1). Si no encuentra ese rol, registra una advertencia y no asigna nada. No usa `truncate`, no toca `PermissionsTableSeeder` y limpia la caché `permissions`. Todas las claves foráneas hacia `users` usan `restrictOnDelete` para conservar el historial.
+
+### Modelos Eloquent (src/Models/Kyc)
+- **SolicitudKyc.php**
+  Modelo de `solicitudes_kyc`. Cifra `numero_documento`, `fecha_nacimiento` y `direccion_residencia`; al asignar el número normaliza (mayúsculas, solo letras y números), calcula un hash HMAC-SHA256 con `APP_KEY` para búsquedas exactas (`hashesCandidatosDocumento()` tolera la letra V/E de la cédula) y guarda los últimos 4 caracteres para `numero_documento_enmascarado`. Oculta los campos sensibles en `toArray()` y `toJson()`. Relaciones: `usuario()`, `administrador()`, `documentos()`, `documentosVigentes()`, `eventos()`.
+- **UsuarioKyc.php**
+  Modelo de `usuarios_kyc`. `esVerificado()` exige estado `verified` y que `expira_en` no haya vencido.
+- **DocumentoKyc.php**
+  Modelo de `documentos_kyc` con las constantes de tipo (`frente`, `reverso`, `selfie`) y estado.
+- **EventoKyc.php**
+  Modelo de auditoría: inmutable, `updating` y `deleting` siempre lanzan excepción.
+- **ProtegeEscrituraKyc.php**
+  Trait que bloquea `creating`, `updating` y `deleting` fuera de la ventana autorizada. Las actualizaciones masivas con `Model::where()->update()` no disparan eventos, por lo que los servicios KYC deben escribir siempre mediante instancias de modelo.
+- **packages/Reda/RedaAlojamiento/src/Services/Kyc/GuardiaEscrituraKyc.php**
+  `ejecutar()` abre una ventana de escritura (reentrante y siempre cerrada con `finally`); solo KycService y KycDocumentoService la usarán. Garantiza que KycService sea el único responsable de cambiar estados.
+
+### Integración
+- **packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php**
+  `register()` carga `config/kyc.php` y `config/didit.php` (esta última en `services.didit`) con `mergeConfigFrom` y registra `DiditService` y `KycService` como singletons. `boot()` carga `routes/kyc.php`, registra `KycSincronizarCommand` y lo programa cada 10 minutos sin solaparse.
+- **packages/Reda/RedaAlojamiento/resources/lang/es.json**
+  Etiquetas de los estados, métodos y tipos de documento del KYC y los mensajes del flujo con Didit.
+
+## Verificación de Identidad (KYC) con Didit — Fase 3: Integración con Didit
+
+Estado: en implementación por fases. Esta fase añade el cliente de Didit, el servicio central, el webhook firmado, los endpoints del usuario para la verificación automática y la consulta de respaldo. Todavía no bloquea ninguna operación (Fase 6) ni tiene pantallas (Fase 7) ni verificación manual (Fase 4).
+
+### Configuración
+- **packages/Reda/RedaAlojamiento/config/didit.php**
+  Se fusiona en `config('services.didit')` sin editar `config/services.php`. Lee solo de `.env`: `DIDIT_API_URL`, `DIDIT_API_KEY`, `DIDIT_WORKFLOW_ID`, `DIDIT_WEBHOOK_SECRET` y `DIDIT_ENVIRONMENT` (`sandbox` o `production`). Las credenciales nunca van a la base de datos, JavaScript, HTML, respuestas ni logs. Como se fusiona en `register()`, funciona con `config:cache`.
+
+### Servicios (src/Services/Kyc)
+- **DiditService.php**
+  Cliente de la API oficial: `crearSesion()` (`POST /v3/session/` con `x-api-key`, `workflow_id`, `vendor_data`, `callback`, `callback_method=both`, `language=es` y `metadata`) y `obtenerDecision()` (`GET /v3/session/{id}/decision/`). Valida el UUID antes de armar la URL, exige https, no sigue redirecciones (no reenvía la API key), devuelve solo mensajes seguros en `DiditException` (reintentable ante red, 429 y 5xx). `sanearDecision()` reduce el resultado a estados por característica sin datos personales ni imágenes. `entornoEsperado()` traduce `DIDIT_ENVIRONMENT` a `sandbox`/`live`.
+- **DiditException.php**
+  Excepción con código HTTP y bandera `reintentable`.
+- **FirmaWebhookDidit.php**
+  Verificación criptográfica pura del webhook. Acepta `X-Signature-V2` (JSON canónico: claves ordenadas, objetos `{}` conservados, Unicode y barras sin escapar) y `X-Signature` (bytes exactos), también las cabeceras `-Previous` de la rotación de secreto; compara con `hash_equals`, exige `X-Timestamp` dentro de 300 s y fuerza `serialize_precision=-1`. NO acepta `X-Signature-Simple` (obsoleta: solo autentica el sobre). Validada contra la implementación de referencia de Didit en Python.
+- **KycService.php**
+  ÚNICO responsable de cambiar estados. Lectura: `estaVerificado()` (la consulta que usará el bloqueo, con caché por petición), `estadoDe()`, `solicitudActiva()`, `resumenParaUsuario()`. Escritura: `iniciarDidit()`, `procesarWebhookDidit()` y `sincronizarConDidit()`; todas devuelven la estructura estándar `success/message/mensaje_usuario/respuesta/code`.
+  - **Concurrencia:** cada cambio ocurre en una transacción que bloquea (`FOR UPDATE`) la fila del usuario en `usuarios_kyc` (creada antes con `INSERT IGNORE`). Solicitud, estado efectivo y evento de auditoría se escriben juntos. Nunca se llama a Didit dentro de una transacción con bloqueo: `iniciarDidit()` reserva la solicitud, crea la sesión fuera de la transacción y guarda el `session_id`; si Didit falla, la solicitud nueva se cierra como `failed` y el usuario puede reintentar de inmediato.
+  - **Webhook:** solo `status.updated` y `data.updated` de sesiones KYC. Comprueba que la sesión exista, que `vendor_data` coincida con el de la solicitud, que el `environment` sea el configurado, mapea el estado con la tabla `kyc.didit.mapa_estados` (comparación estricta) y, antes de aprobar, confirma con la API que la decisión sea `Approved` para ese mismo `vendor_data` (`kyc.didit.confirmar_aprobacion_por_api`). Si la API de Didit no responde devuelve 503 para que Didit reintente.
+  - **Idempotencia y orden:** clave `didit:{event_id}` única en `eventos_kyc`, comprobada con el bloqueo tomado. Solo procesa la solicitud activa (`ignorado_sesion_antigua`) y descarta eventos cuyo `created_at` sea anterior al último aplicado (`ignorado_evento_antiguo`; se usa `created_at`, no `timestamp`, porque este se refresca en cada reintento de Didit). Las transiciones inválidas se registran y se ignoran.
+  - **Consulta de respaldo:** `sincronizarConDidit()` usa el mismo camino que el webhook, con intervalo mínimo de 30 s por solicitud. No registra evento si no hay cambio.
+  - **Avisos:** tras confirmar la transacción emite `EstadoKycCambiado` (punto de enganche de las notificaciones de la Fase 8).
+- **GuardiaEscrituraKyc.php**
+  Ventana de escritura autorizada (ver Fase 2).
+
+### Eventos
+- **packages/Reda/RedaAlojamiento/src/Events/EstadoKycCambiado.php**
+  Evento sin datos personales (usuario, solicitud, estados, método, origen) emitido con `DB::afterCommit`.
+
+### Controladores y rutas
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Kyc/DiditWebhookController.php**
+  `recibir()` atiende `POST /webhooks/didit/kyc`: verifica la firma sobre el cuerpo original antes de leer su contenido; 401 si es inválida (solo se registra el motivo y la IP), 413 si supera 2 MB, 503 si falta el secreto (Didit reintenta) y delega en `KycService`.
+- **packages/Reda/RedaAlojamiento/src/Http/Controllers/Kyc/KycUsuarioController.php**
+  `iniciarDidit()` (`POST kyc/didit/iniciar`: JSON con `respuesta.url` si es AJAX, redirección a Didit si no), `retorno()` (`GET kyc/retorno`: ignora `status` y `verificationSessionId` de la URL, consulta a Didit y muestra el estado real guardado) y `estado()` (`GET kyc/estado`: resumen sin identificadores de Didit, sin caché). El usuario sale siempre de la sesión.
+- **packages/Reda/RedaAlojamiento/routes/kyc.php**
+  El webhook no usa el grupo `web` (sin sesión ni CSRF) y tiene `throttle:120,1`; las rutas `kyc/*` usan `web`, `locale` y `auth`. La ruta comodín `GET {name}` del núcleo solo captura una parte de la URL: la futura pantalla `/kyc` deberá registrarse antes de ella.
+
+### Comandos
+- **packages/Reda/RedaAlojamiento/src/Console/Commands/KycSincronizarCommand.php**
+  `reda:kyc-sincronizar [--forzar]` consulta a Didit las verificaciones `in_progress` o `pending` con más de 5 minutos. Se programa cada 10 minutos (requiere `schedule:run` en el cron del servidor).
+
+### Modelos
+- **EventoKyc.php**
+  Se añadieron las constantes de resultado `ignorado_estado_desconocido`, `ignorado_entorno`, `ignorado_sesion_desconocida`, `ignorado_evento_antiguo`, `rechazado_vendor_data` y `confirmacion_fallida`.
+
+## Verificación de Identidad (KYC) con Didit — Fase 4: Verificación manual y documentos privados
+
+Estado: en implementación por fases. Esta fase añade la verificación manual (datos personales y documentos), el almacenamiento privado cifrado, la descarga protegida, la política de autorización y la retención. Todavía no hay pantallas (Fase 7), panel administrativo (Fase 5), bloqueo de operaciones (Fase 6) ni notificaciones (Fase 8).
+
+### Configuración y soporte
+- **packages/Reda/RedaAlojamiento/config/kyc.php**
+  Se ampliaron `documentos` (`ruta` desde `KYC_RUTA_PRIVADA`, `tipos_solo_imagen`, `lado_minimo_px`, `lado_maximo_px`, `megapixeles_maximo`, `calidad_jpeg`) y se añadió `manual.edad_minima` (18).
+- **packages/Reda/RedaAlojamiento/src/Support/PaisesIso.php**
+  Lista ISO 3166-1 alfa-2 usada para validar países (la tabla `country` del proyecto solo contiene Venezuela). Venezuela (`VE`) es el valor predeterminado de los formularios sin impedir otros países.
+- **packages/Reda/RedaAlojamiento/src/RedaAlojamientoServiceProvider.php**
+  Registra el disco privado `kyc_privado` (driver local, sin URL, permisos 0600/0700; carpeta `storage/app/private/kyc` o `KYC_RUTA_PRIVADA`), los singletons de los nuevos servicios, las políticas (`Gate::policy`) y el comando `reda:kyc-depurar` programado a diario a las 03:30.
+  IMPORTANTE: la raíz web de este proyecto es la raíz del código (el `.htaccess` raíz solo bloquea archivos ocultos), por lo que `storage/` es alcanzable por URL. Por eso los documentos se guardan cifrados con nombre UUID y con un `.htaccess` de denegación en su carpeta, y se recomienda definir `KYC_RUTA_PRIVADA` fuera de `public_html`.
+
+### Servicios (src/Services/Kyc)
+- **KycDocumentoService.php**
+  Valida cada archivo en el servidor: extensión (jpg, jpeg, png, pdf), tamaño (5 MB), tipo MIME REAL con `finfo` que debe coincidir con la extensión (MIME falso), imágenes legibles con límites de dimensiones y memoria, rechazo de código PHP o `<script>` incrustado y recodificación con GD que elimina metadatos, comentarios y datos añadidos (aplica antes la orientación EXIF). Los PDF se inspeccionan fuera de los flujos binarios y dentro de los flujos de objetos comprimidos (`ObjStm`) y se rechazan los que contengan `/JavaScript`, `/JS`, `/Launch`, `/EmbeddedFile`, `/OpenAction`, `/AA`, `/XFA`, `/URI`, `/Encrypt` y similares, incluso ofuscados con `#xx`; la selfie solo admite imágenes. `guardarCifrado()` guarda el archivo cifrado (AES-256 con APP_KEY) con ruta `AAAA/MM/uuid.enc`; `registrarDocumento()` conserva el historial (el vigente pasa a `reemplazado`); `leer()` descifra y comprueba la huella sha256 y que la ruta cumpla el patrón; `registrarAcceso()` audita cada consulta; `eliminarDocumentosDeSolicitud()` borra los archivos conservando las filas y la auditoría. No decide permisos (los decide `KycPolicy`).
+- **DocumentoKycInvalidoException.php**
+  Excepción con el campo del formulario y un mensaje seguro.
+- **ValidadorKycManual.php**
+  Normaliza y valida nombres y apellidos (letras, como figuran en el documento), tipo y número de documento, países ISO, fecha de nacimiento (formato `AAAA-MM-DD`, mayoría de edad), ciudad, dirección sin etiquetas, correo (por defecto el del perfil) y la aceptación del tratamiento de datos. Indica qué documentos exige cada tipo (`frente` siempre; `reverso` y `selfie` según `kyc.tipos_documento`).
+- **KycService.php** (ampliado)
+  `enviarManual()`: valida, guarda los archivos cifrados fuera de la transacción y, con el bloqueo de la fila del usuario, crea la solicitud `manual_review`; impide duplicados (estado abierto o UNIQUE de `clave_abierta`), aplica el límite diario, descarta los documentos que el tipo no exige y borra los archivos escritos si la operación falla. Si había una verificación Didit en proceso la reemplaza (queda `failed` en el historial y no genera un aviso intermedio; un `Approved` tardío de esa sesión se ignora). Marca en la auditoría la coincidencia del número de documento con otro usuario (señal para el revisor, sin bloquear).
+  `reenviarCorreccion()`: atiende una corrección pendiente sin cambiar de estado, exige algún cambio, conserva los documentos reemplazados y audita solo los nombres de los campos modificados. `solicitudParaCorreccion()` entrega los datos propios para precargar el formulario. `coincidenciasDocumento()` y `resumenParaUsuario()` (ahora con `puede_solicitar_manual` y los documentos vigentes por id y tipo).
+- **RetencionKycService.php**
+  Política de retención separada de la aprobación. Calcula la fecha de eliminación = cierre + plazo por estado (`kyc.retencion`, 90 días tras aprobar y 30 tras rechazo, fallo o expiración; `null` = nunca) y elimina solo archivos de solicitudes cerradas. No elimina si el usuario tiene una mediación activa (estado distinto de Cerrado/Cerrada), una cuenta restringida por mediaciones o `retencion_suspendida`. Los plazos se leen de la configuración en cada ejecución. Nunca cambia el estado de verificación.
+
+### Autorización
+- **packages/Reda/RedaAlojamiento/src/Policies/KycPolicy.php**
+  `verDocumento`, `verSolicitud` y `gestionar`. El usuario solo accede a lo suyo (comparando `user_id` del documento y de la solicitud). El administrador necesita estar activo y tener `manage_kyc` mediante `UserPermission` (un administrador con otros permisos, como el rol Atención a usuario, no puede ver documentos). Un documento eliminado no lo ve nadie.
+
+### Controladores y rutas
+- **Http/Controllers/Kyc/KycUsuarioController.php** (ampliado)
+  `opcionesManual()` (tipos, países, límites), `enviarManual()` y `reenviarCorreccion()` (multipart; detectan que el cuerpo superó `post_max_size` y responden 413), `solicitudManual()` (datos propios solo si hay corrección pendiente). El usuario sale siempre de la sesión.
+- **Http/Controllers/Kyc/KycDocumentoController.php**
+  `GET kyc/documentos/{id}`: lee el archivo, lo descifra, verifica su integridad y lo entrega con `nosniff`, sin caché, CSP restrictiva y sin referer; las imágenes en línea y los PDF como adjunto con nombre genérico. Un documento ajeno o inexistente responde 404 (IDOR) y cada consulta queda en la auditoría.
+- **routes/kyc.php**
+  Nuevas rutas `kyc/manual/opciones`, `kyc/manual/solicitud`, `POST kyc/manual`, `POST kyc/manual/correccion` y `kyc/documentos/{documento}`. Cada límite de tasa lleva su propio prefijo (`kyc_webhook`, `kyc_didit`, `kyc_manual`, `kyc_correccion`, `kyc_documentos`): sin prefijo, `throttle` comparte el contador entre todas las rutas del mismo usuario.
+
+### Comandos
+- **Console/Commands/KycDepurarCommand.php**
+  `reda:kyc-depurar [--simular]` aplica la retención y muestra el resumen; `--simular` no modifica nada.
+- **Console/Commands/KycAuditarRutasCommand.php**
+  `reda:kyc-auditar-rutas [--json]` recorre todas las rutas de los controladores vigilados (`kyc.controladores_vigilados`) y verifica que cada una esté clasificada en `operaciones_restringidas` (con middleware `kyc.verificado`) o en `rutas_permitidas` (con justificación). Falla (código 1) si queda alguna ruta sin clasificar o si una restringida no tiene el middleware. Ejecutarlo en Vesta tras cada actualización del núcleo.
+
+### Bloqueo de operaciones (Fase 6)
+Un usuario sin KYC verificado no puede publicar ni reservar. El bloqueo se aplica en 4 capas independientes (la interfaz nunca es la barrera): (1) middleware por **acción** de controlador (no por URI), (2) observadores de modelos, (3) Gate `kyc-verificado` y (4) ventana de reserva en sesión. El interruptor `KYC_ENFORCEMENT` apaga las capas 1 y 2 sin tocar código.
+- **Exceptions/KycNoVerificadoException.php**
+  Excepción de dominio lanzada por las capas de modelo cuando un usuario no verificado intenta una operación restringida.
+- **Services/Kyc/BloqueoKyc.php**
+  Decide si una operación se bloquea (usuario autenticado del guard `users`, fuera de consola y de `/admin`, respetando `KYC_ENFORCEMENT`) y abre/consulta la ventana de reserva (`session('kyc_reserva_autorizada')`, 45 min, solo abierta por un usuario verificado).
+- **Services/Kyc/RespuestaBloqueoKyc.php**
+  Construye la respuesta de bloqueo con el texto aprobado: JSON 403 con `respuesta.codigo='kyc_requerido'` y la URL de verificación para AJAX; redirección a `users/edit-verification` con mensaje flash para peticiones normales.
+- **Services/Kyc/ClasificadorOperacionKyc.php**
+  Resuelve la etiqueta de una ruta (`null`, `reserva_nueva`, `activacion`, `borrador`, `edicion`) a partir de `operaciones_restringidas`. `reserva_nueva` solo se permite si la reserva es propia y está en estado `Processing` (se comprueba en la base).
+- **Services/Kyc/AplicadorMiddlewareKyc.php**
+  Aplica el manifiesto de `config/kyc.php` a las rutas ya registradas añadiéndoles el middleware `kyc.verificado`. Se ejecuta en un callback `booted` al final de `boot()` para ver también las rutas que el plugin reemplaza (`PaymentController@index`, `gateway/pay/{gateway}/complete` y `/callback`); por eso el manifiesto usa los nombres de acción finales y conserva los originales en `acciones_alternativas`.
+- **Services/Kyc/AuditorRutasKyc.php**
+  Lógica del comando de auditoría: lista rutas vigiladas y las clasifica (restringida, permitida con justificación, sin clasificar).
+- **Http/Middleware/EnsureKycVerified.php**
+  Alias `kyc.verificado`. Si la operación es restringida y el usuario no está verificado, responde con `RespuestaBloqueoKyc` (el bloqueo es del servidor, no de la interfaz).
+- **Observers/BloqueoKycObserver.php**
+  Observador de `Properties`, `Bookings`, `Experiencia` y `ActividadExperiencia`. Bloquea crear/activar publicaciones y crear/confirmar reservas (el chat crea `Bookings` como consulta, con `status='Inquiry'` o vacío en versiones anteriores, y se permite; convertirla en reserva real se bloquea en `updating`).
+- **config/kyc.php** (ampliado): `url_seccion`, `reservas`, `controladores_vigilados` (incluye `PasarelaPagoController`, hueco que encontró la auditoría), `operaciones_restringidas`, `acciones_alternativas` y `rutas_permitidas`.
+
+### Panel administrativo KYC (Fase 5)
+Se integra en el panel actual (guard `admin`, layout `admin.template`) bajo `admin/reda/kyc`. Exige el permiso `manage_kyc` en 3 capas: middleware de la ruta, `KycAdminController::autorizar()` (Gate `gestionar`, que además exige administrador activo) y `KycService` (lo vuelve a comprobar antes de escribir). Todas las decisiones pasan por `KycService`, único escritor del estado.
+- **Services/Kyc/ConsultaKycAdmin.php**
+  Consultas de solo lectura: `listar()` (10 por página; grupos pendientes, en proceso, verificados, rechazados, fallidos, expirados; método didit/manual; búsqueda por nombre, correo o número de documento exacto mediante su hash HMAC, con `LIKE ... ESCAPE` para neutralizar comodines), `contadores()` y `detalle()`.
+- **Http/Controllers/Admin/Kyc/KycAdminController.php**
+  `index`, `show` (cabecera `no-store`; registra la consulta con antirrebote), `aprobar`, `rechazar`, `solicitarCorreccion`, `observacion`, `retencion`, `revelarDocumento` y `documento` (descarga protegida con auditoría del administrador). Respuestas JSON con la estructura estándar.
+- **Services/Kyc/KycService.php** (ampliado)
+  `aprobarManual()` (exige manual en revisión, sin corrección pendiente, con datos y documentos obligatorios), `rechazarManual()` (motivo obligatorio de 5 a 1000 caracteres; se permite aunque haya una corrección sin atender), `solicitarCorreccion()`, `agregarObservacion()` (historial interno con tope), `suspenderRetencion()`, `revelarNumeroDocumento()` (auditado) y `registrarConsultaAdmin()`. Las decisiones sobre solicitudes Didit se rechazan con 409. Dos administradores simultáneos: la segunda decisión recibe 409 (bloqueo de la fila `usuarios_kyc`).
+- **Support/EtiquetasKyc.php**
+  Textos y clases visuales traducibles para estados, métodos, orígenes y tipos de evento del historial.
+- **Events/CorreccionKycSolicitada.php**
+  Evento emitido tras confirmar la transacción de una solicitud de corrección; lo usará la Fase 8 (notificaciones).
+- **resources/views/admin/kyc/index.blade.php**
+  Listado: tabla en escritorio y tarjetas en móvil, pestañas con contadores, filtros, búsqueda y paginación `admin.general.paginacion`.
+- **resources/views/admin/kyc/detalle.blade.php**
+  Detalle: datos (documento enmascarado), documentos con miniatura y descarga protegida, resultado de Didit, observaciones, acciones y historial. Todo escapado con `{{ }}`.
+- **resources/views/admin/general/main_footer.blade.php** (modificado)
+  Añade `tieneAccesoKyc` y `kycPendientes` a `window.RedaAdminUser` para mostrar el menú solo a quien tiene `manage_kyc`.
+- **resources/js/admin/vistas/kyc/** (`indexKyc.js`, `detalleKyc.js`, `peticionAdminKyc.js`, `aprobarSolicitudKyc.js`, `rechazarSolicitudKyc.js`, `solicitarCorreccionKyc.js`, `agregarObservacionKyc.js`, `alternarRetencionKyc.js`, `revelarNumeroDocumentoKyc.js`)
+  Peticiones AJAX con la estructura del proyecto y animación "Espera"; el modal de rechazo y de corrección exige el texto; el número de documento se revela bajo demanda.
+- **resources/js/admin/general/menus/menuKycAdmin.js**
+  Inyecta en el menú lateral la entrada "Verificación KYC" (con insignia de pendientes) cuando `tieneAccesoKyc` es verdadero.
+- **resources/sass/admin/main.scss** (ampliado): clases `.reda-kyc-*`. **webpack.mix.js** (ampliado): entradas `indexKyc.min.js` y `detalleKyc.min.js`.
+
+### Interfaz del usuario KYC (Fase 7)
+Se inyecta con JavaScript en la pantalla existente "Verificaciones" (`users/edit-verification`) sin modificar su vista Blade: la tarjeta "Verificación de identidad" se coloca antes de las verificaciones de correo, Facebook y Google. El script solo se carga en esa pantalla (condición en `views/general/main_footer.blade.php`). El bloqueo de publicar y reservar sigue siendo del servidor; esta interfaz solo guía al usuario. Se compila con `BUILD_ALOJAMIENTO=true` a `public/js/reda/vistas/frontend/kyc/verificacionIdentidad.min.js`.
+- **resources/js/vistas/frontend/kyc/verificacionIdentidad.js**
+  Punto de entrada. Inyecta el contenedor, carga el estado y maneja los botones (`data-kyc-accion`): `didit` (pide la sesión y navega solo a URL `https://`), `manual` y `corregir` (cargan las opciones y abren el formulario) y `actualizar`. Mientras el estado es `pending` o `in_progress` consulta cada 20 s (solo con la pestaña visible y hasta 45 veces). Cada acción del usuario muestra la animación de espera.
+- **resources/js/vistas/frontend/kyc/renderizarTarjetaKyc.js**
+  Genera el HTML de la tarjeta según el estado: verificado, solicitud en revisión (con la lista de documentos enviados y su enlace protegido), corrección pendiente (muestra lo pedido), Didit abierto o en revisión, rechazada (con el motivo), fallida, expirada o sin verificar. Todo se escapa; el texto del administrador se muestra con `white-space: pre-wrap`, nunca como HTML.
+- **resources/js/vistas/frontend/kyc/formularioManualKyc.js**
+  Modal del formulario manual (nuevo o de corrección). Los documentos que pide dependen del tipo elegido (el pasaporte no tiene reverso). Valida en el navegador lo básico (obligatorios, mayoría de edad, formato y tamaño de archivo; la selfie solo admite imágenes), muestra vista previa, y los errores 422 del servidor aparecen junto a cada campo. En corrección precarga los datos, no pide el consentimiento de nuevo y deja los documentos como opcionales.
+- **resources/js/vistas/frontend/kyc/peticionUsuarioKyc.js**
+  Petición AJAX común (normal y multipart) que siempre devuelve la estructura estándar, con mensajes claros para 401/419 (sesión), 413 (archivos grandes) y 429 (demasiados intentos).
+- **consultarEstadoKyc.js**, **iniciarVerificacionDiditKyc.js**, **obtenerOpcionesManualKyc.js**, **obtenerSolicitudCorreccionKyc.js**, **enviarSolicitudManualKyc.js**
+  Una función por endpoint (`GET /kyc/estado`, `POST /kyc/didit/iniciar`, `GET /kyc/manual/opciones`, `GET /kyc/manual/solicitud`, `POST /kyc/manual` o `/kyc/manual/correccion`).
+- **resources/js/vistas/frontend/kyc/utilidadesKyc.js**
+  `t()` (traducción con respaldo), `escapar()`, `mensajeSeguro()` y `formatearTamano()`.
+- **resources/sass/main.scss** (ampliado): clases `.reda-kyc-*` del frontend (tarjeta, opciones táctiles, formulario, espacios de archivo); en celular el formulario ocupa toda la pantalla y las opciones se apilan.
+- **Http/Controllers/Kyc/KycUsuarioController.php** (modificado): `retorno()` y el fallo de `iniciarDidit()` sin AJAX ahora redirigen a la pantalla de verificaciones (`kyc.url_seccion`) en lugar del dashboard.
+
 ## Sistema de Puntos de Control y Memoria Operativa
 
 ### Archivos de Control en Tiempo Real
