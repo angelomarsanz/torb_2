@@ -7,17 +7,18 @@
  * garantizando que "Configuración" solo esté visible y disponible para administradores con Rol 1.
  * Ofrece "Mensajes y Alertas" a ambos roles, incluso si el permiso nativo oculta el enlace "Messages"
  * para el rol 2, e inserta el submenú en un anclaje alternativo en ese caso.
- * Convierte las plantillas de correo en un submenú de correos y textos.
+ * Convierte las plantillas de correo en un submenú de correos y textos con ícono SVG propio.
  * Actualiza dinámicamente los contadores del menú.
  * Incluye el acceso a pruebas de mediaciones cuando el servidor lo habilita para el rol 1
  * y desplaza la barra lateral si la subopción queda fuera del área visible.
  */
 import { mediacionSvg } from '../../../general/iconos';
+import iconoPlantillas from '../../../general/iconos/plantillas.svg';
 import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMediaciones.js';
 
 /**
  * Función principal que orquesta la inyección y el comportamiento de los menús del plugin en el panel admin.
- * Incluye "Atención al comercio", el submenú de plantillas y el acceso a pruebas.
+ * Incluye "Atención al comercio", el submenú de plantillas con ícono propio y el acceso a pruebas.
  */
 export const menuLateralAdmin = () =>
 {
@@ -39,10 +40,13 @@ export const menuLateralAdmin = () =>
                     const esCorreos = window.location.pathname.includes('/admin/email-template/');
                     const esTextos = window.location.pathname.includes('/admin/reda/plantillas/textos');
                     const abierto = esCorreos || esTextos;
+                    const rutaIcono = `${APP_URL.replace(/\/$/, '')}/public/${iconoPlantillas.replace(/^\/?(?:public\/)?/, '')}`;
+                    const $icono = $('<span class="nav-icon reda-icono-plantillas" aria-hidden="true"></span>')
+                        .css({ 'mask-image': `url("${rutaIcono}")`, '-webkit-mask-image': `url("${rutaIcono}")` });
                     const $menu = $('<li class="nav-item treeview" id="menu-plantillas"></li>');
                     const $titulo = $('<a href="#" class="nav-link" aria-controls="submenu-plantillas"></a>')
                         .attr('aria-expanded', abierto ? 'true' : 'false')
-                        .append('<i class="nav-icon fa fa-envelope-o"></i>')
+                        .append($icono)
                         .append($('<p></p>').text(traducciones['Plantillas'] || 'Plantillas')
                             .append('<i class="fa nav-arrow pull-right"></i>'));
                     const $lista = $('<ul id="submenu-plantillas" class="nav nav-treeview treeview-menu"></ul>');

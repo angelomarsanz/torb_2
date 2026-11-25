@@ -1,19 +1,21 @@
 <?php
 
-/** Convierte plantillas administrativas a texto plano y resuelve variables de reserva y pago. */
+/** Convierte plantillas a texto plano y resuelve variables de reserva y pago, incluidas fechas visibles. */
 namespace Reda\RedaAlojamiento\Services;
 
 use App\Models\Properties;
 use App\Models\Bookings;
 use App\Models\Country;
+use DateTimeImmutable;
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 use Modules\Gateway\Entities\Gateway;
 use Reda\RedaAlojamiento\Models\PlantillaTexto;
 
 class PlantillasTextoService
 {
     /**
-     * Resuelve la reserva y selecciona sus plantillas o las de confirmación de pago.
+     * Resuelve la reserva, formatea sus fechas para el mensaje inicial y selecciona sus plantillas.
      * También entrega el texto con variables de pago para actualizarlo en la pantalla inicial.
      */
     public function opcionesPago(bool $usarDatosPago = false): array
@@ -35,8 +37,8 @@ class PlantillasTextoService
             '{anfitrion}' => trim(($anfitrion->first_name ?? '') . ' ' . ($anfitrion->last_name ?? '')),
             '{huesped}' => trim(($huesped->first_name ?? '') . ' ' . ($huesped->last_name ?? '')),
             '{alojamiento}' => $propiedad->name,
-            '{llegada}' => (string) session('payment_checkin'),
-            '{salida}' => (string) session('payment_checkout'),
+            '{llegada}' => $usarDatosPago ? (string) session('payment_checkin') : $this->formatearFechaReserva((string) session('payment_checkin')),
+            '{salida}' => $usarDatosPago ? (string) session('payment_checkout') : $this->formatearFechaReserva((string) session('payment_checkout')),
             '{adultos}' => (string) $adultos,
             '{ninos}' => (string) $ninos,
             '{total_personas}' => (string) ((int) $adultos + (int) $ninos),
@@ -66,6 +68,23 @@ class PlantillasTextoService
                     'metodo_pago' => $variablesPago['{metodo_pago}'],
                 ];
             })->all();
+    }
+
+    /** Convierte fechas ISO o regionales a día/mes/año sin cambiar el día calendario. */
+    private function formatearFechaReserva(string $fecha): string
+    {
+        if ($fecha === '') {
+            return '';
+        }
+
+        foreach (array_unique(['Y-m-d', setDateForFront(), 'd-m-Y', 'd/m/Y']) as $formato) {
+            $fechaInterpretada = DateTimeImmutable::createFromFormat('!' . $formato, $fecha);
+            if ($fechaInterpretada && $fechaInterpretada->format($formato) === $fecha) {
+                return $fechaInterpretada->format('d/m/Y');
+            }
+        }
+
+        throw new InvalidArgumentException('Formato de fecha de reserva no reconocido.');
     }
 
     /** Conserva saltos y viñetas al convertir el HTML del editor a texto sin etiquetas. */

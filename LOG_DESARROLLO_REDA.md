@@ -2,6 +2,20 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [25 de Noviembre, 2026] - Formato de fechas en plantillas de reserva
+- **Solicitud:** Mostrar `{llegada}` y `{salida}` como `dd/mm/AAAA` en los textos de la reserva inicial.
+- **Respaldo:** Se revisó `documentacion-torbian-2/BD/appvac_torbDev2-20261125-1221.sql`, del día actual, cabecera 11:21:43. Existe una plantilla de reserva con ambas variables y dos de confirmación; `bookings` almacena fechas como `date`, `messages` guarda los mensajes y la preferencia del respaldo es `dd/mm/yyyy`.
+- **Código:** `packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php` agrega `formatearFechaReserva()` y lo aplica exclusivamente a las variables del mensaje inicial. Interpreta fechas ISO, la preferencia regional y formatos de día/mes con guiones o barras; preserva el día calendario y comunica errores al controlador de opciones. No altera la sesión, reservas, mensajes históricos ni el formato de confirmación de pago.
+- **Archivos de control:** Se actualizaron `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md`, este registro y la lista de `subir_archivos_puntuales.sh` para incluir únicamente el servicio modificado. No se ejecutó SQL ni se modificó la lógica del script.
+- **Validación:** Sintaxis PHP, formato de diferencias y existencia del archivo de subida comprobados. Prueba funcional pendiente en Vesta; no se necesita compilar ni ejecutar migraciones.
+
+## [25 de Noviembre, 2026] - Ícono del menú Plantillas
+- **Solicitud:** Agregar un ícono SVG propio a la opción «Plantillas» del menú lateral administrativo.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/general/iconos/plantillas.svg` contiene un dibujo de documentos. `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js` importa el SVG y sustituye el ícono Font Awesome previo por una máscara decorativa. `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` define el tamaño y permite que herede el color del enlace, incluidos sus estados activos.
+- **Integración:** Laravel Mix procesa el SVG importado y genera el recurso en `public/images` al compilar en Vesta. Se actualizó `lista_archivos_aplicacion.md` con el archivo nuevo y la lista de `subir_archivos_puntuales.sh` con los tres archivos desplegables de la solicitud, sin ejecutar el script ni modificar su lógica.
+- **Documentación:** Se actualizaron `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. No se modificaron vistas originales ni datos.
+- **Validación:** Sintaxis JavaScript, estructura XML del SVG, formato de diferencias y existencia de las tres rutas de despliegue comprobados. Compilación y validación visual pendientes en Vesta.
+
 ## [23 de Noviembre, 2026] - Integración del módulo KYC en el repositorio compartido
 - **Alcance:** incorporar al repositorio (`torb_2`) el módulo de verificación de identidad desarrollado en `dev-app` (fases 2 a 7), sin reemplazar archivos completos ni tocar cambios del compañero. Detalle técnico de cada fase: entradas KYC del 19 de noviembre más abajo.
 - **Archivos nuevos (67):** configuración (`config/kyc.php`, `config/didit.php`), 5 migraciones, rutas (`routes/kyc.php`), enums, eventos, excepción, modelos, servicios, controladores, middleware, observador, política, comandos de consola, `Support`, vistas administrativas y JavaScript (administración y frontend) del KYC.

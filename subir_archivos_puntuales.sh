@@ -5,5 +5,5 @@
 # Pueden ser del proyecto original o de los módulos REDA.
 # Para no subir archivos, escribir la palabra "Ninguno".
 ARCHIVOS_PHP_PUNTUALES=(
-    "composer.json"
+    "packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php"
     )

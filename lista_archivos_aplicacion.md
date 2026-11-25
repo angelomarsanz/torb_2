@@ -242,6 +242,7 @@ ARCHIVOS JAVASCRIPT FUERA DE LA CARPETA FRONTEND
     packages/Reda/RedaAlojamiento/resources/js/general/main.js
     packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js
     packages/Reda/RedaAlojamiento/resources/js/general/iconos/index.js
+    packages/Reda/RedaAlojamiento/resources/js/general/iconos/plantillas.svg
     packages/Reda/RedaAlojamiento/resources/js/general/iconos/mediacionSvg.js
     packages/Reda/RedaAlojamiento/resources/js/general/iconos/estatusDisputaSvg.js
     packages/Reda/RedaAlojamiento/resources/js/general/iconos/notificacionesSvg.js

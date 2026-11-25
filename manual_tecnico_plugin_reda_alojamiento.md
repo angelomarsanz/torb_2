@@ -6,6 +6,8 @@ El permiso `manage_email_template` controla tanto la visibilidad del menú como 
 
 El editor guarda HTML, pero el huésped recibe y envía texto plano: se conservan saltos y viñetas, no los estilos visuales. Las variables son `{anfitrion}`, `{huesped}`, `{alojamiento}`, `{llegada}`, `{salida}`, `{adultos}`, `{ninos}`, `{total_personas}`, `{pais}` y `{metodo_pago}`. El total es la suma del mismo desglose de adultos y niños utilizado en el mensaje. El país y el método corresponden a los valores elegidos en la pantalla inicial y, en confirmación, a los datos guardados en sesión; si no existen se muestra «No seleccionado». En una solicitud sin selectores tampoco se reutilizan datos anteriores. Cuando el huésped modifica el texto, se considera personalizado y los cambios de selección no lo sobrescriben. Para una reserva existente se usa su desglose persistido; el helper preexistente considera a todos adultos si no existe dicho desglose. La nota admite hasta 10.000 caracteres.
 
+En el grupo de reserva inicial, `{llegada}` y `{salida}` se muestran como `dd/mm/AAAA`, tanto si la sesión contiene fechas ISO como si usa el formato regional configurado. No se modifican las fechas de sesión ni de la reserva; el grupo de confirmación de pago conserva su formato anterior. Una fecha no reconocida se informa mediante el error habitual de carga de plantillas.
+
 El formulario inicial `payments/book/{id?}` usa únicamente el grupo de reserva: su campo `message_to_host` se envía por el flujo habitual de creación o actualización de la reserva y aparece en el inbox como mensaje de reserva. La nota de transferencia usa el grupo de confirmación y genera un mensaje separado vinculado a los comprobantes de ese pago. `bookings.note` conserva hasta 191 caracteres para compatibilidad, y el texto íntegro de la nota de transferencia se almacena en `mensajes_pagos` y `messages`. El historial anterior no se reescribe. El inbox usa el ID real del mensaje, no el ID de reserva virtualizado, y autoriza cada enlace comprobando los participantes.
 
 El procesador original coloca las imágenes en `public/uploads/booking`: el nuevo enlace verifica permisos, pero **los archivos siguen en almacenamiento público preexistente**, por lo que su URL original no queda protegida por este cambio. Asimismo, el procesador mueve archivos y el controlador original puede enviar correos antes del cierre de la transacción: una reversión de base de datos no puede deshacer esos efectos externos. Deben revisarse los archivos y correos si se produce un error de pago.
@@ -20,7 +22,7 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
   Modelo del mensaje íntegro, reserva real, identificador del mensaje y nombres de comprobantes.
 
 ### `packages/Reda/RedaAlojamiento/src/Services/PlantillasTextoService.php`
-  `opcionesPago($usarDatosPago)` verifica la reserva existente cuando corresponde, obtiene el desglose, suma adultos y niños para `{total_personas}` y filtra las plantillas según la pantalla. Para confirmación obtiene el nombre del país y de la pasarela desde las selecciones guardadas en sesión; devuelve además el texto con las variables de pago para que el selector inicial pueda actualizarlas. `textoPlano()` elimina etiquetas y conserva saltos y viñetas.
+  `opcionesPago($usarDatosPago)` verifica la reserva existente cuando corresponde, obtiene el desglose, suma adultos y niños para `{total_personas}` y filtra las plantillas según la pantalla. En reserva inicial usa `formatearFechaReserva()` para convertir las fechas válidas a `dd/mm/AAAA` sin alterar la sesión; el formato no reconocido produce un error explícito. Para confirmación obtiene el nombre del país y de la pasarela desde las selecciones guardadas en sesión y conserva las fechas originales; devuelve además el texto con las variables de pago para que el selector inicial pueda actualizarlas. `textoPlano()` elimina etiquetas y conserva saltos y viñetas.
 
 ### `packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/PlantillaTextoController.php`
   `autorizar()` comprueba el permiso; `index()` valida el contexto, pagina diez opciones y permite seleccionar una; `guardar()` valida y persiste dentro del contexto elegido; `eliminar()` valida el contexto y elimina únicamente la opción de ese grupo.
@@ -41,7 +43,10 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
   `iniciarEditor()` configura CKEditor con negritas, cursivas, listas y alineación. El archivo gestiona confirmación de eliminación y espera al navegar o enviar.
 
 ### `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`
-  `menuLateralAdmin()` transforma el acceso autorizado a correos en «Plantillas» con «Correos» y «Textos», conservando la URL original y el estado activo.
+  `menuLateralAdmin()` transforma el acceso autorizado a correos en «Plantillas» con «Correos» y «Textos», conservando la URL original y el estado activo. Importa el SVG de documentos y utiliza la ruta del recurso generado por Laravel Mix como máscara, para heredar el color del enlace.
+
+### `packages/Reda/RedaAlojamiento/resources/js/general/iconos/plantillas.svg`
+  Ícono decorativo de documentos para el menú «Plantillas». Se integra mediante el JavaScript administrativo y se genera en `public/images` durante la compilación.
 
 ### `packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js`
   `cargarPlantillas($campo, $boton)` consulta el grupo correspondiente con animación de espera para `message_to_host` en `#checkout-form` y para `note` en el formulario de transferencia. Elige la primera cuando el campo está vacío, conserva los textos recuperados o escritos mientras carga y permite volver al personalizado. Las opciones se recalculan al cambiar país o método de pago; solo se actualiza el campo si coincide con la opción seleccionada sin editar. Si falla la consulta muestra el error y deja disponible la escritura manual. `validarFormularioPago()` comprueba exclusivamente el comprobante y la longitud de la nota de transferencia; el formulario inicial conserva su validación original.
@@ -59,7 +64,7 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
   En `boot()` sustituye únicamente las acciones de finalización y callback de pasarela por el controlador extendido del plugin.
 
 ### `packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss` y `packages/Reda/RedaAlojamiento/resources/sass/main.scss`
-  Definen respectivamente la distribución adaptable de tres columnas del editor y el ajuste de saltos y palabras del mensaje en inbox. El segundo es el SCSS frontend realmente compilado en este proyecto.
+  Definen respectivamente la distribución adaptable de tres columnas del editor, la máscara del ícono de plantillas que hereda el color del menú, y el ajuste de saltos y palabras del mensaje en inbox. El segundo es el SCSS frontend realmente compilado en este proyecto.
 
 ### `packages/Reda/RedaAlojamiento/resources/lang/es.json`
   Agrega los textos en español de la interfaz y los errores de plantillas y pago.
