@@ -1,4 +1,4 @@
-/* Estilos generales frontend del plugin, incluidos los mensajes y comprobantes del inbox. */
+/* Estilos generales frontend del plugin, incluidos los mensajes, comprobantes y aviso de mediación del inbox. */
 .reda-photo-controls {
     position: absolute;
     top: 10px;
@@ -3963,6 +3963,17 @@
         color: #717171; // Color de texto secundario Airbnb
         font-size: 0.95rem;
         padding: 0 10px;
+    }
+
+    &.reda-exito-mediacion {
+        #notificacion-titulo {
+            font-size: 2rem;
+        }
+
+        #notificacion-mensaje {
+            font-size: 1.6rem;
+            line-height: 1.5;
+        }
     }
 
     // Clase específica para estados de procesamiento/espera

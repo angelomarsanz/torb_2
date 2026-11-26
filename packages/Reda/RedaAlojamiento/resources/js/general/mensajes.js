@@ -4,7 +4,8 @@
  * del proyecto principal, como el Inbox (chat general) y la barra lateral de 
  * detalles de reservación. Permite verificar disputas, solicitar nuevas mediaciones
  * y enriquecer el chat original con información del plugin Reda. Al enviar una solicitud,
- * transforma el modal de espera en la notificación de resultado sin cerrarlo antes.
+ * transforma el modal de espera en la notificación de resultado sin cerrarlo antes
+ * y aplica un estilo temporal al aviso de éxito de la mediación.
  */
 import { mediacionSvg } from './iconos';
 
@@ -483,9 +484,15 @@ const getModalMediacionHtml = () => {
     };
 
     /**
-     * Configura el formulario y los archivos; conserva visible el resultado hasta que el usuario lo cierre.
+     * Configura el formulario y los archivos; conserva visible el resultado hasta que el usuario lo cierre
+     * y retira el estilo de éxito de mediación al cerrar la notificación.
      */
     const configurarEventosModal = () => {
+        $(document).off('hidden.bs.modal.redaExitoMediacion', '#modal-notificacion')
+            .on('hidden.bs.modal.redaExitoMediacion', '#modal-notificacion', function() {
+                $(this).removeClass('reda-exito-mediacion');
+            });
+
         // Trigger para el input oculto
         $(document).off('click', '#btn-trigger-documentos').on('click', '#btn-trigger-documentos', function() {
             $('#documentos').click();
@@ -540,6 +547,7 @@ const getModalMediacionHtml = () => {
                 const exitoTitle = window.RedaAlojamientoJson["¡Éxito!"] || "¡Éxito!";
                 
                 if (window.RedaNotificaciones && typeof window.RedaNotificaciones.notificar === 'function') {
+                    $('#modal-notificacion').addClass('reda-exito-mediacion');
                     window.RedaNotificaciones.notificar(exitoTitle, response.mensaje_usuario, 'exito');
                 } else {
                     if (window.RedaNotificaciones && typeof window.RedaNotificaciones.ocultar === 'function') {

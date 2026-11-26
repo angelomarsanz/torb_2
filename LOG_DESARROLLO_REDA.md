@@ -2,6 +2,29 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [25 de Noviembre, 2026] - Corrección del modal de reserva en celular
+- **Respaldo y diagnóstico:** `documentacion-torbian-2/BD/appvac_torbDev2-20261125-1221.sql` es del día actual; el log `documentacion-torbian-2/torbian.redetronic.top-1795651894664.log` registra el error de `classList` en `onReady` y el fallo posterior de `formatDate`.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js` establece `disableMobile: true` en los calendarios de llegada y salida. Esto conserva el calendario de Flatpickr y su contenedor aun si no hay fechas deshabilitadas; las reglas de disponibilidad y el formato ISO permanecen iguales.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md`, este registro y la lista de `subir_archivos_puntuales.sh` con el JavaScript de esta solicitud. La ruta ya estaba en `lista_archivos_aplicacion.md`.
+- **Validación:** `node --check` y `git diff --check` sin errores; no se modificaron datos ni se compiló. Subida, compilación y prueba funcional en móvil y escritorio pendientes en Vesta.
+
+## [25 de Noviembre, 2026] - Confirmación del error del calendario en celular
+- **Evidencia:** `documentacion-torbian-2/torbian.redetronic.top-1795651894664.log` registra un `TypeError` al leer `classList` dentro de `onReady` de Flatpickr y después otro al acceder a `window.redaFpCheckIn.formatDate`. Ambos ocurren en `prepararModalReserva`, antes de abrir el modal.
+- **Diagnóstico:** La traza confirma el fallo del callback identificado en `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`. El modo nativo móvil de Flatpickr, compatible con la lista de fechas ocupadas vacía observada en el respaldo, explica la ausencia del contenedor. La corrección propuesta sigue pendiente de implementación y prueba.
+- **Alcance:** Solo se actualizó este registro; no se modificaron código, datos ni la lista de subida preexistente.
+
+## [25 de Noviembre, 2026] - Diagnóstico del modal de reserva en celular
+- **Solicitud:** Investigar por qué no abre el formulario de reserva en celular para «Apartamento entero en Chichiriviche».
+- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261125-1221.sql` es del día actual. La propiedad es la ID 1 y, según los estados, fechas y borrado lógico del respaldo, no tiene reservas que el endpoint de fechas ocupadas incluya después del 25 de noviembre. La propiedad 3 sí tiene una reserva pendiente del 26 al 30 de noviembre.
+- **Causa probable:** En `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js`, el calendario de llegada recibe una lista vacía de fechas deshabilitadas. En móviles, Flatpickr puede usar el selector nativo y no crear `calendarContainer`; el callback `onReady` accede a ese contenedor sin comprobarlo. Esto puede interrumpir la preparación antes de mostrar el modal. Con fechas deshabilitadas Flatpickr usa su calendario propio, lo que explica la diferencia observada entre propiedades.
+- **Estado:** Diagnóstico por revisión del código y del respaldo, pendiente de reproducción en el dispositivo y confirmación de la consola en Vesta. Se propone configurar `disableMobile: true` para mantener el calendario del plugin y verificar ambos calendarios y el bloqueo de fechas. No se modificaron código ni datos; se conservaron el punto de control y la lista de subida preexistentes.
+
+## [25 de Noviembre, 2026] - Legibilidad del aviso de mediación
+- **Solicitud:** Agrandar moderadamente el mensaje y el título de la confirmación de mediación en el inbox.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/general/mensajes.js` aplica la clase temporal `reda-exito-mediacion` al aviso exitoso y la retira al cerrar el modal. `packages/Reda/RedaAlojamiento/resources/sass/main.scss` establece 2 rem para el título y 1.6 rem para el mensaje, con interlineado 1.5, solo para esa confirmación. Se tuvo en cuenta que el estilo principal usa `html { font-size: 62.5% }`.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md`, este registro y la lista de `subir_archivos_puntuales.sh` con los dos archivos desplegables. No se modificaron vistas ni datos.
+- **Validación:** Comprobaciones estáticas locales; compilación y prueba visual en escritorio y móvil pendientes en Vesta.
+
 ## [25 de Noviembre, 2026] - Formato de fechas en plantillas de reserva
 - **Solicitud:** Mostrar `{llegada}` y `{salida}` como `dd/mm/AAAA` en los textos de la reserva inicial.
 - **Respaldo:** Se revisó `documentacion-torbian-2/BD/appvac_torbDev2-20261125-1221.sql`, del día actual, cabecera 11:21:43. Existe una plantilla de reserva con ambas variables y dos de confirmación; `bookings` almacena fechas como `date`, `messages` guarda los mensajes y la preferencia del respaldo es `dd/mm/yyyy`.

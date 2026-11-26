@@ -12,6 +12,7 @@
  * - Cambia dinámicamente el botón a "Ver reserva" si ya existe una reservación.
  * - Maneja disparadores por hash (#reservar) para integraciones externas.
  * - Consulta las fechas ocupadas de la propiedad antes de mostrar el calendario de reservas.
+ * - Usa el calendario de Flatpickr también en móviles, incluso cuando no hay fechas ocupadas.
  * - Sincroniza las fechas seleccionadas en formato ISO con el cálculo de precios original.
  * - Evita que respuestas de cálculos anteriores muestren avisos para fechas no seleccionadas.
  * - Restablece el botón de envío al volver a la página desde el flujo de pago usando la caché del navegador.
@@ -276,7 +277,8 @@
         },
 
         /**
-         * Inserta el formulario y abre Flatpickr en la primera fecha libre; inicia la salida vacía y sincroniza fechas ISO con el core.
+         * Inserta el formulario y abre Flatpickr en la primera fecha libre, también en móviles;
+         * inicia la salida vacía y sincroniza fechas ISO con el core.
          */
         prepararModalReserva: function($form, $modalBody, $modal, fechasOcupadas) {
             const self = this;
@@ -388,6 +390,7 @@
                 dateFormat: "d-m-Y",
                 minDate: primeraFechaDisponible,
                 locale: "es",
+                disableMobile: true,
                 disable: fechasOcupadas,
                 defaultDate: primeraFechaDisponible,
                 onReady: function(selectedDates, dateStr, instance) {
@@ -440,6 +443,7 @@
                 dateFormat: "d-m-Y",
                 minDate: minCheckOutDate,
                 locale: "es",
+                disableMobile: true,
                 disable: [salidaCruzaFechaOcupada],
                 defaultDate: "",
                 onReady: function(selectedDates, dateStr, instance) {
