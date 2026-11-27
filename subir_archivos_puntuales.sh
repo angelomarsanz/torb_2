@@ -5,7 +5,6 @@
 # Pueden ser del proyecto original o de los módulos REDA.
 # Para no subir archivos, escribir la palabra "Ninguno".
 ARCHIVOS_PHP_PUNTUALES=(
-    "packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js"
-    "packages/Reda/RedaAlojamiento/resources/sass/main.scss"
-    "packages/Reda/RedaAlojamiento/resources/lang/es.json"
+    "packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php"
+    "packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js"
     )
