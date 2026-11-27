@@ -204,6 +204,24 @@ return [
     // Sección a la que se redirige a un usuario no verificado (el módulo KYC del perfil).
     'url_seccion' => 'users/edit-verification',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Notificaciones del KYC (Fase 8)
+    |--------------------------------------------------------------------------
+    | habilitadas: interruptor general (KYC_NOTIFICACIONES=false apaga todos los avisos sin tocar código).
+    | correo_usuario: correos al usuario cuando su verificación cambia o se le pide una corrección.
+    | alerta_admin / correo_admin: alerta en el panel y correo a los administradores activos con manage_kyc
+    | cuando llega una solicitud que requiere revisión.
+    | Los correos nunca incluyen el texto libre del administrador (motivo del rechazo, corrección solicitada)
+    | ni datos del documento: solo avisan y enlazan a la pantalla protegida por la sesión del usuario.
+    */
+    'notificaciones' => [
+        'habilitadas'    => env('KYC_NOTIFICACIONES', true),
+        'correo_usuario' => true,
+        'alerta_admin'   => true,
+        'correo_admin'   => true,
+    ],
+
     // Reservas: estados de una reserva existente que espera el pago del huésped (el anfitrión ya la aceptó).
     // Pagar una reserva así NO es una reserva nueva y no se bloquea.
     'reservas' => [

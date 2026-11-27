@@ -16,6 +16,8 @@ ARCHIVOS DEL PROYECTO ORIGINAL MODIFICADOS
     app/Providers/AppServiceProvider.php
     config/mail.php
     resources/views/admin/settings/email.blade.php
+    resources/views/admin/roles/add.blade.php
+    resources/views/admin/roles/edit.blade.php
 
 ARCHIVOS PARA LAS DIRECTRICES Y DOCUMENTACIÓN DEL PROYECTO 
 
@@ -48,6 +50,39 @@ PLUGIN REDA ALOJAMIENTO: GENERAL
 
     packages/Reda/RedaAlojamiento/resources/sass/main.scss
     packages/Reda/RedaAlojamiento/resources/sass/admin/main.scss
+    packages/Reda/RedaAlojamiento/config/kyc.php
+    packages/Reda/RedaAlojamiento/config/didit.php
+    packages/Reda/RedaAlojamiento/routes/kyc.php
+    packages/Reda/RedaAlojamiento/src/Enums/EstadoKyc.php
+    packages/Reda/RedaAlojamiento/src/Enums/MetodoKyc.php
+    packages/Reda/RedaAlojamiento/src/Events/CorreccionKycAtendida.php
+    packages/Reda/RedaAlojamiento/src/Events/CorreccionKycSolicitada.php
+    packages/Reda/RedaAlojamiento/src/Events/EstadoKycCambiado.php
+    packages/Reda/RedaAlojamiento/src/Exceptions/KycNoVerificadoException.php
+    packages/Reda/RedaAlojamiento/src/Http/Middleware/EnsureKycVerified.php
+    packages/Reda/RedaAlojamiento/src/Observers/BloqueoKycObserver.php
+    packages/Reda/RedaAlojamiento/src/Policies/KycPolicy.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/AplicadorMiddlewareKyc.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/AuditorRutasKyc.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/BloqueoKyc.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/ClasificadorOperacionKyc.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/ConsultaKycAdmin.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/DiditException.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/DiditService.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/DocumentoKycInvalidoException.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/FirmaWebhookDidit.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/GuardiaEscrituraKyc.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/KycDocumentoService.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/KycService.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/NotificacionesKycService.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/RespuestaBloqueoKyc.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/RetencionKycService.php
+    packages/Reda/RedaAlojamiento/src/Services/Kyc/ValidadorKycManual.php
+    packages/Reda/RedaAlojamiento/src/Support/EtiquetasKyc.php
+    packages/Reda/RedaAlojamiento/src/Support/PaisesIso.php
+    packages/Reda/RedaAlojamiento/src/Console/Commands/KycAuditarRutasCommand.php
+    packages/Reda/RedaAlojamiento/src/Console/Commands/KycDepurarCommand.php
+    packages/Reda/RedaAlojamiento/src/Console/Commands/KycSincronizarCommand.php
 
 PLUGIN REDA ALOJAMIENTO: MODELOS 
     packages/Reda/RedaAlojamiento/src/Models/Administrativo/Administrativo.php   
@@ -76,6 +111,11 @@ PLUGIN REDA ALOJAMIENTO: MODELOS
     packages/Reda/RedaAlojamiento/src/Models/MensajePago.php
     packages/Reda/RedaAlojamiento/src/Models/PlantillaTexto.php
     packages/Reda/RedaAlojamiento/src/Models/Admin/SoporteTecnico.php
+    packages/Reda/RedaAlojamiento/src/Models/Kyc/DocumentoKyc.php
+    packages/Reda/RedaAlojamiento/src/Models/Kyc/EventoKyc.php
+    packages/Reda/RedaAlojamiento/src/Models/Kyc/ProtegeEscrituraKyc.php
+    packages/Reda/RedaAlojamiento/src/Models/Kyc/SolicitudKyc.php
+    packages/Reda/RedaAlojamiento/src/Models/Kyc/UsuarioKyc.php
 
 PLUGIN REDA ALOJAMIENTO: MIGRACIONES 
     packages/Reda/RedaAlojamiento/database/migrations/2025_10_26_225134_create_actividades_experiencias_table.php
@@ -140,6 +180,11 @@ PLUGIN REDA ALOJAMIENTO: MIGRACIONES
     packages/Reda/RedaAlojamiento/database/migrations/2026_11_07_000000_crear_tablas_reinicio_mediaciones.php
     packages/Reda/RedaAlojamiento/database/migrations/2026_11_09_100000_crear_solicitudes_informacion_mediaciones.php
     packages/Reda/RedaAlojamiento/database/migrations/2026_11_18_133000_crear_plantillas_y_mensajes_de_pago.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100000_crear_tabla_solicitudes_kyc.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100100_crear_tabla_usuarios_kyc.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100200_crear_tabla_documentos_kyc.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100300_crear_tabla_eventos_kyc.php
+    packages/Reda/RedaAlojamiento/database/migrations/2026_11_19_100400_crear_permiso_manage_kyc.php
 
 PLUGIN REDA ALOJAMIENTO: VISTAS (ADMIN) 
     packages/Reda/RedaAlojamiento/resources/views/admin/experiencia/tipos_de_negocios/opciones_tipos_de_negocios.blade.php
@@ -158,10 +203,13 @@ PLUGIN REDA ALOJAMIENTO: VISTAS (ADMIN)
     packages/Reda/RedaAlojamiento/resources/views/admin/disputa/reinicio_mediaciones.blade.php
     packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php
     packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/kyc/detalle.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/kyc/index.blade.php
 
 PLANTILLAS EMAIL ADMIN --
     packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php
     packages/Reda/RedaAlojamiento/resources/views/emails/suspension_admin.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/emails/kyc_notificacion_admin.blade.php
 
 PLUGIN REDA ALOJAMIENTO: VISTAS (FRONTEND - CARPETAS FRONTEND) 
     packages/Reda/RedaAlojamiento/resources/views/experiencia/experiencias/frontend/calificacion_experiencia_frontend.blade.php
@@ -211,6 +259,7 @@ PLANTILLAS EMAIL USUARIO
     packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_usuario.blade.php
     packages/Reda/RedaAlojamiento/resources/views/emails/suspension_usuario.blade.php
     packages/Reda/RedaAlojamiento/resources/views/emails/informacion_mediacion.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/emails/kyc_notificacion_usuario.blade.php
 
 ARCHIVOS JAVASCRIPT ADMIN 
     packages/Reda/RedaAlojamiento/resources/js/admin/general/main.js
@@ -225,6 +274,16 @@ ARCHIVOS JAVASCRIPT ADMIN
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/experiencia/opcionesTipoDeNegocios.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/plantillas/textos.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuKycAdmin.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/agregarObservacionKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/alternarRetencionKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/aprobarSolicitudKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/detalleKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/indexKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/peticionAdminKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/rechazarSolicitudKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/revelarNumeroDocumentoKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/solicitarCorreccionKyc.js
 
 ARCHIVOS JAVASCRIPT CARPETA FRONTEND 
     packages/Reda/RedaAlojamiento/resources/js/vistas/experiencia/frontend/listadoProductosServicios.js
@@ -237,6 +296,16 @@ ARCHIVOS JAVASCRIPT CARPETA FRONTEND
     packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/busquedaPropiedades.js
     packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/desgloseHuespedes.js
     packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/verificacionCorreo.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/consultarEstadoKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/enviarSolicitudManualKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/formularioManualKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/iniciarVerificacionDiditKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/obtenerOpcionesManualKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/obtenerSolicitudCorreccionKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/peticionUsuarioKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/renderizarTarjetaKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/utilidadesKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/kyc/verificacionIdentidad.js
 
 ARCHIVOS JAVASCRIPT FUERA DE LA CARPETA FRONTEND 
     packages/Reda/RedaAlojamiento/resources/js/general/main.js
@@ -277,6 +346,10 @@ PLUGIN REDA ALOJAMIENTO: CONTROLADORES ADMIN
     packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Disputa/ReinicioMediacionesController.php
     packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Alerta/AlertaController.php
     packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/PlantillaTextoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Admin/Kyc/KycAdminController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Kyc/DiditWebhookController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Kyc/KycDocumentoController.php
+    packages/Reda/RedaAlojamiento/src/Http/Controllers/Kyc/KycUsuarioController.php
 
 PLUGIN REDA ALOJAMIENTO: CONTROLADORES 
     packages/Reda/RedaAlojamiento/src/Http/Controllers/Administrativo/AdministrativoController.php

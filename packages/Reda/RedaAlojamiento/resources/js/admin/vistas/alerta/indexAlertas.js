@@ -5,6 +5,9 @@
  * marcado de alertas como leídas de forma individual o masiva, y la sincronización reactiva de los contadores
  * de insignias (badges) en la campanita del header y en el menú lateral.
  * Escapa los textos de las alertas antes de insertarlos en la página.
+ * Reconoce las alertas de verificación de identidad (tipo "kyc"): muestran un ícono y una etiqueta propios y un
+ * enlace "Revisar solicitud" al panel KYC, filtrado por el correo del usuario; ese enlace marca la alerta como
+ * leída y muestra la animación de espera igual que "Ver mediación".
  *
  * @package    Reda\RedaAlojamiento
  * @subpackage Resources\Js\Admin\Vistas\Alerta
@@ -106,6 +109,9 @@
                     } else if (alerta.tipo === 'primer_aviso') {
                         iconoHtml = '<i class="fa fa-exclamation-triangle text-warning f-22"></i>';
                         badgeTipoHtml = `<span class="badge bg-warning text-dark">${window.RedaAlojamientoJson["Primer aviso preventivo"] || "Primer aviso preventivo"}</span>`;
+                    } else if (alerta.tipo === 'kyc') {
+                        iconoHtml = '<i class="fa fa-id-card text-primary f-22"></i>';
+                        badgeTipoHtml = `<span class="badge bg-primary">${window.RedaAlojamientoJson["Verificación de identidad"] || "Verificación de identidad"}</span>`;
                     }
 
                     // Botón para marcar como leída
@@ -127,6 +133,14 @@
                     const linkMediacionHtml = alerta.disputa_id ? `
                         <a href="${baseUrl}/admin/reda/disputas" class="btn btn-outline-primary btn-xs py-1 px-2 f-12 btn-ir-mediaciones ms-2">
                             <i class="fa fa-external-link-alt me-1"></i> <span>${labelVerMediacion} #${alerta.disputa_id}</span>
+                        </a>
+                    ` : '';
+
+                    // Enlace al panel KYC (solicitudes pendientes del usuario) en las alertas de verificación de identidad
+                    const labelRevisarSolicitud = window.RedaAlojamientoJson["Revisar solicitud"] || "Revisar solicitud";
+                    const linkKycHtml = alerta.tipo === 'kyc' ? `
+                        <a href="${baseUrl}/admin/reda/kyc?grupo=pendientes&amp;buscar=${encodeURIComponent(alerta.usuario_email || '')}" class="btn btn-outline-primary btn-xs py-1 px-2 f-12 btn-ir-mediaciones btn-ir-kyc ms-2">
+                            <i class="fa fa-external-link-alt me-1"></i> <span>${labelRevisarSolicitud}</span>
                         </a>
                     ` : '';
 
@@ -168,6 +182,7 @@
 
                                         <div class="d-flex justify-content-end align-items-center mt-3 pt-2 border-top">
                                             ${linkMediacionHtml}
+                                            ${linkKycHtml}
                                             <div class="contenedor-accion-leida ms-2">
                                                 ${btnMarcarHtml}
                                             </div>

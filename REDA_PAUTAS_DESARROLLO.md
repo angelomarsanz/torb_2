@@ -94,3 +94,13 @@ El botón de reservación se inyecta dinámicamente en tres vistas principales:
 - **Punto de Control Progresivo:** Como medida de salvaguarda ante interrupciones imprevistas (fallas eléctricas o de internet), la IA registrará progresivamente en tiempo real el avance y los archivos intervenidos en `previo_cambios_realizados.md`.
 - **Documentación Completa y Reporte Final:** Al culminar todas las modificaciones solicitadas, la IA cumplirá obligatoriamente con la documentación en `LOG_DESARROLLO_REDA.md`, `manual_tecnico_plugin_reda_alojamiento.md` y cabeceras de código, y presentará al usuario un informe final completo, claro y pedagógico con el detalle técnico de todo lo realizado y las indicaciones pertinentes para el servidor Vesta de desarrollo.
 
+
+---
+
+## 9. Verificación de identidad (KYC)
+
+- **La autoridad es el servidor.** La interfaz solo guía; publicar y reservar se bloquean en el servidor (middleware por acción, observadores de modelo y política). `KycService` es el único que cambia el estado y los modelos KYC no se escriben directamente.
+- **Consulta del chat.** `ChatController` crea la consulta como `Bookings` con `status='Inquiry'` (versiones anteriores, vacío). El bloqueo KYC trata ambos valores como consulta y solo impide convertirla en una reserva real. No cambiar uno de estos valores sin revisar `BloqueoKycObserver`.
+- **Avisos del KYC.** Nunca deben interrumpir el flujo: se ejecutan protegidos y los correos salen tras responder la petición. No incluir en un correo el texto libre del administrador ni datos del documento. Los fallos, expiraciones y pérdidas se avisan solo si los decidió Didit; el error técnico al crear la sesión no se notifica.
+- **Permiso `manage_kyc`.** La lista de permisos se guarda para siempre en caché: tras migrar o cambiar permisos hay que ejecutar `artisan cache:clear`; si no, Roles muestra el grupo sin casilla y el menú del administrador no aparece.
+- **Despliegue.** `vendor/reda/reda-alojamiento` debe ser un enlace simbólico a `packages/Reda/RedaAlojamiento`; si una subida lo reemplaza por una copia, Laravel carga un plugin viejo. No subir `vendor/`, `node_modules/` ni `.env`.
