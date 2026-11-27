@@ -8,7 +8,7 @@
  * de pago del core ni requerir modificaciones invasivas en el controlador original.
  * 
  * Estrategia de Persistencia Dual:
- * 1. Almacena en la tabla original 'booking_details' usando claves 'adultos' y 'ninos'.
+ * 1. Almacena en 'booking_details' las claves 'adultos' y 'ninos' mediante atributos explícitos.
  * 2. Si la tabla auxiliar 'reserva_huespedes' ha sido migrada, guarda también el registro allí.
  */
 
@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Log;
 class ReservaObserver
 {
     /**
-     * Se ejecuta automáticamente tras la creación de una reserva en la base de datos.
+     * Persiste los huéspedes tras crear una reserva, sin asignación masiva en BookingDetails.
      * 
      * @param Bookings $booking Instancia recién creada de la reservación
      * @return void
@@ -53,15 +53,15 @@ class ReservaObserver
             Log::info("REDA ReservaObserver: Registrando desglose para reserva #{$booking->id} (Código: {$booking->code}) - Adultos: {$adultos}, Niños: {$ninos}");
 
             // 2. Persistencia en tabla booking_details (App\Models\BookingDetails)
-            BookingDetails::updateOrCreate(
-                ['booking_id' => $booking->id, 'field' => 'adultos'],
-                ['value' => (string) $adultos]
-            );
-
-            BookingDetails::updateOrCreate(
-                ['booking_id' => $booking->id, 'field' => 'ninos'],
-                ['value' => (string) $ninos]
-            );
+            foreach (['adultos' => $adultos, 'ninos' => $ninos] as $campo => $cantidad) {
+                $detalle = BookingDetails::where('booking_id', $booking->id)
+                    ->where('field', $campo)
+                    ->first() ?? new BookingDetails;
+                $detalle->booking_id = $booking->id;
+                $detalle->field = $campo;
+                $detalle->value = (string) $cantidad;
+                $detalle->save();
+            }
 
             // 3. Persistencia en tabla auxiliar 'reserva_huespedes' si existe
             if (Schema::hasTable('reserva_huespedes')) {

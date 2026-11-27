@@ -10,9 +10,11 @@
  * adjuntar el comprobante, previniendo la pérdida del archivo ya seleccionado en el input de archivo.
  * Muestra mensajes de error en español bajo cada campo y gestiona la animación de espera al procesar.
  * Carga las opciones en ambos mensajes y actualiza país y método de pago sin alterar textos personalizados.
+ * Ajusta al contenido los mensajes de reserva y comprobante en móviles y escritorio.
  * 
  * Funciones contenidas:
  * - cargarPlantillas($campo, $boton): Carga opciones para el campo indicado y conserva texto personalizado.
+ * - ajustarAlturaMensaje($campo): Adapta la altura del mensaje al texto visible.
  * - obtenerContenedorError($campo, claseEspecifica): Localiza o genera el contenedor para el mensaje de error.
  * - restaurarBotonSubmit(): Restablece el estado activo del botón de envío y oculta el spinner en fallos de validación.
  * - validarFormularioPago(): Comprueba que el comprobante y el mensaje al anfitrión estén presentes antes de enviar.
@@ -22,13 +24,18 @@
     "use strict";
 
     /**
-     * Carga opciones y actualiza sus variables de pago sin alterar textos personalizados.
+     * Carga opciones, actualiza sus variables de pago y ajusta la altura del mensaje.
      * Se utiliza tanto en la reserva inicial como en el formulario de comprobante.
      * @param {jQuery} $campo Campo de mensaje.
      * @param {jQuery} $boton Botón de envío del formulario correspondiente.
      */
     const cargarPlantillas = ($campo, $boton) => {
         if (!$campo.length) return;
+        if ($campo.is('textarea')) {
+            ajustarAlturaMensaje($campo);
+            $campo.on('input change', () => ajustarAlturaMensaje($campo));
+            $(window).on('resize pageshow', () => ajustarAlturaMensaje($campo));
+        }
         const traducciones = window.RedaAlojamientoJson || {};
         const $aviso = $('<div class="text-danger mt-2" role="alert"></div>');
         const $etiqueta = $('<label class="d-block mt-2" for="reda-textos-predefinidos"></label>')
@@ -92,6 +99,7 @@
                 $selector.prop('disabled', false);
                 $boton.prop('disabled', botonEstabaDeshabilitado);
                 if (window.RedaNotificaciones) window.RedaNotificaciones.ocultar();
+                if ($campo.is('textarea')) ajustarAlturaMensaje($campo);
             }
         });
         $selector.on('change', function () {
@@ -118,8 +126,28 @@
                     $opcion.data('texto', plantilla.split('{pais}').join(valorPais).split('{metodo_pago}').join(valorMetodo));
                 }
             });
-            if (actualizarCampo) $campo.val($seleccionada.data('texto'));
+            if (actualizarCampo) {
+                $campo.val($seleccionada.data('texto'));
+                if ($campo.is('textarea')) ajustarAlturaMensaje($campo);
+            }
         });
+    };
+
+    /**
+     * Ajusta la altura del mensaje a su contenido en móvil y escritorio.
+     * @param {jQuery} $campo Campo de mensaje.
+     */
+    const ajustarAlturaMensaje = ($campo) => {
+        const campo = $campo[0];
+        if (!campo) return;
+        if (!campo.getClientRects().length) return;
+
+        campo.style.overflowY = 'hidden';
+        campo.style.height = '0px';
+        const estilos = window.getComputedStyle(campo);
+        const bordes = parseFloat(estilos.borderTopWidth) + parseFloat(estilos.borderBottomWidth);
+        const relleno = parseFloat(estilos.paddingTop) + parseFloat(estilos.paddingBottom);
+        campo.style.height = `${campo.scrollHeight + (estilos.boxSizing === 'border-box' ? bordes : -relleno)}px`;
     };
 
     $(function () {
@@ -145,7 +173,9 @@
             const $inputAttachment = $form.find('input[name="attachment[]"], input[type="file"][name*="attachment"]');
             const $textareaNote = $form.find('textarea[name="note"], [name="note"]');
 
-            if ($inputAttachment.length) cargarPlantillas($textareaNote, $btnSubmit);
+            if ($inputAttachment.length) {
+                cargarPlantillas($textareaNote, $btnSubmit);
+            }
 
             /**
              * Obtiene o crea el elemento contenedor para mostrar el mensaje de error.

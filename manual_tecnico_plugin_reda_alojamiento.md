@@ -50,6 +50,7 @@ El procesador original coloca las imágenes en `public/uploads/booking`: el nuev
 
 ### `packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js`
   `cargarPlantillas($campo, $boton)` consulta el grupo correspondiente con animación de espera para `message_to_host` en `#checkout-form` y para `note` en el formulario de transferencia. Elige la primera cuando el campo está vacío, conserva los textos recuperados o escritos mientras carga y permite volver al personalizado. Las opciones se recalculan al cambiar país o método de pago; solo se actualiza el campo si coincide con la opción seleccionada sin editar. Si falla la consulta muestra el error y deja disponible la escritura manual. `validarFormularioPago()` comprueba exclusivamente el comprobante y la longitud de la nota de transferencia; el formulario inicial conserva su validación original.
+  `ajustarAlturaMensaje($campo)` adapta la altura de los mensajes de selección de pago y comprobante a su contenido tanto en móvil como en escritorio. Se recalcula al inicializar, cargar o cambiar la plantilla, editar el mensaje, cambiar país o método de pago, restaurar la página o cambiar el tamaño de pantalla; no altera el texto ni la validación.
 
 ### `packages/Reda/RedaAlojamiento/src/Http/Controllers/General/RedaInboxController.php`
   `adjuntarComprobantes()` vincula los comprobantes por ID de mensaje. `index()` y `message()` incorporan el vínculo al render inicial y a la carga dinámica.
@@ -246,7 +247,7 @@ Herramienta destructiva y deshabilitada por defecto. Solo se muestra y ejecuta c
 
 ### Observadores y Helpers
 - **packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php**
-  Observador registrado en `RedaAlojamientoServiceProvider` para el modelo original `App\Models\Bookings`. Al crearse una reserva (`created`), intercepta los valores de adultos y niños asegurados en sesión o en la petición y los persiste tanto en la tabla original `booking_details` (`field = 'adultos'`, `field = 'ninos'`) como en la tabla auxiliar `reserva_huespedes` (si está migrada).
+  Observador registrado en `RedaAlojamientoServiceProvider` para el modelo original `App\Models\Bookings`. Al crearse una reserva (`created`), intercepta los valores de adultos y niños asegurados en sesión o en la petición y los persiste tanto en la tabla original `booking_details` (`field = 'adultos'`, `field = 'ninos'`) como en la tabla auxiliar `reserva_huespedes` (si está migrada). Los atributos de `BookingDetails` se asignan explícitamente porque el modelo original no permite asignación masiva; un fallo se registra en el log de Laravel.
 
 - **packages/Reda/RedaAlojamiento/src/Helpers/helpers.php**
   Se incorporó la función helper `reda_obtener_desglose_huespedes($booking)`. Implementa una jerarquía de consulta: primero `reserva_huespedes`, luego `booking_details` y como fallback retrocompatible para reservas antiguas asigna el total de `guest` a Adultos y `0` a Niños. Retorna array asociativo con `adultos`, `ninos`, `total` y `texto` formateado.

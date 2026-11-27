@@ -2,6 +2,25 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [25 de Noviembre, 2026] - Desglose de huéspedes en «Ver reserva»
+- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261125-2107.sql` es el más reciente y su cabecera indica 20:06:31. `reserva_huespedes` no contiene filas y `booking_details` no contiene campos `adultos` ni `ninos`; las reservas 84, 85 y 86 tampoco tienen desglose guardado. No se modificaron datos históricos.
+- **Causa identificada:** `ReservaObserver.php` usaba `updateOrCreate` sobre `BookingDetails`, cuyos atributos están protegidos frente a asignación masiva. El error se capturaba antes de poder escribir en la tabla auxiliar.
+- **Código:** `packages/Reda/RedaAlojamiento/src/Observers/ReservaObserver.php` asigna explícitamente los atributos del detalle antes de guardarlo, para persistir adultos y niños en nuevas reservas, incluido cero niños. El modal existente ya utiliza el desglose. Por decisión del usuario, las reservas anteriores sin desglose siguen mostrando su total como adultos.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md`, este registro y la lista de `subir_archivos_puntuales.sh` con el observador. La ruta de `pagos.js` de la tarea anterior ya no figura en la lista de subida.
+- **Validación:** Sintaxis PHP 8.2 y formato de diferencias comprobados; no se ejecutó SQL ni se modificaron datos. Pruebas funcionales en Vesta pendientes para reservas nuevas con niños y sin niños.
+
+## [25 de Noviembre, 2026] - Altura automática de los mensajes de reserva y pago
+- **Solicitud:** Ajustar al texto los mensajes predefinidos tanto en selección de método de pago como en comprobante, en celular y escritorio.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js` comparte `ajustarAlturaMensaje()` entre ambos formularios. Recalcula la altura al cargar o seleccionar una plantilla, editar el texto, cambiar país o método de pago, restaurar la página o cambiar el tamaño de pantalla. El mensaje y las validaciones no se modifican.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro; `subir_archivos_puntuales.sh` conserva únicamente el JavaScript de esta solicitud, cuya ruta ya figura en `lista_archivos_aplicacion.md`.
+- **Validación:** Sintaxis JavaScript y formato de diferencias comprobados; no se consultaron ni modificaron datos. Compilación y pruebas funcionales en celular y escritorio pendientes en Vesta.
+
+## [25 de Noviembre, 2026] - Altura del mensaje de comprobante en celular
+- **Solicitud:** Mostrar completo el mensaje predefinido al anfitrión en la pantalla de carga del comprobante sin tener que desplazar el interior del campo en celular.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/vistas/pago/frontend/pagos.js` ajusta la altura del textarea `note` en el formulario de comprobante en pantallas de hasta 767 px. Se recalcula al cargar o seleccionar una plantilla, editar el mensaje, restaurar la página o cambiar el tamaño de pantalla; al volver a escritorio restituye los estilos originales. No modifica el contenido, la validación ni el formulario inicial.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md`, este registro y la lista de `subir_archivos_puntuales.sh` con el JavaScript de esta solicitud. La ruta ya estaba en `lista_archivos_aplicacion.md`; la lista anterior de la corrección del modal fue sustituida conforme a la directriz de subida.
+- **Validación:** Sintaxis JavaScript y formato de diferencias verificados. No se consultó ni modificó la base de datos; quedan pendientes la compilación y prueba funcional en Vesta.
+
 ## [25 de Noviembre, 2026] - Corrección del modal de reserva en celular
 - **Respaldo y diagnóstico:** `documentacion-torbian-2/BD/appvac_torbDev2-20261125-1221.sql` es del día actual; el log `documentacion-torbian-2/torbian.redetronic.top-1795651894664.log` registra el error de `classList` en `onReady` y el fallo posterior de `formatDate`.
 - **Código:** `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js` establece `disableMobile: true` en los calendarios de llegada y salida. Esto conserva el calendario de Flatpickr y su contenedor aun si no hay fechas deshabilitadas; las reglas de disponibilidad y el formato ISO permanecen iguales.
