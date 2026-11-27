@@ -18,6 +18,7 @@ import { obtenerConteoMediaciones } from '../../../general/menus/obtenerConteoMe
 
 /**
  * Función principal que orquesta la inyección y el comportamiento de los menús del plugin en el panel admin.
+ * Alinea a la izquierda el texto de "Alertas" y conserva su contador en el submenú "Mensajes y Alertas".
  * Incluye "Atención al comercio", el submenú de plantillas con ícono propio y el acceso a pruebas.
  */
 export const menuLateralAdmin = () =>
@@ -400,7 +401,7 @@ export const menuLateralAdmin = () =>
                                 <li class="nav-item">
                                     <a href="${linkAlertas}" class="nav-link btn-menu-alertas-item d-flex align-items-center justify-content-between ${esRutaAlertas ? 'active' : ''}">
                                         <i class="fa fa-bell nav-icon" style="font-size: 0.75rem;"></i>
-                                        <p class="reda-alertas-texto-admin">${labelAlertas}</p>
+                                        <p class="reda-alertas-texto-admin text-start">${labelAlertas}</p>
                                         <span id="reda-admin-sub-alertas-badge" class="badge bg-danger rounded-pill ms-auto d-none">0</span>
                                     </a>
                                 </li>

@@ -2,6 +2,12 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [27 de Noviembre, 2026] - Alineación de «Alertas» en el menú lateral admin
+- **Solicitud:** Alinear a la izquierda el texto de la subopción «Alertas» en «Mensajes y Alertas», de la misma forma que «Mensajes».
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js` agrega la clase Bootstrap `text-start` al texto de «Alertas». La insignia dinámica de alertas y el resto de la estructura del menú se conservan.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, este registro, `previo_cambios_realizados.md` y la ruta de `subir_archivos_puntuales.sh`. La ruta del JavaScript ya estaba registrada en `lista_archivos_aplicacion.md`.
+- **Validación:** Revisados los cambios y la lista puntual de subida; compilación y prueba visual pendientes en Vesta.
+
 ## [25 de Noviembre, 2026] - Desglose de huéspedes en «Ver reserva»
 - **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261125-2107.sql` es el más reciente y su cabecera indica 20:06:31. `reserva_huespedes` no contiene filas y `booking_details` no contiene campos `adultos` ni `ninos`; las reservas 84, 85 y 86 tampoco tienen desglose guardado. No se modificaron datos históricos.
 - **Causa identificada:** `ReservaObserver.php` usaba `updateOrCreate` sobre `BookingDetails`, cuyos atributos están protegidos frente a asignación masiva. El error se capturaba antes de poder escribir en la tabla auxiliar.
