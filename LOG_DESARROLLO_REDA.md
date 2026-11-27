@@ -2,6 +2,12 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [27 de Noviembre, 2026] - Corrección de distribución de «Alertas»
+- **Diagnóstico:** El usuario confirmó que la alineación anterior no funcionó tras subir y compilar. El enlace usa `justify-content-between`: al ocultarse la insignia, el espacio restante separa el texto del icono. `text-start` no cambia la posición del elemento dentro del contenedor flex.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js` elimina `justify-content-between` del enlace. La insignia conserva `ms-auto` y el comportamiento del contador.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md` y este registro. `subir_archivos_puntuales.sh` ya contiene únicamente el JavaScript de esta solicitud; su ruta ya figura en `lista_archivos_aplicacion.md`.
+- **Validación:** Sintaxis JavaScript y formato de diferencias comprobados; verificadas las reglas locales de Bootstrap para `justify-content-between`, `ms-auto` y `d-none`. Compilación y prueba visual en Vesta pendientes, con y sin alertas no leídas.
+
 ## [27 de Noviembre, 2026] - Fusión de trabajos de Alertas y KYC
 - **Solicitud:** Integrar el commit local de alineación de Alertas y el commit remoto de notificaciones KYC sin descartar ninguno.
 - **Resolución:** `previo_cambios_realizados.md` conserva los registros de Alertas, desglose de huéspedes y notificaciones KYC; se retiraron los marcadores del conflicto actual y los que ya estaban guardados en la versión remota. Este registro documenta la fusión.

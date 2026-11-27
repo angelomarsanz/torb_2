@@ -3,11 +3,12 @@
 ## Alineación de Alertas
 
 - **Fecha:** 27 de noviembre de 2026.
-- **Tarea:** Corregir la alineación del texto «Alertas» en el menú lateral del backend para que quede alineado a la izquierda, igual que «Mensajes».
-- **Archivos modificados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `manual_tecnico_plugin_reda_alojamiento.md`, `LOG_DESARROLLO_REDA.md` y `subir_archivos_puntuales.sh`.
-- **Código:** Se añadió la utilidad Bootstrap `text-start` a la etiqueta de «Alertas» sin cambiar su badge dinámico.
-- **Inventario:** La ruta del JavaScript ya existe en la categoría «ARCHIVOS JAVASCRIPT ADMIN» de `lista_archivos_aplicacion.md`; no se duplicó.
-- **Estado:** Cambio y documentación completados. Pendientes compilación y prueba visual en Vesta.
+- **Tarea actual:** Corregir la alineación de «Alertas», que permanece a la derecha tras la subida y compilación informadas por el usuario.
+- **Diagnóstico:** El enlace utiliza `justify-content-between`; cuando la insignia está oculta distribuye el icono y el texto en extremos opuestos. `text-start` solo alinea el texto dentro del elemento, no cambia su posición en el enlace.
+- **Archivos modificados:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js`, `manual_tecnico_plugin_reda_alojamiento.md`, `LOG_DESARROLLO_REDA.md` y este punto de control. La lista puntual ya contiene únicamente el JavaScript de esta solicitud; no requiere cambios.
+- **Código:** Se retiró `justify-content-between`; la insignia conserva `ms-auto` para permanecer a la derecha cuando es visible.
+- **Validación:** Sintaxis JavaScript y formato de diferencias comprobados; revisadas las reglas Bootstrap de distribución y visibilidad.
+- **Estado:** Pendientes subida, compilación y prueba visual en Vesta con y sin alertas no leídas; se conservan los puntos de control de las otras tareas pendientes.
 ## Desglose de huéspedes
 
 - **Fecha:** 25 de noviembre de 2026.
