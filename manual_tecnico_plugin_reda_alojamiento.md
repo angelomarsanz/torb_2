@@ -133,7 +133,7 @@ Los correos pendientes se guardan en la base de datos y el agente asignado puede
   `generarListaAdjuntosHtml()` y `abrirMediaViewer()` muestran archivos propios, incluso PDF con rutas autenticadas; `renderizarMensajes()` escapa el contenido.
 
 ### `packages/Reda/RedaAlojamiento/resources/js/admin/vistas/alerta/indexAlertas.js`
-  `renderizarAlertas()` escapa textos y datos de usuario antes de insertarlos en el HTML.
+  `renderizarAlertas()` escapa textos y datos de usuario antes de insertarlos en el HTML. Reconoce las alertas de verificación de identidad (tipo `kyc`): muestran el ícono de tarjeta de identidad, la etiqueta "Verificación de identidad" y el enlace "Revisar solicitud" a `/admin/reda/kyc?grupo=pendientes&buscar=<correo del usuario>`. Ese enlace reutiliza la clase `btn-ir-mediaciones`, por lo que, igual que "Ver mediación", marca la alerta como leída y muestra la animación de espera.
 
 ### `packages/Reda/RedaAlojamiento/src/Services/ReinicioMediacionesService.php`
   `reiniciar()` incluye las solicitudes de información en el reinicio, independientemente de su estado. Guarda en una cola durable las rutas privadas y elimina sus registros y mensajes inequívocos en la misma transacción que las mediaciones.
@@ -714,6 +714,23 @@ Se inyecta con JavaScript en la pantalla existente "Verificaciones" (`users/edit
   `t()` (traducción con respaldo), `escapar()`, `mensajeSeguro()` y `formatearTamano()`.
 - **resources/sass/main.scss** (ampliado): clases `.reda-kyc-*` del frontend (tarjeta, opciones táctiles, formulario, espacios de archivo); en celular el formulario ocupa toda la pantalla y las opciones se apilan.
 - **Http/Controllers/Kyc/KycUsuarioController.php** (modificado): `retorno()` y el fallo de `iniciarDidit()` sin AJAX ahora redirigen a la pantalla de verificaciones (`kyc.url_seccion`) en lugar del dashboard.
+
+### Notificaciones del KYC (Fase 8)
+Avisos automáticos cuando cambia una verificación. El usuario recibe un correo; los administradores activos con el permiso `manage_kyc` reciben una alerta en el panel (`alertas_admin`, tipo `kyc`, sin migración porque `tipo` es `varchar`) y un correo. `KycService` solo emite eventos tras confirmar la transacción y no envía nada: `NotificacionesKycService` los escucha (registrados en `RedaAlojamientoServiceProvider`).
+- **src/Services/Kyc/NotificacionesKycService.php**
+  Escuchas `alCambiarEstado()`, `alSolicitarCorreccion()` y `alAtenderCorreccion()`. `situacionParaUsuario()` y `situacionParaAdministradores()` (públicos y sin efectos) deciden qué avisar: al usuario, `recibida` (solicitud manual nueva), `verificada`, `rechazada`, `correccion`, y, solo si lo decidió Didit (origen `didit_webhook` o `didit_consulta`), `no_completada`, `expirada` y `perdida` (verificación vigente revocada); a los administradores, `nueva_manual`, `correccion_atendida` y `didit_en_revision`. El error técnico al crear la sesión de Didit (origen `sistema`) no se notifica porque el usuario ya lo vio en pantalla. `administradoresDeKyc()` aplica el mismo criterio que `KycPolicy` (administrador `Active` con `manage_kyc`). Las alertas se crean en el momento; los correos se envían tras responder la petición (`app()->terminating()`), para no retrasar al usuario ni al webhook de Didit. Todo va protegido: un error de correo o de alertas se registra (tipo y línea, sin direcciones ni nombres) y nunca interrumpe el KYC. Interruptores en `config/kyc.php` (`notificaciones`: `habilitadas`, `correo_usuario`, `alerta_admin`, `correo_admin`) y `KYC_NOTIFICACIONES=false` en `.env`.
+- **src/Events/CorreccionKycAtendida.php**
+  Evento nuevo que `KycService::reenviarCorreccion()` emite al confirmarse la transacción cuando el usuario responde una corrección. La solicitud sigue en `manual_review`, por lo que no hay cambio de estado ni `EstadoKycCambiado`; este evento es el que avisa a los administradores.
+- **resources/views/emails/kyc_notificacion_usuario.blade.php**
+  Plantilla única para los correos al usuario. Recibe título, párrafos, texto del botón y color ya traducidos. No incluye texto libre del administrador (motivo del rechazo o corrección pedida) ni datos del documento: solo avisa y enlaza a `users/edit-verification`, protegida por la sesión.
+- **resources/views/emails/kyc_notificacion_admin.blade.php**
+  Plantilla para los administradores: título, mensaje, nombre y correo de la cuenta del usuario y botón que abre el panel KYC filtrado por ese correo. Nunca muestra datos del documento.
+- **src/Services/Kyc/KycService.php** (modificado): emite `CorreccionKycAtendida`; cabecera y documentación de `reenviarCorreccion()` actualizadas.
+- **config/kyc.php** (modificado): bloque `notificaciones`.
+- **src/RedaAlojamientoServiceProvider.php** (modificado): singleton de `NotificacionesKycService` y tres `Event::listen`.
+- **resources/js/admin/vistas/alerta/indexAlertas.js** (modificado): tipo de alerta `kyc` (ver su entrada más arriba).
+- **resources/lang/es.json** (modificado): 42 textos nuevos de los correos y de las alertas.
+- **src/Observers/BloqueoKycObserver.php** (ajuste de la integración): ahora considera consulta del chat tanto el estado `Inquiry` (que crea `ChatController` en este repositorio) como el vacío; sin este ajuste un usuario sin KYC no podía iniciar un chat.
 
 ## Sistema de Puntos de Control y Memoria Operativa
 

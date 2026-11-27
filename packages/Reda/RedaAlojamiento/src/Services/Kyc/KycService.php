@@ -23,6 +23,9 @@
  *    y el evento se crean juntos. Una verificación Didit sin terminar se reemplaza por la manual (queda como failed
  *    en el historial y no genera un aviso intermedio). Las correcciones solicitadas por un administrador se atienden
  *    sin cambiar de estado y conservando los documentos reemplazados como historial.
+ *  - Avisos: tras confirmar la transacción emite EstadoKycCambiado (cambio de estado), CorreccionKycSolicitada (el
+ *    administrador pide una corrección) y CorreccionKycAtendida (el usuario la responde). NotificacionesKycService
+ *    los escucha; este servicio no envía correos ni alertas.
  *
  * Todas las operaciones públicas devuelven la estructura estándar del plugin:
  * ['success','message','mensaje_usuario','respuesta','code'].
@@ -42,6 +45,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Reda\RedaAlojamiento\Enums\EstadoKyc;
 use Reda\RedaAlojamiento\Enums\MetodoKyc;
+use Reda\RedaAlojamiento\Events\CorreccionKycAtendida;
 use Reda\RedaAlojamiento\Events\CorreccionKycSolicitada;
 use Reda\RedaAlojamiento\Events\EstadoKycCambiado;
 use Reda\RedaAlojamiento\Models\Kyc\EventoKyc;
@@ -500,6 +504,7 @@ class KycService
     /**
      * Reenvía datos y/o documentos cuando un administrador solicitó una corrección. La solicitud sigue en
      * manual_review; los documentos reemplazados se conservan como historial y se registra la atención de la corrección.
+     * Al confirmarse la transacción emite CorreccionKycAtendida para avisar a los administradores.
      *
      * @param  array<string,mixed> $datos
      * @param  array<string,mixed> $archivos Solo los documentos que se reemplazan.
@@ -596,6 +601,10 @@ class KycService
                     'detalle'         => ['campos_modificados' => $modificados, 'documentos' => array_keys($preparados)],
                     'ip'              => $ip,
                 ]);
+
+                // Avisa a los administradores solo si la transacción se confirma.
+                $idSolicitudAtendida = (int) $solicitud->id;
+                DB::afterCommit(static fn () => event(new CorreccionKycAtendida($usuarioId, $idSolicitudAtendida)));
 
                 return ['ok' => true];
             });

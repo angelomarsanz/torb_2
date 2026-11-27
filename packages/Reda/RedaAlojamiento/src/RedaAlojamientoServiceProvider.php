@@ -51,6 +51,7 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
         $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\KycService::class);
         $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\BloqueoKyc::class);
         $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\ClasificadorOperacionKyc::class);
+        $this->app->singleton(\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class);
 
         // Disco privado de documentos de identidad (sin URL pública, permisos restrictivos). Solo se define si
         // el proyecto no lo configuró. Con KYC_RUTA_PRIVADA puede ubicarse fuera de la raíz web.
@@ -121,6 +122,12 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
             $programador->command('reda:kyc-sincronizar')->everyTenMinutes()->withoutOverlapping();
             $programador->command('reda:kyc-depurar')->dailyAt('03:30')->withoutOverlapping();
         });
+
+        // Avisos del KYC (Fase 8): correo al usuario y alerta/correo a los administradores con manage_kyc.
+        // Los eventos los emite KycService tras confirmar la transacción; el servicio nunca interrumpe el KYC.
+        \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\EstadoKycCambiado::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alCambiarEstado']);
+        \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\CorreccionKycSolicitada::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alSolicitarCorreccion']);
+        \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\CorreccionKycAtendida::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alAtenderCorreccion']);
 
         // Carga las vistas con el nuevo namespace 'reda-alojamiento'
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'reda-alojamiento');
