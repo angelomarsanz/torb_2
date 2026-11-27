@@ -7,6 +7,7 @@
  * Funcionalidades:
  * - Normaliza el avatar de la tarjeta resumen superior en dispositivos móviles.
  * - Oculta el sidebar de reserva original.
+ * - Presenta la tarifa base y la capacidad en una tarjeta informativa sin formulario.
  * - Inyecta un botón flotante responsivo.
  * - Verifica reservas activas antes de permitir una nueva reservación.
  * - Cambia dinámicamente el botón a "Ver reserva" si ya existe una reservación.
@@ -71,13 +72,14 @@
         },
 
         /**
-         * Configura la interfaz de usuario inicial, ocultando el sidebar original 
-         * e inyectando el botón flotante.
+         * Oculta el sidebar original, presenta su resumen informativo e inyecta el botón flotante.
          */
         setupUI: function() {
             const self = this;
             const $form = $(this.config.formId);
             const $sidebar = $(this.config.sidebarContainerId);
+
+            this.mostrarResumenReserva($sidebar, $form);
 
             // 1. Ocultar sidebar original (agregando clase de SASS)
             $sidebar.closest('.card').parent().addClass('hide-booking-sidebar');
@@ -111,6 +113,52 @@
 
             $saveBtn.find('span:not(.display-off)').text(enviarText);
             $saveBtn.addClass('btn-enviar-latido');
+        },
+
+        /**
+         * Reutiliza el precio formateado y la capacidad del formulario original sin duplicar sus controles.
+         */
+        mostrarResumenReserva: function($sidebar, $form) {
+            const precio = $sidebar.find('#booking-banner .row > .text-white').first().text().trim();
+            const capacidad = $form.find('#number_of_guests option').last().val();
+            const $tarjeta = $sidebar.closest('.card');
+
+            if (!precio || !$tarjeta.length) {
+                console.error('REDA Property Detail: No se encontró el precio o la tarjeta de reserva.');
+                return;
+            }
+
+            const traducciones = window.RedaAlojamientoJson || {};
+            const $resumen = $('<section class="reda-resumen-reserva"></section>');
+            const $encabezado = $('<div class="reda-resumen-reserva-encabezado"></div>');
+            $encabezado.append('<span class="reda-resumen-reserva-icono" aria-hidden="true"><i class="far fa-calendar-alt"></i></span>');
+            $encabezado.append($('<h2></h2>').text(traducciones['Información para tu reserva'] || 'Información para tu reserva'));
+            $resumen.append($encabezado);
+
+            $resumen.append($('<p class="reda-resumen-reserva-etiqueta"></p>').text(traducciones['Tarifa base por noche'] || 'Tarifa base por noche'));
+            $resumen.append($('<p class="reda-resumen-reserva-precio"></p>').text(precio));
+
+            if (capacidad && Number.isInteger(Number(capacidad)) && Number(capacidad) > 0) {
+                const $capacidad = $('<div class="reda-resumen-reserva-capacidad"></div>');
+                $capacidad.append('<i class="fa fa-users" aria-hidden="true"></i>');
+                $capacidad.append($('<span></span>').text(
+                    (traducciones['Capacidad máxima'] || 'Capacidad máxima') + ': ' + capacidad
+                    + ' ' + (Number(capacidad) === 1
+                        ? (traducciones['huésped'] || 'huésped')
+                        : (traducciones['huéspedes'] || 'huéspedes'))
+                ));
+                $resumen.append($capacidad);
+            } else {
+                console.error('REDA Property Detail: No se encontró una capacidad válida para el alojamiento.');
+            }
+
+            $resumen.append($('<p class="reda-resumen-reserva-nota"></p>').text(
+                traducciones['La tarifa puede variar según las fechas y los cargos adicionales.']
+                    || 'La tarifa puede variar según las fechas y los cargos adicionales.'
+            ));
+
+            $tarjeta.addClass('reda-resumen-reserva-tarjeta');
+            $sidebar.before($resumen);
         },
 
         /**

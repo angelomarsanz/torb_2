@@ -2,6 +2,18 @@
 
 Este archivo sirve como memoria técnica para que Gemini pueda recordar los avances, decisiones arquitectónicas y tareas completadas en sesiones anteriores.
 
+## [27 de Noviembre, 2026] - Resumen informativo de reserva en detalle de propiedad
+- **Solicitud:** Mostrar información general del alojamiento en la columna lateral sin formulario y conservar el botón flotante. El usuario eligió tarifa por noche y capacidad, sin detalles de reservas existentes.
+- **Respaldo:** `documentacion-torbian-2/BD/appvac_torbDev2-20261127-1555.sql`, generación interna 14:55:34. `properties.accommodates` admite nulos; `property_price` se relaciona con `properties.id` mediante `property_id` y contiene tarifas de fin de semana y cargos adicionales. En el respaldo, la propiedad 4 tiene tarifa de fin de semana distinta a la base. No se consultaron ni modificaron datos de la base.
+- **Código:** `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js` muestra la tarifa base ya formateada y la capacidad del selector existente, sin clonar controles, cambiar el modal ni efectuar consultas adicionales. Informa en consola si faltan datos y advierte que el precio puede variar. `packages/Reda/RedaAlojamiento/resources/sass/main.scss` aporta los estilos para escritorio y celular; es el SCSS frontend compilado existente. `packages/Reda/RedaAlojamiento/resources/lang/es.json` añade los textos.
+- **Documentación y subida:** Actualizados `manual_tecnico_plugin_reda_alojamiento.md`, `previo_cambios_realizados.md`, este registro y la lista de `subir_archivos_puntuales.sh` con los tres archivos desplegables. Los tres ya están en `lista_archivos_aplicacion.md`.
+- **Validación:** Sintaxis JavaScript, JSON y formato de diferencias revisados; pendientes compilación y prueba visual y funcional en Vesta.
+
+## [27 de Noviembre, 2026] - Revisión de la columna de reserva en detalle de propiedad
+- **Solicitud:** Investigar el espacio vacío a la derecha de la vista `property.single`, sin alterar el comportamiento.
+- **Diagnóstico:** `resources/views/property/single.blade.php` contiene en esa columna el precio por noche y el formulario original de reserva. `packages/Reda/RedaAlojamiento/resources/js/vistas/frontend/propiedad_detalle.js` oculta `#booking-price`, inyecta el botón flotante y traslada el formulario al modal al abrirlo. La tarjeta y la columna permanecen en la distribución original; el precio del encabezado queda fuera del formulario trasladado. La ocultación ya figuraba en el commit inicial `ad32e78` del repositorio disponible.
+- **Alcance:** Revisión estática, sin modificar código de aplicación, consultar datos ni comprobar visualmente Vesta. Se actualizó este registro y la lista de `subir_archivos_puntuales.sh` a `Ninguno`; la corrección anterior de Alertas sigue pendiente de confirmación de subida.
+
 ## [27 de Noviembre, 2026] - Corrección de distribución de «Alertas»
 - **Diagnóstico:** El usuario confirmó que la alineación anterior no funcionó tras subir y compilar. El enlace usa `justify-content-between`: al ocultarse la insignia, el espacio restante separa el texto del icono. `text-start` no cambia la posición del elemento dentro del contenedor flex.
 - **Código:** `packages/Reda/RedaAlojamiento/resources/js/admin/general/menus/menuLateralAdmin.js` elimina `justify-content-between` del enlace. La insignia conserva `ms-auto` y el comportamiento del contador.
