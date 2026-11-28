@@ -24,8 +24,12 @@
  *    en el historial y no genera un aviso intermedio). Las correcciones solicitadas por un administrador se atienden
  *    sin cambiar de estado y conservando los documentos reemplazados como historial.
  *  - Avisos: tras confirmar la transacción emite EstadoKycCambiado (cambio de estado), CorreccionKycSolicitada (el
- *    administrador pide una corrección) y CorreccionKycAtendida (el usuario la responde). NotificacionesKycService
- *    los escucha; este servicio no envía correos ni alertas.
+ *    administrador pide una corrección), CorreccionKycAtendida (el usuario la responde) y VerificacionKycEliminada
+ *    (un administrador elimina la verificación). NotificacionesKycService los escucha; este servicio no envía
+ *    correos ni alertas.
+ *  - Eliminación (eliminarVerificacion): un administrador con manage_kyc puede borrar por completo la verificación
+ *    de un usuario (solicitudes con sus datos personales, documentos y archivos) y dejarlo en not_started para que
+ *    vuelva a verificarse. Se conserva la auditoría sin datos personales y un evento "kyc_eliminado" con el motivo.
  *
  * Todas las operaciones públicas devuelven la estructura estándar del plugin:
  * ['success','message','mensaje_usuario','respuesta','code'].
@@ -48,6 +52,8 @@ use Reda\RedaAlojamiento\Enums\MetodoKyc;
 use Reda\RedaAlojamiento\Events\CorreccionKycAtendida;
 use Reda\RedaAlojamiento\Events\CorreccionKycSolicitada;
 use Reda\RedaAlojamiento\Events\EstadoKycCambiado;
+use Reda\RedaAlojamiento\Events\VerificacionKycEliminada;
+use Reda\RedaAlojamiento\Models\Kyc\DocumentoKyc;
 use Reda\RedaAlojamiento\Models\Kyc\EventoKyc;
 use Reda\RedaAlojamiento\Models\Kyc\SolicitudKyc;
 use Reda\RedaAlojamiento\Models\Kyc\UsuarioKyc;
@@ -1101,6 +1107,136 @@ class KycService
             ]));
         } catch (Throwable $e) {
             Log::warning('KYC: no se pudo registrar la consulta de la solicitud ' . $solicitudId . ' (' . get_class($e) . ').');
+        }
+    }
+
+    /**
+     * Elimina por completo la verificación de identidad del usuario dueño de la solicitud indicada, para que pueda
+     * volver a enviarla (por ejemplo, si un administrador aprobó por error). Exige el permiso manage_kyc en el
+     * servidor y un motivo obligatorio (de 5 a 500 caracteres).
+     *
+     * En una sola transacción, con la fila del usuario bloqueada (serializa a dos administradores y al propio usuario):
+     *  - borra los documentos y las solicitudes del usuario, con todos sus datos personales;
+     *  - deja usuarios_kyc en not_started, sin solicitud activa ni verificación vigente;
+     *  - conserva los eventos de auditoría (no contienen datos personales; pierden el vínculo con la solicitud) y
+     *    agrega el evento "kyc_eliminado" con el administrador, la IP, el motivo y las cantidades eliminadas.
+     * Los archivos físicos se borran DESPUÉS de confirmar la transacción: si algo falla, no se pierde ni un archivo.
+     * Si un archivo no se puede borrar queda huérfano pero cifrado y sin vínculos; se informa en la respuesta.
+     * Una verificación de Didit abierta no se cancela en Didit: sus webhooks posteriores se ignoran (sesión
+     * desconocida) y el usuario sigue sin verificar.
+     * Al confirmarse emite VerificacionKycEliminada para avisar al usuario.
+     *
+     * @return array{success:bool,message:string,mensaje_usuario:string,respuesta:mixed,code:int}
+     */
+    public function eliminarVerificacion(int $adminId, int $solicitudId, ?string $motivo, ?string $ip = null): array
+    {
+        try {
+            if ($error = $this->exigirAdministrador($adminId)) {
+                return $error;
+            }
+
+            $motivo = $this->limpiarTexto($motivo);
+
+            if ($motivo === null || mb_strlen($motivo) < 5 || mb_strlen($motivo) > 500) {
+                return $this->respuestaValidacion(['motivo' => [__('El motivo de la eliminación es obligatorio (entre 5 y 500 caracteres).')]]);
+            }
+
+            $resultado = $this->transaccion(function () use ($adminId, $solicitudId, $motivo, $ip) {
+                $existente = SolicitudKyc::find($solicitudId);
+
+                if (!$existente) {
+                    return ['error' => $this->respuesta(false, __('Verificación no encontrada'),
+                        __('La verificación ya no existe (otro administrador pudo haberla eliminado).'), 'no_encontrada', 404)];
+                }
+
+                $usuarioId   = (int) $existente->user_id;
+                $registro    = $this->bloquearUsuario($usuarioId);
+                $solicitudes = SolicitudKyc::where('user_id', $usuarioId)->lockForUpdate()->get();
+
+                // Otro administrador pudo eliminarla mientras esta petición esperaba el bloqueo.
+                if ($solicitudes->isEmpty()) {
+                    return ['error' => $this->respuesta(false, __('Verificación no encontrada'),
+                        __('La verificación ya no existe (otro administrador pudo haberla eliminado).'), 'no_encontrada', 404)];
+                }
+
+                $documentos = DocumentoKyc::where('user_id', $usuarioId)->get();
+                $rutas      = $documentos->where('estado', '!=', DocumentoKyc::ESTADO_ELIMINADO)->pluck('ruta')->filter()->values()->all();
+                $anterior   = $registro->estadoEfectivo();
+                $metodo     = $registro->metodo_verificacion?->value;
+
+                foreach ($documentos as $documento) {
+                    $documento->delete();
+                }
+
+                // Antes de borrar las solicitudes: usuarios_kyc.solicitud_activa_id apunta a una de ellas.
+                $registro->estado                  = EstadoKyc::SinIniciar;
+                $registro->solicitud_activa_id     = null;
+                $registro->metodo_verificacion     = null;
+                $registro->verificado_en           = null;
+                $registro->verificado_por_admin_id = null;
+                $registro->expira_en               = null;
+                $registro->version                 = ((int) $registro->version) + 1;
+                $registro->save();
+
+                foreach ($solicitudes as $solicitud) {
+                    $solicitud->delete();
+                }
+
+                $this->registrarEvento([
+                    'user_id'         => $usuarioId,
+                    'solicitud_id'    => null,
+                    'origen'          => EventoKyc::ORIGEN_ADMIN,
+                    'tipo'            => 'kyc_eliminado',
+                    'estado_anterior' => $anterior->value,
+                    'estado_nuevo'    => EstadoKyc::SinIniciar->value,
+                    'resultado'       => EventoKyc::RESULTADO_PROCESADO,
+                    'detalle'         => array_filter([
+                        'motivo'      => $motivo,
+                        'metodo'      => $metodo,
+                        'solicitudes' => $solicitudes->count(),
+                        'documentos'  => $documentos->count(),
+                    ], static fn ($valor) => $valor !== null),
+                    'admin_id'        => $adminId,
+                    'ip'              => $ip,
+                ]);
+
+                unset($this->cacheVerificado[$usuarioId]);
+
+                DB::afterCommit(function () use ($usuarioId, $adminId) {
+                    unset($this->cacheVerificado[$usuarioId]);
+                    event(new VerificacionKycEliminada($usuarioId, $adminId));
+                });
+
+                return [
+                    'usuario_id'  => $usuarioId,
+                    'solicitudes' => $solicitudes->count(),
+                    'documentos'  => $documentos->count(),
+                    'rutas'       => $rutas,
+                ];
+            });
+
+            if (isset($resultado['error'])) {
+                return $resultado['error'];
+            }
+
+            $pendientes = $this->documentos->eliminarArchivosFisicos($resultado['rutas']);
+
+            if ($pendientes > 0) {
+                Log::warning('KYC: la verificación del usuario ' . $resultado['usuario_id'] . ' se eliminó, pero ' . $pendientes . ' archivo(s) físico(s) no se pudieron borrar y deben retirarse manualmente.');
+            }
+
+            return $this->respuesta(true, __('Verificación eliminada'),
+                $pendientes > 0
+                    ? __('La verificación se eliminó de la base de datos, pero :n archivo(s) no se pudieron borrar del disco. Quedaron cifrados y sin vínculos; avisa a soporte técnico para retirarlos.', ['n' => $pendientes])
+                    : __('Se eliminaron los datos y documentos de verificación del usuario. Podrá volver a enviar su verificación de identidad.'),
+                [
+                    'usuario_id'          => $resultado['usuario_id'],
+                    'solicitudes'         => $resultado['solicitudes'],
+                    'documentos'          => $resultado['documentos'],
+                    'archivos_pendientes' => $pendientes,
+                ], 200);
+        } catch (Throwable $e) {
+            return $this->errorInterno($e, 'eliminarVerificacion');
         }
     }
 

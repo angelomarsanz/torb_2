@@ -9,6 +9,9 @@
  *  - contadores(): cantidad de solicitudes por grupo de estado (para las pestañas).
  *  - detalle(): todo lo necesario para la pantalla de una solicitud: datos, documentos con su historial, resultado
  *    de Didit, otras solicitudes del usuario, coincidencia de documento y el historial de cambios.
+ *  - listarEliminaciones() e historialUsuario(): consulta de las verificaciones eliminadas por un administrador
+ *    (quién, cuándo, motivo y cantidades) y de los eventos de auditoría que se conservan de cada usuario. Esos
+ *    eventos no contienen datos personales, pero ya no se vinculan a ninguna solicitud.
  * No escribe en la base de datos ni decide permisos: eso lo hacen KycService y KycPolicy.
  *
  * @package    Reda\RedaAlojamiento
@@ -43,6 +46,9 @@ class ConsultaKycAdmin
             'expirados'   => [EstadoKyc::Expirado->value],
         ];
     }
+
+    /** Tipo del evento que deja KycService::eliminarVerificacion(). */
+    public const TIPO_ELIMINACION = 'kyc_eliminado';
 
     public function __construct(private readonly KycService $kyc)
     {
@@ -99,6 +105,7 @@ class ConsultaKycAdmin
     {
         $porEstado = SolicitudKyc::query()->selectRaw('estado, count(*) as total')->groupBy('estado')->pluck('total', 'estado');
         $resultado = ['todos' => (int) $porEstado->sum()];
+        $resultado['eliminadas'] = EventoKyc::query()->where('tipo', self::TIPO_ELIMINACION)->count();
 
         foreach (self::grupos() as $grupo => $estados) {
             $resultado[$grupo] = (int) collect($estados)->sum(fn ($e) => (int) ($porEstado[$e] ?? 0));
@@ -152,6 +159,53 @@ class ConsultaKycAdmin
             'historial'     => $historial,
             'coincidencias' => $this->kyc->coincidenciasDocumento($solicitud),
             'es_manual_abierta' => $solicitud->metodo?->value === 'manual' && $solicitud->estado === EstadoKyc::RevisionManual,
+        ];
+    }
+
+    /**
+     * Verificaciones eliminadas por un administrador, de la más reciente a la más antigua (10 por página).
+     * El motivo, el método y las cantidades salen del detalle del evento "kyc_eliminado".
+     */
+    public function listarEliminaciones(): LengthAwarePaginator
+    {
+        return EventoKyc::query()
+            ->leftJoin('users', 'users.id', '=', 'eventos_kyc.user_id')
+            ->leftJoin('admin', 'admin.id', '=', 'eventos_kyc.admin_id')
+            ->where('eventos_kyc.tipo', self::TIPO_ELIMINACION)
+            ->select('eventos_kyc.*', 'users.first_name as usuario_nombre', 'users.last_name as usuario_apellido',
+                'users.email as usuario_correo', 'admin.username as admin_nombre')
+            ->orderByDesc('eventos_kyc.id')
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    /**
+     * Historial de auditoría de un usuario (10 por página, del más reciente al más antiguo) y los datos básicos de
+     * su cuenta, o null si el usuario no existe. Incluye los eventos que sobreviven a la eliminación de su
+     * verificación.
+     *
+     * @return array{usuario:object,eventos:LengthAwarePaginator,eliminaciones:int}|null
+     */
+    public function historialUsuario(int $usuarioId): ?array
+    {
+        $usuario = DB::table('users')->where('id', $usuarioId)->first(['id', 'first_name', 'last_name', 'email', 'status', 'deleted_at']);
+
+        if (!$usuario) {
+            return null;
+        }
+
+        $eventos = EventoKyc::query()
+            ->leftJoin('admin', 'admin.id', '=', 'eventos_kyc.admin_id')
+            ->where('eventos_kyc.user_id', $usuarioId)
+            ->select('eventos_kyc.*', 'admin.username as admin_nombre')
+            ->orderByDesc('eventos_kyc.id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return [
+            'usuario'       => $usuario,
+            'eventos'       => $eventos,
+            'eliminaciones' => EventoKyc::query()->where('user_id', $usuarioId)->where('tipo', self::TIPO_ELIMINACION)->count(),
         ];
     }
 

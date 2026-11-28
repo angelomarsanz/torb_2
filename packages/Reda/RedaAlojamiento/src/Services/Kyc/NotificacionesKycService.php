@@ -5,7 +5,8 @@
  * correspondientes:
  *
  *  USUARIO (correo): recibimos tu solicitud manual, identidad verificada, solicitud rechazada, corrección solicitada,
- *  verificación de Didit no completada, verificación expirada y verificación que dejó de estar vigente.
+ *  verificación de Didit no completada, verificación expirada y verificación que dejó de estar vigente,
+ *  verificación eliminada por un administrador (puede volver a enviarla).
  *  ADMINISTRADORES activos con el permiso manage_kyc (alerta en alertas_admin con tipo "kyc" y correo): llegó una
  *  solicitud manual nueva, el usuario respondió una corrección, o Didit dejó una verificación en revisión.
  *
@@ -13,8 +14,8 @@
  *  - Un aviso nunca interrumpe el KYC: todo se ejecuta protegido (cualquier error se registra sin datos personales) y
  *    los correos se envían después de responder la petición (terminating), para no demorar al usuario ni al webhook
  *    de Didit con el servidor de correo.
- *  - Los correos no incluyen el texto libre del administrador (motivo del rechazo, corrección solicitada) ni datos del
- *    documento: solo avisan y enlazan a la pantalla de verificaciones, protegida por la sesión del usuario.
+ *  - Los correos no incluyen el texto libre del administrador (motivo del rechazo, corrección solicitada, motivo de la
+ *    eliminación) ni datos del documento: solo avisan y enlazan a la pantalla de verificaciones, protegida por la sesión del usuario.
  *  - Fallos, expiraciones y pérdidas de verificación se avisan solo si provienen de una decisión de Didit. El error
  *    técnico al crear la sesión (origen "sistema") no se notifica: el usuario ya lo vio en pantalla.
  *  - Los avisos se pueden apagar con KYC_NOTIFICACIONES=false o por canal en config/kyc.php (notificaciones).
@@ -36,6 +37,7 @@ use Reda\RedaAlojamiento\Enums\EstadoKyc;
 use Reda\RedaAlojamiento\Events\CorreccionKycAtendida;
 use Reda\RedaAlojamiento\Events\CorreccionKycSolicitada;
 use Reda\RedaAlojamiento\Events\EstadoKycCambiado;
+use Reda\RedaAlojamiento\Events\VerificacionKycEliminada;
 use Reda\RedaAlojamiento\Models\Alerta\AlertaAdmin;
 use Reda\RedaAlojamiento\Models\Kyc\EventoKyc;
 use Reda\RedaAlojamiento\Policies\KycPolicy;
@@ -83,6 +85,16 @@ class NotificacionesKycService
     {
         if ($this->habilitado()) {
             $this->avisarUsuario($evento->usuarioId, 'correccion');
+        }
+    }
+
+    /**
+     * Avisa al usuario de que un administrador eliminó su verificación y de que puede enviarla de nuevo.
+     */
+    public function alEliminarVerificacion(VerificacionKycEliminada $evento): void
+    {
+        if ($this->habilitado()) {
+            $this->avisarUsuario($evento->usuarioId, 'eliminada');
         }
     }
 
@@ -227,6 +239,16 @@ class NotificacionesKycService
                     __('Inicia sesión para ver qué debes corregir y enviar la corrección.'),
                 ],
                 'boton'    => __('Corregir mi solicitud'),
+                'color'    => '#d68a00',
+            ],
+            'eliminada' => [
+                'asunto'   => __('Tu verificación de identidad fue eliminada'),
+                'titulo'   => __('Tu verificación fue eliminada'),
+                'parrafos' => [
+                    __('Un administrador eliminó tu verificación de identidad junto con los datos y documentos que enviaste.'),
+                    __('Mientras no vuelvas a verificarte no podrás publicar ni reservar. Puedes enviar tu verificación de nuevo cuando quieras.'),
+                ],
+                'boton'    => __('Verificar mi identidad'),
                 'color'    => '#d68a00',
             ],
             'no_completada' => [

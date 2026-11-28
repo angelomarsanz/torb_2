@@ -128,6 +128,7 @@ class RedaAlojamientoServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\EstadoKycCambiado::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alCambiarEstado']);
         \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\CorreccionKycSolicitada::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alSolicitarCorreccion']);
         \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\CorreccionKycAtendida::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alAtenderCorreccion']);
+        \Illuminate\Support\Facades\Event::listen(\Reda\RedaAlojamiento\Events\VerificacionKycEliminada::class, [\Reda\RedaAlojamiento\Services\Kyc\NotificacionesKycService::class, 'alEliminarVerificacion']);
 
         // Carga las vistas con el nuevo namespace 'reda-alojamiento'
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'reda-alojamiento');

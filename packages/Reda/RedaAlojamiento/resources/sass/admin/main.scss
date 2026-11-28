@@ -1635,3 +1635,12 @@
         flex: 1 1 auto;
     }
 }
+
+/* Motivo de una eliminación de verificación KYC: conserva los saltos de línea sin interpretar HTML. */
+.reda-kyc-motivo {
+    max-width: 380px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: .85rem;
+}

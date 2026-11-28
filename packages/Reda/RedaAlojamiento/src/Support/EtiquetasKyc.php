@@ -35,6 +35,7 @@ class EtiquetasKyc
             'solicitud_consultada'         => __('Detalle consultado por un administrador'),
             'documento_consultado'         => __('Documento consultado'),
             'documentos_eliminados'        => __('Documentos eliminados por retención'),
+            'kyc_eliminado'                => __('Verificación eliminada por un administrador'),
             'inicio_verificacion_didit'    => __('Verificación con Didit iniciada'),
             'sesion_didit_creada'          => __('Sesión de Didit creada'),
             'error_creacion_sesion_didit'  => __('Error al crear la sesión de Didit'),

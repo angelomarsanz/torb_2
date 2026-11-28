@@ -58,6 +58,7 @@ PLUGIN REDA ALOJAMIENTO: GENERAL
     packages/Reda/RedaAlojamiento/src/Events/CorreccionKycAtendida.php
     packages/Reda/RedaAlojamiento/src/Events/CorreccionKycSolicitada.php
     packages/Reda/RedaAlojamiento/src/Events/EstadoKycCambiado.php
+    packages/Reda/RedaAlojamiento/src/Events/VerificacionKycEliminada.php
     packages/Reda/RedaAlojamiento/src/Exceptions/KycNoVerificadoException.php
     packages/Reda/RedaAlojamiento/src/Http/Middleware/EnsureKycVerified.php
     packages/Reda/RedaAlojamiento/src/Observers/BloqueoKycObserver.php
@@ -204,7 +205,10 @@ PLUGIN REDA ALOJAMIENTO: VISTAS (ADMIN)
     packages/Reda/RedaAlojamiento/resources/views/admin/alerta/index.blade.php
     packages/Reda/RedaAlojamiento/resources/views/admin/plantillas/textos.blade.php
     packages/Reda/RedaAlojamiento/resources/views/admin/kyc/detalle.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/kyc/eliminadas.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/kyc/historial.blade.php
     packages/Reda/RedaAlojamiento/resources/views/admin/kyc/index.blade.php
+    packages/Reda/RedaAlojamiento/resources/views/admin/kyc/partials/pestanas.blade.php
 
 PLANTILLAS EMAIL ADMIN --
     packages/Reda/RedaAlojamiento/resources/views/emails/primer_aviso_admin.blade.php
@@ -279,6 +283,7 @@ ARCHIVOS JAVASCRIPT ADMIN
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/alternarRetencionKyc.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/aprobarSolicitudKyc.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/detalleKyc.js
+    packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/eliminarVerificacionKyc.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/indexKyc.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/peticionAdminKyc.js
     packages/Reda/RedaAlojamiento/resources/js/admin/vistas/kyc/rechazarSolicitudKyc.js

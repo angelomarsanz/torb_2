@@ -1,8 +1,10 @@
 /**
  * Resumen: Interactividad del detalle administrativo de una solicitud KYC (#reda-kyc-detalle).
  * Gestiona las acciones del administrador: aprobar, rechazar (motivo obligatorio), solicitar corrección, agregar
- * una observación interna, suspender o reanudar la eliminación automática de documentos y mostrar el número de
- * documento completo. Cada petición AJAX muestra la animación de "Espera" hasta que responde el servidor.
+ * una observación interna, suspender o reanudar la eliminación automática de documentos, mostrar el número de
+ * documento completo y eliminar la verificación del usuario (motivo obligatorio y confirmación explícita; al
+ * terminar lleva al listado de eliminadas, porque la solicitud ya no existe). Cada petición AJAX muestra la
+ * animación de "Espera" hasta que responde el servidor.
  * El servidor es quien autoriza y valida; aquí solo se evitan envíos vacíos. Los textos del servidor se escapan antes
  * de mostrarlos.
  *
@@ -18,6 +20,7 @@ import { solicitarCorreccionKyc } from './solicitarCorreccionKyc.js';
 import { agregarObservacionKyc } from './agregarObservacionKyc.js';
 import { alternarRetencionKyc } from './alternarRetencionKyc.js';
 import { revelarNumeroDocumentoKyc } from './revelarNumeroDocumentoKyc.js';
+import { eliminarVerificacionKyc } from './eliminarVerificacionKyc.js';
 
 (function ($) {
     "use strict";
@@ -121,6 +124,33 @@ import { revelarNumeroDocumentoKyc } from './revelarNumeroDocumentoKyc.js';
             if (!window.confirm(aviso)) return;
             esperar();
             mostrarResultado(await alternarRetencionKyc($vista.data('url-retencion'), suspender));
+        });
+
+        // Eliminar la verificación (motivo obligatorio y confirmación). La solicitud deja de existir: se va al listado.
+        $vista.on('click', '#btn-confirmar-eliminacion-kyc', function () {
+            const motivo = ($('#kyc-motivo-eliminacion').val() || '').trim();
+            const confirmado = $('#kyc-confirmar-eliminacion').is(':checked');
+            const $errorMotivo = $('#error-motivo-eliminacion');
+            const $errorConfirmar = $('#error-confirmar-eliminacion');
+            $errorMotivo.text('');
+            $errorConfirmar.text('');
+            if (motivo.length < 5) {
+                $errorMotivo.text(t('El motivo de la eliminación es obligatorio (entre 5 y 500 caracteres).'));
+                return;
+            }
+            if (!confirmado) {
+                $errorConfirmar.text(t('Marca la casilla para confirmar la eliminación.'));
+                return;
+            }
+            cerrarModalYEjecutar('#modal-eliminar-kyc', async () => {
+                esperar();
+                const r = await eliminarVerificacionKyc($vista.data('url-eliminar'), motivo);
+                if (r.success && window.RedaNotificaciones) {
+                    window.RedaNotificaciones.notificar(t('¡Éxito!'), escapar(r.mensaje_usuario || r.message), 'exito', String($vista.data('url-eliminadas')));
+                } else {
+                    mostrarResultado(r);
+                }
+            });
         });
 
         // Mostrar el número de documento completo (queda auditado)

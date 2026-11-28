@@ -56,6 +56,9 @@ Route::middleware(['web', 'locale', 'auth'])->prefix('kyc')->as('reda.kyc.')->gr
 */
 Route::prefix('admin/reda/kyc')->middleware(['web', 'guest:admin', 'permission:manage_kyc'])->as('reda.admin.kyc.')->group(function () {
     Route::get('/', [KycAdminController::class, 'index'])->name('index');
+    Route::get('eliminadas', [KycAdminController::class, 'eliminadas'])->name('eliminadas');
+    Route::get('historial/{usuario}', [KycAdminController::class, 'historial'])
+        ->whereNumber('usuario')->middleware('throttle:60,1,kyc_admin_historial')->name('historial');
     Route::get('documentos/{documento}', [KycAdminController::class, 'documento'])
         ->whereNumber('documento')->middleware('throttle:120,1,kyc_admin_documentos')->name('documento');
 
@@ -65,6 +68,7 @@ Route::prefix('admin/reda/kyc')->middleware(['web', 'guest:admin', 'permission:m
         Route::post('{id}/rechazar', [KycAdminController::class, 'rechazar'])->whereNumber('id')->name('rechazar');
         Route::post('{id}/solicitar-correccion', [KycAdminController::class, 'solicitarCorreccion'])->whereNumber('id')->name('correccion');
         Route::post('{id}/observacion', [KycAdminController::class, 'observacion'])->whereNumber('id')->name('observacion');
+        Route::post('{id}/eliminar', [KycAdminController::class, 'eliminar'])->whereNumber('id')->name('eliminar');
         Route::post('{id}/retencion', [KycAdminController::class, 'retencion'])->whereNumber('id')->name('retencion');
         Route::post('{id}/revelar-documento', [KycAdminController::class, 'revelarDocumento'])->whereNumber('id')->name('revelar');
     });

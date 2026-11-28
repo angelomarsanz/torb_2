@@ -13,6 +13,8 @@
  *    "reemplazado" y no se borra.
  *  - Leer un documento verificando su integridad (sha256) y registrar cada acceso en la auditoría.
  *  - Eliminar archivos (retención) dejando la fila de auditoría.
+ *  - Eliminar los archivos físicos de una lista de rutas (eliminación de la verificación de un usuario, ya confirmada
+ *    en la base de datos) informando cuántos no se pudieron borrar.
  * La autorización (quién puede leer) NO se decide aquí: la aplica KycPolicy en el controlador.
  * Las escrituras en base de datos usan la ventana GuardiaEscrituraKyc.
  *
@@ -460,6 +462,36 @@ class KycDocumentoService
                 Log::warning('KYC: no se pudo eliminar un archivo físico (' . get_class($e) . ').');
             }
         }
+    }
+
+    /**
+     * Elimina los archivos físicos de las rutas indicadas. Se usa cuando las filas de documentos ya se borraron
+     * (y la transacción se confirmó): un archivo que no se pueda borrar queda huérfano pero cifrado y sin ningún
+     * vínculo en la base de datos. Solo se aceptan rutas con el formato que genera este servicio.
+     *
+     * @param  array<int,string> $rutas
+     * @return int Cantidad de archivos que no se pudieron eliminar (0 si todo salió bien).
+     */
+    public function eliminarArchivosFisicos(array $rutas): int
+    {
+        $fallidos = 0;
+
+        foreach (array_unique($rutas) as $ruta) {
+            if (!is_string($ruta) || preg_match(self::PATRON_RUTA, $ruta) !== 1) {
+                continue;
+            }
+
+            try {
+                if ($this->disco()->exists($ruta) && !$this->disco()->delete($ruta)) {
+                    $fallidos++;
+                }
+            } catch (Throwable $e) {
+                $fallidos++;
+                Log::warning('KYC: no se pudo eliminar un archivo físico (' . get_class($e) . ').');
+            }
+        }
+
+        return $fallidos;
     }
 
     /**

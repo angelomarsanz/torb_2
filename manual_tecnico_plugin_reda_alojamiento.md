@@ -736,6 +736,28 @@ Avisos automáticos cuando cambia una verificación. El usuario recibe un correo
 - **resources/lang/es.json** (modificado): 42 textos nuevos de los correos y de las alertas.
 - **src/Observers/BloqueoKycObserver.php** (ajuste de la integración): ahora considera consulta del chat tanto el estado `Inquiry` (que crea `ChatController` en este repositorio) como el vacío; sin este ajuste un usuario sin KYC no podía iniciar un chat.
 
+### Eliminar la verificación de un usuario (KYC)
+Acción del panel administrativo para borrar por completo la verificación de un usuario y dejarlo en `not_started`, de modo que pueda volver a verificarse (por ejemplo, si se aprobó por error). Requiere `manage_kyc` (ruta, controlador y servicio), motivo obligatorio de 5 a 500 caracteres y una casilla de confirmación. Pestaña "Eliminadas" para consultar quién, cuándo, por qué y qué se eliminó.
+- **src/Services/Kyc/KycService.php** (ampliado): `eliminarVerificacion($adminId, $solicitudId, $motivo, $ip)`. En una transacción con la fila de `usuarios_kyc` bloqueada: borra `documentos_kyc` y `solicitudes_kyc` del usuario (en ese orden por las claves foráneas `RESTRICT`), reinicia `usuarios_kyc` (estado `not_started`, sin solicitud activa, sin verificación vigente, versión +1) y registra el evento `kyc_eliminado` (administrador, IP, estado anterior, motivo, método y cantidades). Los eventos anteriores se conservan: no contienen datos personales y pierden el vínculo con la solicitud (`ON DELETE SET NULL`). Los archivos físicos se borran después de confirmar la transacción; si alguno no se puede borrar queda huérfano, cifrado y sin vínculos, y la respuesta lo informa (`archivos_pendientes`). Una verificación de Didit abierta no se cancela en Didit: sus webhooks posteriores se ignoran (sesión desconocida). Responde 403 sin permiso, 422 sin motivo válido y 404 si ya no existe (otro administrador la eliminó). Emite `VerificacionKycEliminada` al confirmarse.
+- **src/Services/Kyc/KycDocumentoService.php** (ampliado): `eliminarArchivosFisicos(array $rutas)` borra los archivos de las rutas (solo con el formato `AAAA/MM/uuid.enc`) y devuelve cuántos no se pudieron borrar.
+- **src/Events/VerificacionKycEliminada.php**
+  Evento con `usuarioId` y `adminId`. No transporta el motivo para que no llegue al correo del usuario.
+- **src/Services/Kyc/NotificacionesKycService.php** (ampliado): `alEliminarVerificacion()` envía al usuario el correo "Tu verificación de identidad fue eliminada" (sin el motivo, con enlace a la pantalla de verificaciones). Respeta `KYC_NOTIFICACIONES` y los interruptores de `config/kyc.php`.
+- **src/Services/Kyc/ConsultaKycAdmin.php** (ampliado): `contadores()` incluye `eliminadas`; `listarEliminaciones()` (10 por página, de la más reciente a la más antigua) e `historialUsuario()` (datos de la cuenta y eventos de auditoría, 10 por página).
+- **src/Http/Controllers/Admin/Kyc/KycAdminController.php** (ampliado): `eliminar()` (POST), `eliminadas()` y `historial()` (GET, con `Cache-Control: no-store`).
+- **routes/kyc.php** (ampliado): `POST admin/reda/kyc/{id}/eliminar`, `GET admin/reda/kyc/eliminadas` y `GET admin/reda/kyc/historial/{usuario}`, con el mismo grupo y permiso `manage_kyc`.
+- **src/Support/EtiquetasKyc.php** (ampliado): etiqueta del evento `kyc_eliminado`.
+- **resources/views/admin/kyc/partials/pestanas.blade.php**
+  Pestañas del panel, compartidas por el listado, "Eliminadas" y el historial; agrega la pestaña "Eliminadas" con su contador.
+- **resources/views/admin/kyc/eliminadas.blade.php**
+  Lista de eliminaciones: tabla en escritorio y tarjetas en móvil, con usuario, administrador, estado que tenía, cantidades, motivo (conserva saltos de línea con CSS, nunca como HTML) y enlace al historial; paginación de 10 en 10.
+- **resources/views/admin/kyc/historial.blade.php**
+  Historial de auditoría de un usuario con los eventos que se conservan; muestra el motivo de cada eliminación.
+- **resources/views/admin/kyc/detalle.blade.php** y **index.blade.php** (modificados): el detalle agrega la tarjeta "Eliminar verificación" y su modal (motivo y confirmación); el listado usa el parcial de pestañas.
+- **resources/js/admin/vistas/kyc/eliminarVerificacionKyc.js**
+  Función AJAX con la estructura estándar (`peticionAdminKyc`). `detalleKyc.js` (modificado) valida el motivo y la casilla, muestra la animación de espera y, al terminar, lleva a "Eliminadas" porque la solicitud ya no existe.
+- **resources/sass/admin/main.scss** (ampliado): `.reda-kyc-motivo`. **resources/lang/es.json** (ampliado): 33 textos.
+
 ## Sistema de Puntos de Control y Memoria Operativa
 
 ### Archivos de Control en Tiempo Real

@@ -1,7 +1,8 @@
 {{--
     Detalle administrativo de una solicitud KYC: datos personales (el número de documento se muestra enmascarado y se
-    revela bajo demanda, con auditoría), documentos con su historial, resultado de Didit, observaciones, acciones y
-    el historial de cambios. Las acciones se envían por AJAX (detalleKyc.js). Todo el contenido se escapa con {{ }}.
+    revela bajo demanda, con auditoría), documentos con su historial, resultado de Didit, observaciones, acciones
+    (incluida "Eliminar verificación", con motivo obligatorio y confirmación) y el historial de cambios. Las acciones
+    se envían por AJAX (detalleKyc.js). Todo el contenido se escapa con {{ }}.
 --}}
 @extends('admin.template')
 
@@ -29,6 +30,8 @@
      data-url-observacion="{{ route('reda.admin.kyc.observacion', $solicitud->id) }}"
      data-url-retencion="{{ route('reda.admin.kyc.retencion', $solicitud->id) }}"
      data-url-revelar="{{ route('reda.admin.kyc.revelar', $solicitud->id) }}"
+     data-url-eliminar="{{ route('reda.admin.kyc.eliminar', $solicitud->id) }}"
+     data-url-eliminadas="{{ route('reda.admin.kyc.eliminadas') }}"
      data-url-listado="{{ route('reda.admin.kyc.index') }}">
     <section class="content-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h1 class="mb-0">{{ __('Solicitud de verificación') }} #{{ $solicitud->id }}
@@ -202,6 +205,15 @@
                     </div>
                 </div>
 
+                {{-- Eliminar la verificación (permite al usuario volver a verificarse) --}}
+                <div class="card mb-3 border-danger">
+                    <div class="card-header"><h2 class="h5 mb-0 text-danger">{{ __('Eliminar verificación') }}</h2></div>
+                    <div class="card-body d-grid gap-2">
+                        <p class="small text-muted mb-0">{{ __('Elimina los datos personales, los documentos y las solicitudes de este usuario y lo deja sin verificar para que pueda enviar su verificación de nuevo. Úsalo, por ejemplo, si una verificación se aprobó por error.') }}</p>
+                        <button type="button" class="btn btn-outline-danger" id="btn-eliminar-kyc" data-bs-toggle="modal" data-bs-target="#modal-eliminar-kyc">{{ __('Eliminar verificación') }}</button>
+                    </div>
+                </div>
+
                 {{-- Observaciones --}}
                 <div class="card mb-3">
                     <div class="card-header"><h2 class="h5 mb-0">{{ __('Observaciones internas') }}</h2></div>
@@ -248,6 +260,32 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
                     <button type="button" class="btn btn-danger" id="btn-confirmar-rechazo-kyc">{{ __('Rechazar') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: eliminar la verificación --}}
+    <div class="modal fade" id="modal-eliminar-kyc" tabindex="-1" aria-labelledby="titulo-eliminar-kyc" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title text-danger" id="titulo-eliminar-kyc">{{ __('Eliminar verificación') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Cerrar') }}"></button></div>
+                <div class="modal-body">
+                    <div class="alert alert-danger small">{{ __('Esta acción no se puede deshacer. Se borrarán definitivamente los datos personales, los documentos y las solicitudes de este usuario, y quedará sin verificar. Se le avisará por correo y podrá enviar su verificación de nuevo.') }}</div>
+                    <label class="form-label" for="kyc-motivo-eliminacion">{{ __('Motivo de la eliminación') }} <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="kyc-motivo-eliminacion" rows="3" maxlength="500" required></textarea>
+                    <small class="text-muted">{{ __('Queda registrado junto con tu nombre y la fecha. No se envía al usuario.') }}</small>
+                    <div class="invalid-feedback d-block" id="error-motivo-eliminacion"></div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="kyc-confirmar-eliminacion">
+                        <label class="form-check-label small" for="kyc-confirmar-eliminacion">{{ __('Entiendo que se eliminarán definitivamente los datos y documentos y que el usuario deberá verificarse de nuevo.') }}</label>
+                    </div>
+                    <div class="invalid-feedback d-block" id="error-confirmar-eliminacion"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-eliminacion-kyc">{{ __('Eliminar verificación') }}</button>
                 </div>
             </div>
         </div>

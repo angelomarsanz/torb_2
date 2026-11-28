@@ -4,9 +4,11 @@
  * Resumen: Controlador del panel administrativo KYC ("Verificación de identidad"), integrado en el panel actual
  * (guard "admin", layout admin.template y permisos del proyecto). No crea un panel aparte.
  *
- * Pantallas: listado paginado con filtros y búsqueda, y detalle de una solicitud.
+ * Pantallas: listado paginado con filtros y búsqueda, detalle de una solicitud, listado de verificaciones eliminadas
+ * y historial de auditoría de un usuario.
  * Acciones AJAX (estructura estándar): aprobar, rechazar (motivo obligatorio), solicitar corrección, agregar
- * observación interna, suspender/reanudar la retención de documentos y mostrar el número de documento completo.
+ * observación interna, suspender/reanudar la retención de documentos, mostrar el número de documento completo y
+ * eliminar la verificación de un usuario (motivo obligatorio) para que pueda volver a enviarla.
  * Descarga protegida de documentos para administradores.
  *
  * Seguridad: cada acción exige el permiso manage_kyc en tres capas: el middleware de la ruta, autorizar() en este
@@ -87,6 +89,36 @@ class KycAdminController extends Controller
     }
 
     /**
+     * Listado de verificaciones eliminadas por administradores (con su motivo).
+     */
+    public function eliminadas(ConsultaKycAdmin $consulta)
+    {
+        $this->autorizar();
+
+        return view('reda-alojamiento::admin.kyc.eliminadas', [
+            'eliminaciones' => $consulta->listarEliminaciones(),
+            'contadores'    => $consulta->contadores(),
+            'filtros'       => ['grupo' => 'eliminadas', 'metodo' => '', 'buscar' => ''],
+        ]);
+    }
+
+    /**
+     * Historial de auditoría de un usuario (incluye los eventos que se conservan tras eliminar su verificación).
+     */
+    public function historial(int $usuario, ConsultaKycAdmin $consulta)
+    {
+        $this->autorizar();
+
+        $datos = $consulta->historialUsuario($usuario);
+        abort_if($datos === null, 404);
+
+        return response()->view('reda-alojamiento::admin.kyc.historial', $datos + [
+            'contadores' => $consulta->contadores(),
+            'filtros'    => ['grupo' => 'eliminadas', 'metodo' => '', 'buscar' => ''],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
      * Aprueba una solicitud manual.
      */
     public function aprobar(Request $peticion, int $id, KycService $kyc): JsonResponse
@@ -134,6 +166,16 @@ class KycAdminController extends Controller
         $admin = $this->autorizar();
 
         return $this->responder($kyc->suspenderRetencion((int) $admin->id, $id, $peticion->boolean('suspender'), $peticion->ip()));
+    }
+
+    /**
+     * Elimina la verificación del usuario dueño de la solicitud (el motivo es obligatorio y queda auditado).
+     */
+    public function eliminar(Request $peticion, int $id, KycService $kyc): JsonResponse
+    {
+        $admin = $this->autorizar();
+
+        return $this->responder($kyc->eliminarVerificacion((int) $admin->id, $id, $this->texto($peticion, 'motivo'), $peticion->ip()));
     }
 
     /**

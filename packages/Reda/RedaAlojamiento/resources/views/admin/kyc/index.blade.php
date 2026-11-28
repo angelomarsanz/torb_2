@@ -8,31 +8,13 @@
 @section('main')
 @php
     use Reda\RedaAlojamiento\Support\EtiquetasKyc;
-    $pestanas = [
-        'pendientes'  => __('Pendientes de revisión'),
-        'en_proceso'  => __('En proceso'),
-        'verificados' => __('Verificados'),
-        'rechazados'  => __('Rechazados'),
-        'fallidos'    => __('Fallidos'),
-        'expirados'   => __('Expirados'),
-        'todos'       => __('Todos'),
-    ];
 @endphp
 <div class="content-wrapper" id="reda-kyc-index">
     <section class="content-header">
         <h1>{{ __('Verificación de identidad (KYC)') }}</h1>
     </section>
     <section class="content">
-        <ul class="nav nav-pills reda-kyc-pestanas mb-3" role="tablist">
-            @foreach ($pestanas as $clave => $texto)
-                <li class="nav-item">
-                    <a class="nav-link {{ $filtros['grupo'] === $clave ? 'active' : '' }}"
-                       href="{{ route('reda.admin.kyc.index', array_filter(['grupo' => $clave, 'metodo' => $filtros['metodo'], 'buscar' => $filtros['buscar']])) }}">
-                        {{ $texto }} <span class="badge bg-light text-dark">{{ $contadores[$clave] ?? 0 }}</span>
-                    </a>
-                </li>
-            @endforeach
-        </ul>
+        @include('reda-alojamiento::admin.kyc.partials.pestanas')
 
         <form class="row g-2 align-items-end mb-3 reda-kyc-filtros" method="GET" action="{{ route('reda.admin.kyc.index') }}">
             <input type="hidden" name="grupo" value="{{ $filtros['grupo'] }}">
